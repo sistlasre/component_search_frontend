@@ -9,6 +9,7 @@ import Footer from './components/Footer';
 import LandingPage from './components/LandingPage';
 import PartDetail from './components/PartDetail';
 import SearchResults from './components/SearchResults';
+import SubcategoryPage from './components/SubcategoryPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <main className="flex-grow-1">
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/category/:categoryName" element={<SubcategoryPage />} />
             <Route path="/part/:partNumber" element={<PartDetail />} />
             <Route path="/search" element={<SearchResults />} />
           </Routes>

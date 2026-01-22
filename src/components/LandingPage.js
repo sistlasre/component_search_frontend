@@ -1,22 +1,45 @@
-import React from 'react';
-import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Badge, Button, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faMicrochip, faMemory, faPlug, faSatelliteDish, 
   faBatteryFull, faWifi, faLightbulb, faTools,
-  faShippingFast, faShieldAlt, faAward, faHeadset
+  faShippingFast, faShieldAlt, faAward, faHeadset,
+  faGears
 } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from './SearchBar';
 import SEO from './SEO';
-import { categories, featuredParts, featuredManufacturers } from '../data/mockData';
+import { featuredParts, featuredManufacturers } from '../data/mockData';
+import { fetchCategories, getCategoryIcon } from '../services/api';
 
 const iconMap = {
   faMicrochip, faMemory, faPlug, faSatelliteDish,
-  faBatteryFull, faWifi, faLightbulb, faTools
+  faBatteryFull, faWifi, faLightbulb, faTools,
+  faGears, faShieldAlt
 };
 
 const LandingPage = () => {
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [categoriesError, setCategoriesError] = useState(null);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories();
+        setCategories(data);
+        setCategoriesError(null);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        setCategoriesError('Failed to load categories. Please try again later.');
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
   return (
     <>
       <SEO 
@@ -83,19 +106,47 @@ const LandingPage = () => {
       <section className="py-5">
         <Container>
           <h2 className="text-center mb-4">Browse by Category</h2>
-          <Row>
-            {categories.map((category) => (
-              <Col key={category.id} xs={6} md={4} lg={3} className="mb-4">
-                <Link to={`/search?category=${encodeURIComponent(category.name)}`} className="category-card">
-                  <div className="icon">
-                    <FontAwesomeIcon icon={iconMap[category.icon]} />
-                  </div>
-                  <h6 className="mb-1">{category.name}</h6>
-                  <small className="text-muted">{category.count} Parts</small>
-                </Link>
-              </Col>
-            ))}
-          </Row>
+          
+          {/* Loading State */}
+          {loadingCategories && (
+            <div className="text-center py-5">
+              <Spinner animation="border" role="status" variant="primary">
+                <span className="visually-hidden">Loading categories...</span>
+              </Spinner>
+              <p className="mt-3 text-muted">Loading categories...</p>
+            </div>
+          )}
+          
+          {/* Error State */}
+          {categoriesError && !loadingCategories && (
+            <Alert variant="danger" className="text-center">
+              <h5>Error Loading Categories</h5>
+              <p>{categoriesError}</p>
+              <Button 
+                variant="outline-danger" 
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </Button>
+            </Alert>
+          )}
+          
+          {/* Categories Grid */}
+          {!loadingCategories && !categoriesError && (
+            <Row>
+              {categories.map((category, index) => (
+                <Col key={index} xs={6} md={4} lg={3} className="mb-4">
+                  <Link to={`/category/${encodeURIComponent(category.category)}`} className="category-card">
+                    <div className="icon">
+                      <FontAwesomeIcon icon={iconMap[getCategoryIcon(category.category)]} />
+                    </div>
+                    <h6 className="mb-1">{category.category}</h6>
+                    <small className="text-muted">{category.count.toLocaleString()} Parts</small>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          )}
         </Container>
       </section>
 

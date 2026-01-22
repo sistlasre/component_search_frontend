@@ -1,115 +1,226 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Container, Row, Col, Card, Badge, Form, Button } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Badge, Form, Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faSort } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faSort, faTimes } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import SearchBar from './SearchBar';
-import { searchParts, categories, featuredManufacturers } from '../data/mockData';
 
 const SearchResults = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
+  // Get URL parameters
   const query = searchParams.get('q') || '';
   const categoryFilter = searchParams.get('category') || '';
-  const manufacturerFilter = searchParams.get('manufacturer') || '';
+  const subcategoryFilter = searchParams.get('subcategory') || '';
   
+  // State for API data
   const [results, setResults] = useState([]);
-  const [filteredResults, setFilteredResults] = useState([]);
+  const [facets, setFacets] = useState({});
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Parse filters from URL (these are the applied filters)
+  const selectedFilters = {};
+  searchParams.forEach((value, key) => {
+    if (key !== 'category' && key !== 'subcategory' && key !== 'q') {
+      selectedFilters[key] = value.split(',');
+    }
+  });
+  
+  // State for pending filters (before applying)
+  const [pendingFilters, setPendingFilters] = useState(selectedFilters);
   const [sortBy, setSortBy] = useState('relevance');
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedManufacturers, setSelectedManufacturers] = useState([]);
 
+  // Build API URL with all parameters from URL
+  const buildApiUrl = useCallback(() => {
+    const baseUrl = 'https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/prod/cs/search';
+    const params = new URLSearchParams();
+    
+    // Category is required
+    if (!categoryFilter) {
+      return null;
+    }
+    params.append('category', categoryFilter);
+    
+    // Subcategory is optional
+    if (subcategoryFilter) {
+      params.append('subcategory', subcategoryFilter);
+    }
+    
+    // Add all other URL parameters (facet filters) - they're already properly formatted
+    searchParams.forEach((value, key) => {
+      if (key !== 'category' && key !== 'subcategory' && key !== 'q') {
+        params.append(key, value);
+      }
+    });
+    
+    // Add search query if present
+    if (query) {
+      params.append('q', query);
+    }
+    
+    return `${baseUrl}?${params.toString()}`;
+  }, [categoryFilter, subcategoryFilter, searchParams, query]);
+
+  // Update pending filters when URL changes
   useEffect(() => {
-    // Get search results
-    let searchResults = searchParts(query);
-    
-    // Apply category filter from URL
-    if (categoryFilter) {
-      searchResults = searchResults.filter(p => p.category === categoryFilter);
-      setSelectedCategories([categoryFilter]);
-    }
-    
-    // Apply manufacturer filter from URL
-    if (manufacturerFilter) {
-      searchResults = searchResults.filter(p => p.manufacturer === manufacturerFilter);
-      setSelectedManufacturers([manufacturerFilter]);
-    }
-    
-    setResults(searchResults);
-    setFilteredResults(searchResults);
-  }, [query, categoryFilter, manufacturerFilter]);
+    setPendingFilters(selectedFilters);
+  }, [searchParams]); // Update when URL params change
 
+  // Fetch data from API
   useEffect(() => {
-    let filtered = [...results];
+    const fetchData = async () => {
+      const url = buildApiUrl();
+      
+      if (!url) {
+        setError('Category is required for search');
+        setResults([]);
+        setFacets({});
+        setTotal(0);
+        return;
+      }
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Set results and facets from API response
+        setResults(data.results || []);
+        setFacets(data.facets || {});
+        setTotal(data.total || 0);
+        
+      } catch (err) {
+        setError(err.message);
+        setResults([]);
+        setFacets({});
+        setTotal(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [buildApiUrl]); // Refetch when buildApiUrl changes (which depends on filters)
 
-    // Apply category filters
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(p => selectedCategories.includes(p.category));
+  // Update URL when filters change (without page refresh)
+  const updateUrlParams = useCallback((newFilters) => {
+    const params = new URLSearchParams();
+    
+    // Always keep category and subcategory
+    if (categoryFilter) params.append('category', categoryFilter);
+    if (subcategoryFilter) params.append('subcategory', subcategoryFilter);
+    if (query) params.append('q', query);
+    
+    // Add selected filters as comma-separated values
+    Object.entries(newFilters).forEach(([facetKey, values]) => {
+      if (values && values.length > 0) {
+        params.append(facetKey, values.join(','));
+      }
+    });
+    
+    // Update URL without refreshing the page
+    setSearchParams(params, { replace: true });
+  }, [categoryFilter, subcategoryFilter, query, setSearchParams]);
+
+  // Handle filter toggle for any facet (updates pending filters)
+  const handleFilterToggle = (facetKey, value) => {
+    const newFilters = { ...pendingFilters };
+    
+    if (!newFilters[facetKey]) {
+      newFilters[facetKey] = [];
     }
-
-    // Apply manufacturer filters
-    if (selectedManufacturers.length > 0) {
-      filtered = filtered.filter(p => selectedManufacturers.includes(p.manufacturer));
+    
+    const index = newFilters[facetKey].indexOf(value);
+    if (index > -1) {
+      // Remove filter
+      newFilters[facetKey].splice(index, 1);
+      if (newFilters[facetKey].length === 0) {
+        delete newFilters[facetKey];
+      }
+    } else {
+      // Add filter
+      newFilters[facetKey].push(value);
     }
-
-    // Apply price range filter
-    if (priceRange.min || priceRange.max) {
-      filtered = filtered.filter(p => {
-        const price = parseFloat(p.price.replace('$', ''));
-        const min = priceRange.min ? parseFloat(priceRange.min) : 0;
-        const max = priceRange.max ? parseFloat(priceRange.max) : Infinity;
-        return price >= min && price <= max;
-      });
-    }
-
-    // Apply sorting
-    switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => parseFloat(a.price.replace('$', '')) - parseFloat(b.price.replace('$', '')));
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => parseFloat(b.price.replace('$', '')) - parseFloat(a.price.replace('$', '')));
-        break;
-      case 'stock':
-        filtered.sort((a, b) => b.stock - a.stock);
-        break;
-      default:
-        // Keep original order (relevance)
-        break;
-    }
-
-    setFilteredResults(filtered);
-  }, [results, sortBy, priceRange, selectedCategories, selectedManufacturers]);
-
-  const handleCategoryToggle = (category) => {
-    setSelectedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
+    
+    setPendingFilters(newFilters);
   };
 
-  const handleManufacturerToggle = (manufacturer) => {
-    setSelectedManufacturers(prev =>
-      prev.includes(manufacturer)
-        ? prev.filter(m => m !== manufacturer)
-        : [...prev, manufacturer]
-    );
+  // Apply filters - updates URL and triggers API call
+  const applyFilters = () => {
+    updateUrlParams(pendingFilters);
   };
 
+  // Clear all filters
   const clearFilters = () => {
-    setSelectedCategories([]);
-    setSelectedManufacturers([]);
-    setPriceRange({ min: '', max: '' });
+    const emptyFilters = {};
+    setPendingFilters(emptyFilters);
     setSortBy('relevance');
+    updateUrlParams(emptyFilters);
   };
+  
+  // Check if a filter value is selected in pending filters
+  const isFilterSelected = (facetKey, value) => {
+    return pendingFilters[facetKey] && pendingFilters[facetKey].includes(value);
+  };
+  
+  // Check if there are pending changes
+  const hasPendingChanges = () => {
+    return JSON.stringify(pendingFilters) !== JSON.stringify(selectedFilters);
+  };
+  
+  // Remove a specific filter value
+  const removeFilter = (facetKey, value) => {
+    const newFilters = { ...selectedFilters };
+    if (newFilters[facetKey]) {
+      newFilters[facetKey] = newFilters[facetKey].filter(v => v !== value);
+      if (newFilters[facetKey].length === 0) {
+        delete newFilters[facetKey];
+      }
+    }
+    updateUrlParams(newFilters);
+  };
+  
+  // Convert filter key to human-readable format
+  const formatFilterLabel = (key) => {
+    // First check if we have a label from the facets
+    if (facets[key]?.label) {
+      return facets[key].label;
+    }
+    
+    // Otherwise, format the key itself
+    return key
+      .replace(/_/g, ' ')  // Replace underscores with spaces
+      .replace(/([A-Z])/g, ' $1')  // Add space before capital letters (for camelCase)
+      .replace(/\b\w/g, (char) => char.toUpperCase())  // Capitalize first letter of each word
+      .trim();
+  };
+
+  // Show error if no category
+  if (!categoryFilter) {
+    return (
+      <Container className="py-4">
+        <Alert variant="warning">
+          Please select a category to search for components.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <>
       <SEO 
         title={`Search Results${query ? ` for "${query}"` : ''}`}
-        description={`Find electronic components and parts. ${filteredResults.length} results found.`}
+        description={`Find electronic components and parts. ${total} results found.`}
         keywords="electronic components search, parts finder, component database"
       />
 
@@ -120,127 +231,190 @@ const SearchResults = () => {
         </div>
 
         {/* Results Header */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="mb-0">
-            {query && `Search results for "${query}"`}
-            {categoryFilter && !query && `${categoryFilter}`}
-            {manufacturerFilter && !query && `Parts by ${manufacturerFilter}`}
-            <span className="text-muted ms-2">({filteredResults.length} results)</span>
-          </h5>
-          <Form.Select 
-            style={{ width: 'auto' }}
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="relevance">Sort by: Relevance</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="stock">Stock Availability</option>
-          </Form.Select>
+        <div className="mb-3">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5 className="mb-0">
+              {categoryFilter && `${categoryFilter}`}
+              {subcategoryFilter && ` > ${subcategoryFilter}`}
+              {query && ` - "${query}"`}
+              <span className="text-muted ms-2">({total} results)</span>
+            </h5>
+            <Form.Select 
+              style={{ width: 'auto' }}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              disabled={loading}
+            >
+              <option value="relevance">Sort by: Relevance</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="stock">Stock Availability</option>
+            </Form.Select>
+          </div>
+          
+          {/* Applied Filters Display */}
+          {Object.keys(selectedFilters).length > 0 && (
+            <div className="d-flex flex-wrap gap-2 align-items-center">
+              <span className="text-muted me-2">Applied Filters:</span>
+              {Object.entries(selectedFilters).map(([facetKey, values]) => (
+                values.map(value => {
+                  const facetLabel = formatFilterLabel(facetKey);
+                  return (
+                    <Badge 
+                      key={`${facetKey}-${value}`}
+                      bg="secondary" 
+                      className="d-flex align-items-center gap-2 py-2 px-3"
+                      style={{ fontSize: '0.875rem' }}
+                    >
+                      <span>{facetLabel}: {value}</span>
+                      <FontAwesomeIcon 
+                        icon={faTimes} 
+                        size="sm"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => removeFilter(facetKey, value)}
+                      />
+                    </Badge>
+                  );
+                })
+              ))}
+              {Object.keys(selectedFilters).length > 0 && (
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={clearFilters}
+                  className="text-danger p-0 ms-2"
+                >
+                  Clear All
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         <Row>
           {/* Filters Sidebar */}
           <Col lg={3} className="mb-4">
             <Card>
-              <Card.Header className="d-flex justify-content-between align-items-center">
-                <span>
-                  <FontAwesomeIcon icon={faFilter} className="me-2" />
-                  Filters
-                </span>
-                <Button variant="link" size="sm" onClick={clearFilters} className="p-0">
-                  Clear All
-                </Button>
+              <Card.Header>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span>
+                    <FontAwesomeIcon icon={faFilter} className="me-2" />
+                    Filters
+                  </span>
+                  <Button variant="link" size="sm" onClick={clearFilters} className="p-0">
+                    Clear All
+                  </Button>
+                </div>
+                {hasPendingChanges() && (
+                  <Button 
+                    variant="primary" 
+                    size="sm" 
+                    className="w-100"
+                    onClick={applyFilters}
+                    disabled={loading}
+                  >
+                    Apply Filters
+                  </Button>
+                )}
               </Card.Header>
               <Card.Body>
-                {/* Price Range */}
+                {/* Current Category and Subcategory */}
                 <div className="mb-4">
-                  <h6 className="mb-2">Price Range</h6>
-                  <Row className="g-2">
-                    <Col xs={6}>
-                      <Form.Control
-                        type="number"
-                        placeholder="Min"
-                        value={priceRange.min}
-                        onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
-                        size="sm"
+                  <h6 className="mb-2">Current Selection</h6>
+                  <div className="text-muted small">
+                    <div>Category: <strong>{categoryFilter}</strong></div>
+                    {subcategoryFilter && (
+                      <div>Subcategory: <strong>{subcategoryFilter}</strong></div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Dynamic Facets from API */}
+                {Object.entries(facets).map(([facetKey, facetData]) => (
+                  <div key={facetKey} className="mb-4">
+                    <h6 className="mb-2">{formatFilterLabel(facetKey)}</h6>
+                    {facetData.values && facetData.values.slice(0, 10).map(item => (
+                      <Form.Check
+                        key={item.value}
+                        type="checkbox"
+                        label={`${item.value} (${item.count})`}
+                        checked={isFilterSelected(facetKey, item.value)}
+                        onChange={() => handleFilterToggle(facetKey, item.value)}
+                        disabled={loading}
+                        className="mb-1"
                       />
-                    </Col>
-                    <Col xs={6}>
-                      <Form.Control
-                        type="number"
-                        placeholder="Max"
-                        value={priceRange.max}
-                        onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
-                        size="sm"
-                      />
-                    </Col>
-                  </Row>
-                </div>
-
-                {/* Categories */}
-                <div className="mb-4">
-                  <h6 className="mb-2">Categories</h6>
-                  {categories.slice(0, 5).map(cat => (
-                    <Form.Check
-                      key={cat.id}
-                      type="checkbox"
-                      label={cat.name}
-                      checked={selectedCategories.includes(cat.name)}
-                      onChange={() => handleCategoryToggle(cat.name)}
-                      className="mb-1"
-                    />
-                  ))}
-                </div>
-
-                {/* Manufacturers */}
-                <div className="mb-4">
-                  <h6 className="mb-2">Manufacturers</h6>
-                  {featuredManufacturers.slice(0, 5).map(mfr => (
-                    <Form.Check
-                      key={mfr}
-                      type="checkbox"
-                      label={mfr}
-                      checked={selectedManufacturers.includes(mfr)}
-                      onChange={() => handleManufacturerToggle(mfr)}
-                      className="mb-1"
-                    />
-                  ))}
-                </div>
-
-                {/* Stock Status */}
-                <div className="mb-4">
-                  <h6 className="mb-2">Availability</h6>
-                  <Form.Check type="checkbox" label="In Stock" defaultChecked className="mb-1" />
-                  <Form.Check type="checkbox" label="Ships Today" className="mb-1" />
-                </div>
+                    ))}
+                    {facetData.values && facetData.values.length > 10 && (
+                      <small className="text-muted">+ {facetData.values.length - 10} more</small>
+                    )}
+                  </div>
+                ))}
               </Card.Body>
             </Card>
           </Col>
 
           {/* Results Grid */}
           <Col lg={9}>
-            {filteredResults.length > 0 ? (
+            {loading ? (
+              <Card>
+                <Card.Body className="text-center py-5">
+                  <Spinner animation="border" variant="primary" className="mb-3" />
+                  <p className="text-muted">Loading results...</p>
+                </Card.Body>
+              </Card>
+            ) : error ? (
+              <Alert variant="danger">
+                <strong>Error:</strong> {error}
+              </Alert>
+            ) : results.length > 0 ? (
               <Row>
-                {filteredResults.map((part) => (
+                {results.map((part) => (
                   <Col key={part.id} xs={12} sm={6} md={4} className="mb-4">
                     <Card className="product-card h-100">
-                      <Link to={`/part/${part.partNumber}`} className="text-decoration-none text-dark">
+                      <Link to={`/part/${part.part_number || part.partNumber}`} className="text-decoration-none text-dark">
                         <div className="product-image-container">
-                          <img src={part.image} alt={part.partNumber} />
-                          {part.stock > 0 && (
+                          {/* Use placeholder image if not available */}
+                          {/*
+                          <img 
+                            src={part.image || 'https://via.placeholder.com/200x150?text=No+Image'}
+                            alt={part.part_number || part.partNumber}
+                            onError={(e) => { e.target.src = 'https://via.placeholder.com/200x150?text=No+Image' }}
+                          />
+                          */}
+                          {part.part_specs && part.part_specs['stock_status.value'] === 'In Stock' && (
                             <Badge bg="success" className="stock-badge">
                               In Stock
                             </Badge>
                           )}
                         </div>
                         <Card.Body>
-                          <h6 className="text-primary-tint mb-1">{part.partNumber}</h6>
-                          <small className="text-muted d-block mb-2">{part.manufacturer}</small>
-                          <p className="small text-truncate-2 mb-2">{part.description}</p>
+                          <h6 className="text-primary-tint mb-1">{part.part_number || part.partNumber}</h6>
+                          <small className="text-muted d-block mb-2">
+                            {part.manufacturer || (part.part_specs && part.part_specs['manufacturer.value']) || 'Unknown'}
+                          </small>
+                          <p className="small text-truncate-2 mb-2">
+                            {part.description || `${part.category} - ${part.subcategory}`}
+                          </p>
+                          
+                          {/* Display some key specs if available */}
+                          {part.part_specs && (
+                            <div className="small mb-2">
+                              {part.part_specs['coil_voltage_dc.value'] && (
+                                <div>Voltage: {part.part_specs['coil_voltage_dc.value']}</div>
+                              )}
+                              {part.part_specs['contact_current_rating.value'] && (
+                                <div>Current: {part.part_specs['contact_current_rating.value']}</div>
+                              )}
+                            </div>
+                          )}
+                          
                           <div className="d-flex justify-content-between align-items-center">
-                            <span className="h5 mb-0 text-accent">{part.price}</span>
-                            <small className="text-muted">{part.stock.toLocaleString()} units</small>
+                            <span className="h5 mb-0 text-accent">
+                              {part.price || (part.part_specs && part.part_specs['price.value']) || 'Contact for Price'}
+                            </span>
+                            {part.stock && (
+                              <small className="text-muted">{part.stock.toLocaleString()} units</small>
+                            )}
                           </div>
                         </Card.Body>
                       </Link>
@@ -253,7 +427,9 @@ const SearchResults = () => {
                 <Card.Body className="text-center py-5">
                   <h5>No results found</h5>
                   <p className="text-muted">Try adjusting your search or filters</p>
-                  <Button variant="primary" onClick={clearFilters}>Clear All Filters</Button>
+                  {(Object.keys(selectedFilters).length > 0 || Object.keys(pendingFilters).length > 0) && (
+                    <Button variant="primary" onClick={clearFilters}>Clear All Filters</Button>
+                  )}
                 </Card.Body>
               </Card>
             )}
