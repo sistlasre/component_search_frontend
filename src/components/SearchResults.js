@@ -39,11 +39,14 @@ const SearchResults = () => {
     const baseUrl = 'https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/prod/cs/search';
     const params = new URLSearchParams();
     
-    // Category is required
-    if (!categoryFilter) {
+    // Either category OR q is required
+    if (!categoryFilter && !query) {
       return null;
     }
-    params.append('category', categoryFilter);
+    
+    if (categoryFilter) {
+      params.append('category', categoryFilter);
+    }
     
     // Subcategory is optional
     if (subcategoryFilter) {
@@ -76,7 +79,7 @@ const SearchResults = () => {
       const url = buildApiUrl();
       
       if (!url) {
-        setError('Category is required for search');
+        setError('Either a search term or category is required');
         setResults([]);
         setFacets({});
         setTotal(0);
@@ -205,13 +208,18 @@ const SearchResults = () => {
       .trim();
   };
 
-  // Show error if no category
-  if (!categoryFilter) {
+  // Show prompt if no category AND no query
+  if (!categoryFilter && !query) {
     return (
       <Container className="py-4">
-        <Alert variant="warning">
-          Please select a category to search for components.
-        </Alert>
+        <div className="text-center py-5">
+          <h3>Search for Components</h3>
+          <p className="text-muted mb-4">Enter a search term or browse by category to find parts</p>
+          <SearchBar />
+          <Button variant="primary" as={Link} to="/" className="mt-3">
+            Browse Categories
+          </Button>
+        </div>
       </Container>
     );
   }
@@ -318,37 +326,49 @@ const SearchResults = () => {
                 )}
               </Card.Header>
               <Card.Body>
-                {/* Current Category and Subcategory */}
-                <div className="mb-4">
-                  <h6 className="mb-2">Current Selection</h6>
-                  <div className="text-muted small">
-                    <div>Category: <strong>{categoryFilter}</strong></div>
-                    {subcategoryFilter && (
-                      <div>Subcategory: <strong>{subcategoryFilter}</strong></div>
-                    )}
+                {/* Current Category and Subcategory - Only show if we have a category */}
+                {categoryFilter && (
+                  <div className="mb-4">
+                    <h6 className="mb-2">Current Selection</h6>
+                    <div className="text-muted small">
+                      <div>Category: <strong>{categoryFilter}</strong></div>
+                      {subcategoryFilter && (
+                        <div>Subcategory: <strong>{subcategoryFilter}</strong></div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Dynamic Facets from API */}
-                {Object.entries(facets).map(([facetKey, facetData]) => (
-                  <div key={facetKey} className="mb-4">
-                    <h6 className="mb-2">{formatFilterLabel(facetKey)}</h6>
-                    {facetData.values && facetData.values.slice(0, 10).map(item => (
-                      <Form.Check
-                        key={item.value}
-                        type="checkbox"
-                        label={`${item.value} (${item.count})`}
-                        checked={isFilterSelected(facetKey, item.value)}
-                        onChange={() => handleFilterToggle(facetKey, item.value)}
-                        disabled={loading}
-                        className="mb-1"
-                      />
-                    ))}
-                    {facetData.values && facetData.values.length > 10 && (
-                      <small className="text-muted">+ {facetData.values.length - 10} more</small>
-                    )}
+                {/* Dynamic Facets from API - Only show facets that have values */}
+                {Object.entries(facets)
+                  .filter(([_, facetData]) => facetData.values && facetData.values.length > 0)
+                  .map(([facetKey, facetData]) => (
+                    <div key={facetKey} className="mb-4">
+                      <h6 className="mb-2">{formatFilterLabel(facetKey)}</h6>
+                      {facetData.values.slice(0, 10).map(item => (
+                        <Form.Check
+                          key={item.value}
+                          type="checkbox"
+                          label={`${item.value} (${item.count})`}
+                          checked={isFilterSelected(facetKey, item.value)}
+                          onChange={() => handleFilterToggle(facetKey, item.value)}
+                          disabled={loading}
+                          className="mb-1"
+                        />
+                      ))}
+                      {facetData.values.length > 10 && (
+                        <small className="text-muted">+ {facetData.values.length - 10} more</small>
+                      )}
+                    </div>
+                  ))
+                }
+                
+                {/* Show message if no filters available */}
+                {Object.keys(facets).length === 0 && !loading && (
+                  <div className="text-muted text-center py-3">
+                    <small>No filters available</small>
                   </div>
-                ))}
+                )}
               </Card.Body>
             </Card>
           </Col>
