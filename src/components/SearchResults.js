@@ -26,7 +26,7 @@ const SearchResults = () => {
   const selectedFilters = {};
   searchParams.forEach((value, key) => {
     if (key !== 'category' && key !== 'subcategory' && key !== 'q') {
-      selectedFilters[key] = value.split(',');
+      selectedFilters[key] = value.split('||');
     }
   });
   
@@ -127,7 +127,7 @@ const SearchResults = () => {
     // Add selected filters as comma-separated values
     Object.entries(newFilters).forEach(([facetKey, values]) => {
       if (values && values.length > 0) {
-        params.append(facetKey, values.join(','));
+        params.append(facetKey, values.join('||'));
       }
     });
     
