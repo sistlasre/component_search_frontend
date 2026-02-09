@@ -14,6 +14,7 @@ const SearchResults = () => {
   const query = searchParams.get('q') || '';
   const categoryFilter = searchParams.get('category') || '';
   const subcategoryFilter = searchParams.get('subcategory') || '';
+  const manufacturerFilter = searchParams.get('manufacturer') || '';
   
   // State for API data
   const [results, setResults] = useState([]);
@@ -40,7 +41,7 @@ const SearchResults = () => {
     const params = new URLSearchParams();
     
     // Either category OR q is required
-    if (!categoryFilter && !query) {
+    if (!categoryFilter && !query && !manufacturerFilter) {
       return null;
     }
     
@@ -66,7 +67,7 @@ const SearchResults = () => {
     }
     
     return `${baseUrl}?${params.toString()}`;
-  }, [categoryFilter, subcategoryFilter, searchParams, query]);
+  }, [categoryFilter, subcategoryFilter, manufacturerFilter, searchParams, query]);
 
   // Update pending filters when URL changes
   useEffect(() => {
@@ -209,7 +210,7 @@ const SearchResults = () => {
   };
 
   // Show prompt if no category AND no query
-  if (!categoryFilter && !query) {
+  if (!categoryFilter && !query && !manufacturerFilter) {
     return (
       <Container className="py-4">
         <div className="text-center py-5">
@@ -374,6 +375,7 @@ const SearchResults = () => {
           </Col>
 
           {/* Results Grid */}
+            {/* Results Grid */}
             <Col lg={9}>
               {loading ? (
                 <Card>
@@ -392,22 +394,22 @@ const SearchResults = () => {
                     // --- LOGIC FOR FILTERING SPECS ---
                     const specs = part.part_specs || {};
 
-                    // Define the fields we always want to handle explicitly
-                    const manufacturer = part.manufacturer || specs['manufacturer.value'] || 'Unknown';
-                    const packaging = specs['packaging.value'];
-                    const type = specs['type.value'];
+                    // Explicitly pull these fields for display
+                    const manufacturer = part.manufacturer || 'Unknown';
+                    const packaging = part.packaging || '';
+                    const type = part.type || '';
 
                     // Get category types that ARE NOT currently active filters
-                    // and are not already handled above (manufacturer, packaging, type)
-                    // Also explicitly exclude pricing/stock keys here
+                    // AND are not already handled explicitly (manufacturer, packaging, type)
+                    // AND are not pricing/stock related
                     const activeFilterKeys = Object.keys(selectedFilters);
                     const dynamicSpecs = Object.entries(specs).filter(([key, value]) => {
                       const cleanKey = key.replace('.value', '');
                       const isFilter = activeFilterKeys.includes(cleanKey);
-                      const isFixedField = ['manufacturer', 'packaging', 'type', 'price', 'stock_status', 'stock', 'inventory'].includes(cleanKey);
-
-                      return value && !isFilter && !isFixedField && key.endsWith('.value');
-                    });
+                      const isExplicitField = ['manufacturer', 'packaging', 'type'].includes(cleanKey);
+                      const isRemovedField = ['price', 'stock_status', 'stock', 'inventory'].includes(cleanKey);
+                      return value && !isFilter && !isExplicitField && !isRemovedField && key.endsWith('.value');
+                  });
 
                     return (
                       <Col key={part.id} xs={12} sm={6} md={4} className="mb-4">
@@ -422,31 +424,31 @@ const SearchResults = () => {
                                 onError={(e) => { e.target.src = 'https://via.placeholder.com/200x150?text=No+Image' }}
                               />
                               */}
-                              {/* Stock badge removed per request */}
+                              {/* Pricing/Stock badges removed */}
                             </div>
                             <Card.Body>
-                              <h6 className="text-primary-tint mb-2">{part.part_number || part.partNumber}</h6>
+                              <h6 className="text-primary-tint mb-1">{part.part_number || part.partNumber}</h6>
 
                               {/* 1. Manufacturer */}
-                              <div className="small mb-1">
+                              <div className="small mb-0">
                                 <strong>Manufacturer:</strong> {manufacturer}
                               </div>
 
                               {/* 2. Packaging */}
                               {packaging && (
-                                <div className="small mb-1">
+                                <div className="small mb-0">
                                   <strong>Packaging:</strong> {packaging}
                                 </div>
                               )}
 
                               {/* 3. Type */}
                               {type && (
-                                <div className="small mb-1">
+                                <div className="small mb-0">
                                   <strong>Type:</strong> {type}
                                 </div>
                               )}
 
-                              {/* 4. Category types that aren't filters */}
+                              {/* 4. Other category details (only if not a filter) */}
                               {dynamicSpecs.length > 0 && (
                                 <div className="mt-2 pt-2 border-top">
                                   {dynamicSpecs.map(([key, value]) => (
@@ -457,7 +459,7 @@ const SearchResults = () => {
                                 </div>
                               )}
 
-                              {/* Pricing and Stock footer removed per request */}
+                              {/* Pricing and Stock footer removed */}
                             </Card.Body>
                           </Link>
                         </Card>
