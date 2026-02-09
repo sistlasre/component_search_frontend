@@ -374,86 +374,109 @@ const SearchResults = () => {
           </Col>
 
           {/* Results Grid */}
-          <Col lg={9}>
-            {loading ? (
-              <Card>
-                <Card.Body className="text-center py-5">
-                  <Spinner animation="border" variant="primary" className="mb-3" />
-                  <p className="text-muted">Loading results...</p>
-                </Card.Body>
-              </Card>
-            ) : error ? (
-              <Alert variant="danger">
-                <strong>Error:</strong> {error}
-              </Alert>
-            ) : results.length > 0 ? (
-              <Row>
-                {results.map((part) => (
-                  <Col key={part.id} xs={12} sm={6} md={4} className="mb-4">
-                    <Card className="product-card h-100">
-                      <Link to={`/part/${part.part_number || part.partNumber}`} className="text-decoration-none text-dark">
-                        <div className="product-image-container">
-                          {/* Use placeholder image if not available */}
-                          {/*
-                          <img 
-                            src={part.image || 'https://via.placeholder.com/200x150?text=No+Image'}
-                            alt={part.part_number || part.partNumber}
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/200x150?text=No+Image' }}
-                          />
-                          */}
-                          {part.part_specs && part.part_specs['stock_status.value'] === 'In Stock' && (
-                            <Badge bg="success" className="stock-badge">
-                              In Stock
-                            </Badge>
-                          )}
-                        </div>
-                        <Card.Body>
-                          <h6 className="text-primary-tint mb-1">{part.part_number || part.partNumber}</h6>
-                          <small className="text-muted d-block mb-2">
-                            {part.manufacturer || (part.part_specs && part.part_specs['manufacturer.value']) || 'Unknown'}
-                          </small>
-                          <p className="small text-truncate-2 mb-2">
-                            {part.description || `${part.category} - ${part.subcategory}`}
-                          </p>
-                          
-                          {/* Display some key specs if available */}
-                          {part.part_specs && (
-                            <div className="small mb-2">
-                              {part.part_specs['coil_voltage_dc.value'] && (
-                                <div>Voltage: {part.part_specs['coil_voltage_dc.value']}</div>
-                              )}
-                              {part.part_specs['contact_current_rating.value'] && (
-                                <div>Current: {part.part_specs['contact_current_rating.value']}</div>
-                              )}
+            <Col lg={9}>
+              {loading ? (
+                <Card>
+                  <Card.Body className="text-center py-5">
+                    <Spinner animation="border" variant="primary" className="mb-3" />
+                    <p className="text-muted">Loading results...</p>
+                  </Card.Body>
+                </Card>
+              ) : error ? (
+                <Alert variant="danger">
+                  <strong>Error:</strong> {error}
+                </Alert>
+              ) : results.length > 0 ? (
+                <Row>
+                  {results.map((part) => {
+                    // --- LOGIC FOR FILTERING SPECS ---
+                    const specs = part.part_specs || {};
+
+                    // Define the fields we always want to handle explicitly
+                    const manufacturer = part.manufacturer || specs['manufacturer.value'] || 'Unknown';
+                    const packaging = specs['packaging.value'];
+                    const type = specs['type.value'];
+
+                    // Get category types that ARE NOT currently active filters
+                    // and are not already handled above (manufacturer, packaging, type)
+                    // Also explicitly exclude pricing/stock keys here
+                    const activeFilterKeys = Object.keys(selectedFilters);
+                    const dynamicSpecs = Object.entries(specs).filter(([key, value]) => {
+                      const cleanKey = key.replace('.value', '');
+                      const isFilter = activeFilterKeys.includes(cleanKey);
+                      const isFixedField = ['manufacturer', 'packaging', 'type', 'price', 'stock_status', 'stock', 'inventory'].includes(cleanKey);
+
+                      return value && !isFilter && !isFixedField && key.endsWith('.value');
+                    });
+
+                    return (
+                      <Col key={part.id} xs={12} sm={6} md={4} className="mb-4">
+                        <Card className="product-card h-100">
+                          <Link to={`/part/${part.part_number || part.partNumber}`} className="text-decoration-none text-dark">
+                            <div className="product-image-container">
+                              {/* Use placeholder image if not available */}
+                              {/*
+                              <img
+                                src={part.image || 'https://via.placeholder.com/200x150?text=No+Image'}
+                                alt={part.part_number || part.partNumber}
+                                onError={(e) => { e.target.src = 'https://via.placeholder.com/200x150?text=No+Image' }}
+                              />
+                              */}
+                              {/* Stock badge removed per request */}
                             </div>
-                          )}
-                          
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="h5 mb-0 text-accent">
-                              {part.price || (part.part_specs && part.part_specs['price.value']) || 'Contact for Price'}
-                            </span>
-                            {part.stock && (
-                              <small className="text-muted">{part.stock.toLocaleString()} units</small>
-                            )}
-                          </div>
-                        </Card.Body>
-                      </Link>
-                    </Card>
-                  </Col>
-                ))}
-              </Row>
-            ) : (
-              <Card>
-                <Card.Body className="text-center py-5">
-                  <h5>No results found</h5>
-                  <p className="text-muted">Try adjusting your search or filters</p>
-                  {(Object.keys(selectedFilters).length > 0 || Object.keys(pendingFilters).length > 0) && (
-                    <Button variant="primary" onClick={clearFilters}>Clear All Filters</Button>
-                  )}
-                </Card.Body>
-              </Card>
-            )}
-          </Col>
+                            <Card.Body>
+                              <h6 className="text-primary-tint mb-2">{part.part_number || part.partNumber}</h6>
+
+                              {/* 1. Manufacturer */}
+                              <div className="small mb-1">
+                                <strong>Manufacturer:</strong> {manufacturer}
+                              </div>
+
+                              {/* 2. Packaging */}
+                              {packaging && (
+                                <div className="small mb-1">
+                                  <strong>Packaging:</strong> {packaging}
+                                </div>
+                              )}
+
+                              {/* 3. Type */}
+                              {type && (
+                                <div className="small mb-1">
+                                  <strong>Type:</strong> {type}
+                                </div>
+                              )}
+
+                              {/* 4. Category types that aren't filters */}
+                              {dynamicSpecs.length > 0 && (
+                                <div className="mt-2 pt-2 border-top">
+                                  {dynamicSpecs.map(([key, value]) => (
+                                    <div key={key} className="small text-muted mb-1">
+                                      <strong>{formatFilterLabel(key.replace('.value', ''))}:</strong> {value}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Pricing and Stock footer removed per request */}
+                            </Card.Body>
+                          </Link>
+                        </Card>
+                      </Col>
+                    );
+                  })}
+                </Row>
+              ) : (
+                <Card>
+                  <Card.Body className="text-center py-5">
+                    <h5>No results found</h5>
+                    <p className="text-muted">Try adjusting your search or filters</p>
+                    {(Object.keys(selectedFilters).length > 0 || Object.keys(pendingFilters).length > 0) && (
+                      <Button variant="primary" onClick={clearFilters}>Clear All Filters</Button>
+                    )}
+                  </Card.Body>
+                </Card>
+              )}
+            </Col>
         </Row>
       </Container>
     </>
