@@ -8,6 +8,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import { getPartDetails } from '../data/mockData';
+import { fetchPartDetails } from '../services/api';
+import { transformPartData } from '../utils/dataTransformers';
 
 const PartDetail = () => {
   const { partNumber } = useParams();
@@ -17,12 +19,55 @@ const PartDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const details = getPartDetails(partNumber);
-      setPart(details);
-      setLoading(false);
-    }, 300);
+    const loadPartDetails = async () => {
+      setLoading(true);
+      try {
+        // Try to fetch from real API first
+        const apiData = await fetchPartDetails(partNumber);
+        const transformedData = transformPartData(apiData);
+
+        // Get mock data for suppliers, documents, and related parts
+        const mockDetails = getPartDetails(partNumber);
+        if (mockDetails) {
+          // Merge real API data with mock data for other sections
+          transformedData.suppliers = mockDetails.suppliers;
+          transformedData.documents = mockDetails.documents;
+          transformedData.relatedParts = mockDetails.relatedParts;
+        } else {
+          // If no mock data, provide default empty data for these sections
+          transformedData.suppliers = [
+            {
+              name: "Digi-Key Electronics",
+              partNumber: partNumber,
+              stock: transformedData.stock || 0,
+              moq: 1,
+              price: [
+                { qty: 1, price: 0.00 },
+                { qty: 10, price: 0.00 },
+                { qty: 100, price: 0.00 },
+                { qty: 1000, price: 0.00 }
+              ],
+              leadTime: transformedData.leadTime || "Check Lead Time"
+            }
+          ];
+          transformedData.documents = [
+            { type: "Datasheet", name: `${partNumber}_Datasheet.pdf`, size: "N/A" }
+          ];
+          transformedData.relatedParts = [];
+        }
+
+        setPart(transformedData);
+      } catch (error) {
+        console.error('Error fetching part from API, falling back to mock data:', error);
+        // Fallback to mock data if API fails
+        const details = getPartDetails(partNumber);
+        setPart(details);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPartDetails();
   }, [partNumber]);
 
   if (loading) {
@@ -73,6 +118,11 @@ const PartDetail = () => {
           <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/search?category=${part.category}` }}>
             {part.category}
           </Breadcrumb.Item>
+          {part.subcategory && (
+            <Breadcrumb.Item linkAs={Link} linkProps={{ to: `/search?category=${part.category}&subcategory=${part.subcategory}` }}>
+              {part.subcategory}
+            </Breadcrumb.Item>
+          )}
           <Breadcrumb.Item active>{part.partNumber}</Breadcrumb.Item>
         </Breadcrumb>
 
@@ -94,31 +144,28 @@ const PartDetail = () => {
                 by <Link to={`/search?manufacturer=${part.manufacturer}`}>{part.manufacturer}</Link>
               </p>
               <p className="lead mb-3">{part.description}</p>
-              
+
               <Row className="mb-3">
-                <Col xs={6} md={3}>
+                <Col xs={6} md={4}>
                   <small className="text-muted d-block">Category</small>
                   <strong>{part.category}</strong>
                 </Col>
-                <Col xs={6} md={3}>
-                  <small className="text-muted d-block">Total Stock</small>
-                  <strong className="text-success">
-                    <FontAwesomeIcon icon={faCheck} className="me-1" />
-                    {part.stock.toLocaleString()} units
-                  </strong>
-                </Col>
-                <Col xs={6} md={3}>
-                  <small className="text-muted d-block">Lead Time</small>
-                  <strong>{part.leadTime}</strong>
-                </Col>
-                <Col xs={6} md={3}>
-                  <small className="text-muted d-block">RoHS Status</small>
-                  <strong className="text-success">Compliant</strong>
-                </Col>
+                {part.subcategory && (
+                  <Col xs={6} md={4}>
+                    <small className="text-muted d-block">Subcategory</small>
+                    <strong>{part.subcategory}</strong>
+                  </Col>
+                )}
+                {part.rawData?.product_status && (
+                  <Col xs={6} md={4}>
+                    <small className="text-muted d-block">Product Status</small>
+                    <strong>{part.rawData.product_status}</strong>
+                  </Col>
+                )}
               </Row>
 
-              {/* Quick Actions */}
-              <div className="d-flex gap-2 flex-wrap">
+              {/* Quick Actions - commented out for future use */}
+              {/* <div className="d-flex gap-2 flex-wrap">
                 <Button variant="primary" size="sm">
                   <FontAwesomeIcon icon={faFileAlt} className="me-2" />
                   Datasheet
@@ -131,31 +178,38 @@ const PartDetail = () => {
                   <FontAwesomeIcon icon={faClipboardList} className="me-2" />
                   Request Sample
                 </Button>
-              </div>
+              </div> */}
             </Col>
           </Row>
         </div>
 
         {/* Tabs */}
-        <Tab.Container defaultActiveKey="pricing">
+        <Tab.Container defaultActiveKey="specifications">
           <Nav variant="tabs" className="mb-4">
-            <Nav.Item>
-              <Nav.Link eventKey="pricing">Pricing & Availability</Nav.Link>
-            </Nav.Item>
+            {false && (
+              <Nav.Item>
+                <Nav.Link eventKey="pricing">Pricing & Availability</Nav.Link>
+              </Nav.Item>
+            )}
             <Nav.Item>
               <Nav.Link eventKey="specifications">Specifications</Nav.Link>
             </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="documents">Documents</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="related">Related Products</Nav.Link>
-            </Nav.Item>
+            {false && (
+              <>
+                <Nav.Item>
+                  <Nav.Link eventKey="documents">Documents</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link eventKey="related">Related Products</Nav.Link>
+                </Nav.Item>
+              </>
+            )}
           </Nav>
 
           <Tab.Content>
-            {/* Pricing Tab */}
-            <Tab.Pane eventKey="pricing">
+            {/* Pricing Tab - kept for future use */}
+            {false && (
+              <Tab.Pane eventKey="pricing">
               <Card>
                 <Card.Body>
                   <h5 className="mb-3">Supplier Pricing & Availability</h5>
@@ -249,7 +303,8 @@ const PartDetail = () => {
                   </Card>
                 </Card.Body>
               </Card>
-            </Tab.Pane>
+              </Tab.Pane>
+            )}
 
             {/* Specifications Tab */}
             <Tab.Pane eventKey="specifications">
@@ -276,8 +331,9 @@ const PartDetail = () => {
               </Card>
             </Tab.Pane>
 
-            {/* Documents Tab */}
-            <Tab.Pane eventKey="documents">
+            {/* Documents Tab - kept for future use */}
+            {false && (
+              <Tab.Pane eventKey="documents">
               <Card>
                 <Card.Body>
                   <h5 className="mb-3">Available Documents</h5>
@@ -300,10 +356,12 @@ const PartDetail = () => {
                   </Row>
                 </Card.Body>
               </Card>
-            </Tab.Pane>
+              </Tab.Pane>
+            )}
 
-            {/* Related Products Tab */}
-            <Tab.Pane eventKey="related">
+            {/* Related Products Tab - kept for future use */}
+            {false && (
+              <Tab.Pane eventKey="related">
               <Row>
                 {part.relatedParts.map((relatedPart) => (
                   <Col key={relatedPart.id} xs={12} sm={6} md={3} className="mb-4">
@@ -326,7 +384,8 @@ const PartDetail = () => {
                   </Col>
                 ))}
               </Row>
-            </Tab.Pane>
+              </Tab.Pane>
+            )}
           </Tab.Content>
         </Tab.Container>
       </Container>

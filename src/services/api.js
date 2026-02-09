@@ -61,3 +61,22 @@ export const getCategoryIcon = (categoryName) => {
   
   return iconMap[categoryName] || 'faMicrochip'; // Default icon
 };
+
+/**
+ * Fetch part details from the API
+ * @param {string} partNumber - The part number to fetch details for
+ * @returns {Promise<Object>} Part details object
+ */
+export const fetchPartDetails = async (partNumber) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/part/${partNumber}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch part details: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.part_data;
+  } catch (error) {
+    console.error(`Error fetching part details for ${partNumber}:`, error);
+    throw error;
+  }
+};
