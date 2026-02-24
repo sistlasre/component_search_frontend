@@ -113,31 +113,6 @@ const LandingPage = () => {
         </Container>
       </section>
 
-      {/* Manufacturers Section */}
-      <section className="py-5">
-        <Container>
-          <h2 className="text-center mb-4">Trusted Manufacturers</h2>
-          <Row className="justify-content-center">
-            <Col lg={10}>
-              <div className="d-flex flex-wrap justify-content-center gap-3">
-                {featuredManufacturers.map((manufacturer, index) => (
-                  <Button
-                    key={index}
-                    variant="outline-secondary"
-                    size="sm"
-                    as={Link}
-                    to={`/search?manufacturer=${encodeURIComponent(manufacturer)}`}
-                    className="mb-2"
-                  >
-                    {manufacturer}
-                  </Button>
-                ))}
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-
       {/* CTA Section */}
       <section className="bg-primary-tint text-white py-5">
         <Container>
