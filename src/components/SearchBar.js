@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
 const SearchBar = ({ 
-  placeholder = "Search millions of parts by number, keyword, or description...", 
+  placeholder = "Search millions of parts by number",
   className = "",
   defaultCategory = null  // Optional default category to use
 }) => {
@@ -20,24 +20,16 @@ const SearchBar = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      const params = new URLSearchParams();
+      params.append('q', searchQuery.trim());
       if (currentCategory) {
-        // If we have a category, include it in the search
-        const params = new URLSearchParams();
         params.append('category', currentCategory);
-        params.append('q', searchQuery.trim());
-        
-        // Preserve subcategory if it exists
-        const subcategory = searchParams.get('subcategory');
-        if (subcategory) {
-          params.append('subcategory', subcategory);
-        }
-        
-        navigate(`/search?${params.toString()}`);
-      } else {
-        // Show warning if no category is available
-        setShowWarning(true);
-        setTimeout(() => setShowWarning(false), 5000);
       }
+      const subcategory = searchParams.get('subcategory');
+      if (subcategory) {
+        params.append('subcategory', subcategory);
+      }
+      navigate(`/search?${params.toString()}`);
     }
   };
 
@@ -52,8 +44,8 @@ const SearchBar = ({
         <InputGroup className="search-bar-hero">
           <Form.Control
             type="search"
-            placeholder={currentCategory ? placeholder : "Select a category first, then search..."}
             value={searchQuery}
+            placeholder="Search for parts"
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search for electronic parts"
           />
@@ -62,9 +54,6 @@ const SearchBar = ({
             <span>Search</span>
           </Button>
         </InputGroup>
-        {!currentCategory && (
-          <small className="text-muted">Tip: Navigate to a category first, then search within it.</small>
-        )}
       </Form>
     </>
   );

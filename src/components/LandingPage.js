@@ -60,43 +60,6 @@ const LandingPage = () => {
                 Search millions of parts from authorized distributors worldwide
               </p>
               <SearchBar />
-              <div className="mt-4">
-                <small className="opacity-75">
-                  Popular searches: STM32, ESP32, Arduino, Raspberry Pi, LM358
-                </small>
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-
-      {/* Trust Indicators */}
-      <section className="bg-light py-3">
-        <Container>
-          <Row className="text-center">
-            <Col xs={6} md={3} className="mb-2 mb-md-0">
-              <div className="d-flex align-items-center justify-content-center">
-                <FontAwesomeIcon icon={faShippingFast} className="text-primary-tint me-2" />
-                <small className="fw-semibold">Fast Shipping</small>
-              </div>
-            </Col>
-            <Col xs={6} md={3} className="mb-2 mb-md-0">
-              <div className="d-flex align-items-center justify-content-center">
-                <FontAwesomeIcon icon={faShieldAlt} className="text-primary-tint me-2" />
-                <small className="fw-semibold">100% Authentic</small>
-              </div>
-            </Col>
-            <Col xs={6} md={3}>
-              <div className="d-flex align-items-center justify-content-center">
-                <FontAwesomeIcon icon={faAward} className="text-primary-tint me-2" />
-                <small className="fw-semibold">ISO Certified</small>
-              </div>
-            </Col>
-            <Col xs={6} md={3}>
-              <div className="d-flex align-items-center justify-content-center">
-                <FontAwesomeIcon icon={faHeadset} className="text-primary-tint me-2" />
-                <small className="fw-semibold">24/7 Support</small>
-              </div>
             </Col>
           </Row>
         </Container>
@@ -147,43 +110,6 @@ const LandingPage = () => {
               ))}
             </Row>
           )}
-        </Container>
-      </section>
-
-      {/* Featured Products */}
-      <section className="py-5 bg-light">
-        <Container>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Featured Products</h2>
-            <Link to="/search" className="btn btn-outline-primary">View All</Link>
-          </div>
-          <Row>
-            {featuredParts.slice(0, 8).map((part) => (
-              <Col key={part.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
-                <Card className="product-card h-100">
-                  <Link to={`/part/${part.partNumber}`} className="text-decoration-none text-dark">
-                    <div className="product-image-container">
-                      <img src={part.image} alt={part.partNumber} />
-                      {part.stock > 0 && (
-                        <Badge bg="success" className="stock-badge">
-                          In Stock
-                        </Badge>
-                      )}
-                    </div>
-                    <Card.Body>
-                      <h6 className="text-primary-tint mb-1">{part.partNumber}</h6>
-                      <small className="text-muted d-block mb-2">{part.manufacturer}</small>
-                      <p className="small text-truncate-2 mb-2">{part.description}</p>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <span className="h5 mb-0 text-accent">{part.price}</span>
-                        <small className="text-muted">{part.stock.toLocaleString()} units</small>
-                      </div>
-                    </Card.Body>
-                  </Link>
-                </Card>
-              </Col>
-            ))}
-          </Row>
         </Container>
       </section>
 
