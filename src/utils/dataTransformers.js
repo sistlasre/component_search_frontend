@@ -66,12 +66,6 @@ export const categorizeSpecifications = (partData) => {
       'technology',
       'interface',
       'applications'
-    ],
-    'Availability & Pricing': [
-      'quantity_available',
-      'price',
-      'minimum_order_quantity',
-      'lead_time'
     ]
   };
 
@@ -105,7 +99,7 @@ export const categorizeSpecifications = (partData) => {
     }
 
     // If not categorized, put in "Other Specifications"
-    if (!categorized) {
+    if (!categorized && key != 'price' && key != 'quantity_available') {
       if (!specifications['Other Specifications']) {
         specifications['Other Specifications'] = {};
       }
@@ -136,8 +130,6 @@ export const transformPartData = (rawData) => {
     category: rawData.category1 || 'Electronic Components',
     subcategory: rawData.category2 || '',
     image: 'https://via.placeholder.com/400x300/f0f0f0/666?text=' + encodeURIComponent(rawData.part_number),
-    stock: rawData.quantity_available ? parseInt(rawData.quantity_available.split('\\n')[0]) || 0 : 0,
-    leadTime: rawData.quantity_available && rawData.quantity_available.includes('In Stock') ? 'In Stock' : 'Check Lead Time',
     specifications: categorizeSpecifications(rawData),
     // Preserve mock data for sections we'll integrate later
     suppliers: [],

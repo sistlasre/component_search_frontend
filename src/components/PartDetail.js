@@ -26,36 +26,6 @@ const PartDetail = () => {
         const apiData = await fetchPartDetails(partNumber);
         const transformedData = transformPartData(apiData);
 
-        // Get mock data for suppliers, documents, and related parts
-        const mockDetails = getPartDetails(partNumber);
-        if (mockDetails) {
-          // Merge real API data with mock data for other sections
-          transformedData.suppliers = mockDetails.suppliers;
-          transformedData.documents = mockDetails.documents;
-          transformedData.relatedParts = mockDetails.relatedParts;
-        } else {
-          // If no mock data, provide default empty data for these sections
-          transformedData.suppliers = [
-            {
-              name: "Digi-Key Electronics",
-              partNumber: partNumber,
-              stock: transformedData.stock || 0,
-              moq: 1,
-              price: [
-                { qty: 1, price: 0.00 },
-                { qty: 10, price: 0.00 },
-                { qty: 100, price: 0.00 },
-                { qty: 1000, price: 0.00 }
-              ],
-              leadTime: transformedData.leadTime || "Check Lead Time"
-            }
-          ];
-          transformedData.documents = [
-            { type: "Datasheet", name: `${partNumber}_Datasheet.pdf`, size: "N/A" }
-          ];
-          transformedData.relatedParts = [];
-        }
-
         setPart(transformedData);
       } catch (error) {
         console.error('Error fetching part from API, falling back to mock data:', error);
