@@ -28,7 +28,7 @@ const SearchResults = () => {
   // Parse filters from URL (these are the applied filters)
   const selectedFilters = {};
   searchParams.forEach((value, key) => {
-    if (key !== 'category' && key !== 'subcategory' && key !== 'q') {
+    if (key !== 'category' && key !== 'subcategory' && key !== 'q' && key !== 'page' && key !== 'size') {
       selectedFilters[key] = value.split('||');
     }
   });
@@ -433,6 +433,37 @@ const SearchResults = () => {
           {/* Results Grid */}
             {/* Results Grid */}
             <Col lg={9}>
+              {/* Top Pagination Controls */}
+              {!loading && !error && results.length > 0 && totalPages > 1 && (
+                <div className="d-flex justify-content-center align-items-center mb-3">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="me-2"
+                  >
+                    <FontAwesomeIcon icon={faChevronLeft} className="me-1" />
+                    Previous
+                  </Button>
+
+                  <span className="mx-3">
+                    Page {currentPage} of {totalPages}
+                  </span>
+
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="ms-2"
+                  >
+                    Next
+                    <FontAwesomeIcon icon={faChevronRight} className="ms-1" />
+                  </Button>
+                </div>
+              )}
+
               {loading ? (
                 <Card>
                   <Card.Body className="text-center py-5">
@@ -535,7 +566,7 @@ const SearchResults = () => {
                 </Card>
               )}
 
-              {/* Pagination Controls */}
+              {/* Bottom Pagination Controls */}
               {!loading && !error && results.length > 0 && totalPages > 1 && (
                 <div className="d-flex justify-content-center align-items-center mt-4">
                   <Button
