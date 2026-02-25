@@ -69,7 +69,9 @@ export const getCategoryIcon = (categoryName) => {
  */
 export const fetchPartDetails = async (partNumber) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/part/${partNumber}`);
+    // Encode the partNumber to handle special characters safely
+    const encodedPartNumber = encodeURIComponent(partNumber);
+    const response = await fetch(`${API_BASE_URL}/part/${encodedPartNumber}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch part details: ${response.status}`);
     }

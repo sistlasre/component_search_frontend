@@ -496,7 +496,7 @@ const SearchResults = () => {
                     return (
                       <Col key={part.id} xs={12} sm={6} md={4} className="mb-4">
                         <Card className="product-card h-100">
-                          <Link to={`/part/${part.part_number || part.partNumber}`} className="text-decoration-none text-dark">
+                          <Link to={`/part/${encodeURIComponent(part.part_number)}`} className="text-decoration-none text-dark">
                             <div className="product-image-container">
                               {/* Use placeholder image if not available */}
                               {/*
