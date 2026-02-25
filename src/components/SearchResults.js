@@ -2,27 +2,29 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Badge, Form, Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faSort, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faSort, faTimes, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import SearchBar from './SearchBar';
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   // Get URL parameters
   const query = searchParams.get('q') || '';
   const categoryFilter = searchParams.get('category') || '';
   const subcategoryFilter = searchParams.get('subcategory') || '';
   const manufacturerFilter = searchParams.get('manufacturer') || '';
-  
+  const currentPage = Number(searchParams.get('page')) || 1;
+  const pageSize = Number(searchParams.get('size')) || 50;
+
   // State for API data
   const [results, setResults] = useState([]);
   const [facets, setFacets] = useState({});
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Parse filters from URL (these are the applied filters)
   const selectedFilters = {};
   searchParams.forEach((value, key) => {
@@ -30,44 +32,52 @@ const SearchResults = () => {
       selectedFilters[key] = value.split('||');
     }
   });
-  
+
   // State for pending filters (before applying)
   const [pendingFilters, setPendingFilters] = useState(selectedFilters);
   const [sortBy, setSortBy] = useState('relevance');
+
+  // State for expanded filter sections
+  const [expandedFacets, setExpandedFacets] = useState({});
 
   // Build API URL with all parameters from URL
   const buildApiUrl = useCallback(() => {
     const baseUrl = 'https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/prod/cs/search';
     const params = new URLSearchParams();
-    
+
     // Either category OR q is required
     if (!categoryFilter && !query && !manufacturerFilter) {
       return null;
     }
-    
+
     if (categoryFilter) {
       params.append('category', categoryFilter);
     }
-    
+
     // Subcategory is optional
     if (subcategoryFilter) {
       params.append('subcategory', subcategoryFilter);
     }
-    
+
     // Add all other URL parameters (facet filters) - they're already properly formatted
     searchParams.forEach((value, key) => {
-      if (key !== 'category' && key !== 'subcategory' && key !== 'q') {
+      if (key !== 'category' && key !== 'subcategory' && key !== 'q' && key !== 'page' && key !== 'size') {
         params.append(key, value);
       }
     });
-    
+
     // Add search query if present
     if (query) {
       params.append('q', query);
     }
-    
+
+    // Add pagination parameters
+    params.append('size', pageSize.toString());
+    const offset = (currentPage - 1) * pageSize;
+    params.append('from', offset.toString());
+
     return `${baseUrl}?${params.toString()}`;
-  }, [categoryFilter, subcategoryFilter, manufacturerFilter, searchParams, query]);
+  }, [categoryFilter, subcategoryFilter, manufacturerFilter, searchParams, query, currentPage, pageSize]);
 
   // Update pending filters when URL changes
   useEffect(() => {
@@ -78,7 +88,7 @@ const SearchResults = () => {
   useEffect(() => {
     const fetchData = async () => {
       const url = buildApiUrl();
-      
+
       if (!url) {
         setError('Either a search term or category is required');
         setResults([]);
@@ -86,23 +96,23 @@ const SearchResults = () => {
         setTotal(0);
         return;
       }
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Set results and facets from API response
         setResults(data.results || []);
         setFacets(data.facets || {});
         setTotal(data.total || 0);
-        
+
       } catch (err) {
         setError(err.message);
         setResults([]);
@@ -112,38 +122,46 @@ const SearchResults = () => {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [buildApiUrl]); // Refetch when buildApiUrl changes (which depends on filters)
 
   // Update URL when filters change (without page refresh)
-  const updateUrlParams = useCallback((newFilters) => {
+  const updateUrlParams = useCallback((newFilters, resetPage = true) => {
     const params = new URLSearchParams();
-    
+
     // Always keep category and subcategory
     if (categoryFilter) params.append('category', categoryFilter);
     if (subcategoryFilter) params.append('subcategory', subcategoryFilter);
     if (query) params.append('q', query);
-    
+
     // Add selected filters as comma-separated values
     Object.entries(newFilters).forEach(([facetKey, values]) => {
       if (values && values.length > 0) {
         params.append(facetKey, values.join('||'));
       }
     });
-    
+
+    // Keep pagination or reset to page 1
+    if (!resetPage && currentPage > 1) {
+      params.append('page', currentPage.toString());
+    }
+    if (pageSize !== 20) {
+      params.append('size', pageSize.toString());
+    }
+
     // Update URL without refreshing the page
     setSearchParams(params, { replace: true });
-  }, [categoryFilter, subcategoryFilter, query, setSearchParams]);
+  }, [categoryFilter, subcategoryFilter, query, currentPage, pageSize, setSearchParams]);
 
   // Handle filter toggle for any facet (updates pending filters)
   const handleFilterToggle = (facetKey, value) => {
     const newFilters = { ...pendingFilters };
-    
+
     if (!newFilters[facetKey]) {
       newFilters[facetKey] = [];
     }
-    
+
     const index = newFilters[facetKey].indexOf(value);
     if (index > -1) {
       // Remove filter
@@ -155,7 +173,7 @@ const SearchResults = () => {
       // Add filter
       newFilters[facetKey].push(value);
     }
-    
+
     setPendingFilters(newFilters);
   };
 
@@ -171,17 +189,17 @@ const SearchResults = () => {
     setSortBy('relevance');
     updateUrlParams(emptyFilters);
   };
-  
+
   // Check if a filter value is selected in pending filters
   const isFilterSelected = (facetKey, value) => {
     return pendingFilters[facetKey] && pendingFilters[facetKey].includes(value);
   };
-  
+
   // Check if there are pending changes
   const hasPendingChanges = () => {
     return JSON.stringify(pendingFilters) !== JSON.stringify(selectedFilters);
   };
-  
+
   // Remove a specific filter value
   const removeFilter = (facetKey, value) => {
     const newFilters = { ...selectedFilters };
@@ -193,14 +211,14 @@ const SearchResults = () => {
     }
     updateUrlParams(newFilters);
   };
-  
+
   // Convert filter key to human-readable format
   const formatFilterLabel = (key) => {
     // First check if we have a label from the facets
     if (facets[key]?.label) {
       return facets[key].label;
     }
-    
+
     // Otherwise, format the key itself
     return key
       .replace(/_/g, ' ')  // Replace underscores with spaces
@@ -208,6 +226,28 @@ const SearchResults = () => {
       .replace(/\b\w/g, (char) => char.toUpperCase())  // Capitalize first letter of each word
       .trim();
   };
+
+  // Toggle expanded state for a facet
+  const toggleFacetExpanded = (facetKey) => {
+    setExpandedFacets(prev => ({
+      ...prev,
+      [facetKey]: !prev[facetKey]
+    }));
+  };
+
+  // Navigate to a specific page
+  const goToPage = (page) => {
+    const params = new URLSearchParams(searchParams);
+    if (page > 1) {
+      params.set('page', page.toString());
+    } else {
+      params.delete('page');
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  // Calculate total pages
+  const totalPages = Math.ceil(total / pageSize);
 
   // Show prompt if no category AND no query
   if (!categoryFilter && !query && !manufacturerFilter) {
@@ -260,7 +300,7 @@ const SearchResults = () => {
               <option value="stock">Stock Availability</option>
             </Form.Select>
           </div>
-          
+
           {/* Applied Filters Display */}
           {Object.keys(selectedFilters).length > 0 && (
             <div className="d-flex flex-wrap gap-2 align-items-center">
@@ -343,27 +383,43 @@ const SearchResults = () => {
                 {/* Dynamic Facets from API - Only show facets that have values */}
                 {Object.entries(facets)
                   .filter(([_, facetData]) => facetData.values && facetData.values.length > 0)
-                  .map(([facetKey, facetData]) => (
-                    <div key={facetKey} className="mb-4">
-                      <h6 className="mb-2">{formatFilterLabel(facetKey)}</h6>
-                      {facetData.values.slice(0, 10).map(item => (
-                        <Form.Check
-                          key={item.value}
-                          type="checkbox"
-                          label={`${item.value} (${item.count})`}
-                          checked={isFilterSelected(facetKey, item.value)}
-                          onChange={() => handleFilterToggle(facetKey, item.value)}
-                          disabled={loading}
-                          className="mb-1"
-                        />
-                      ))}
-                      {facetData.values.length > 10 && (
-                        <small className="text-muted">+ {facetData.values.length - 10} more</small>
-                      )}
-                    </div>
-                  ))
+                  .map(([facetKey, facetData]) => {
+                    const isExpanded = expandedFacets[facetKey];
+                    const itemsToShow = isExpanded ? facetData.values : facetData.values.slice(0, 10);
+
+                    return (
+                      <div key={facetKey} className="mb-4">
+                        <h6 className="mb-2">{formatFilterLabel(facetKey)}</h6>
+                        {itemsToShow.map(item => (
+                          <Form.Check
+                            key={item.value}
+                            type="checkbox"
+                            label={`${item.value} (${item.count})`}
+                            checked={isFilterSelected(facetKey, item.value)}
+                            onChange={() => handleFilterToggle(facetKey, item.value)}
+                            disabled={loading}
+                            className="mb-1"
+                          />
+                        ))}
+                        {facetData.values.length > 10 && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 text-muted"
+                            onClick={() => toggleFacetExpanded(facetKey)}
+                          >
+                            {isExpanded ? (
+                              <>Show less</>  
+                            ) : (
+                              <>+ {facetData.values.length - 10} more</>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })
                 }
-                
+
                 {/* Show message if no filters available */}
                 {Object.keys(facets).length === 0 && !loading && (
                   <div className="text-muted text-center py-3">
@@ -477,6 +533,37 @@ const SearchResults = () => {
                     )}
                   </Card.Body>
                 </Card>
+              )}
+
+              {/* Pagination Controls */}
+              {!loading && !error && results.length > 0 && totalPages > 1 && (
+                <div className="d-flex justify-content-center align-items-center mt-4">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="me-2"
+                  >
+                    <FontAwesomeIcon icon={faChevronLeft} className="me-1" />
+                    Previous
+                  </Button>
+
+                  <span className="mx-3">
+                    Page {currentPage} of {totalPages}
+                  </span>
+
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="ms-2"
+                  >
+                    Next
+                    <FontAwesomeIcon icon={faChevronRight} className="ms-1" />
+                  </Button>
+                </div>
               )}
             </Col>
         </Row>
