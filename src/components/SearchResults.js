@@ -274,11 +274,6 @@ const SearchResults = () => {
       />
 
       <Container className="py-4">
-        {/* Search Bar */}
-        <div className="mb-4">
-          <SearchBar />
-        </div>
-
         {/* Results Header */}
         <div className="mb-3">
           <div className="d-flex justify-content-between align-items-center mb-3">
