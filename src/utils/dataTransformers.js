@@ -5,7 +5,11 @@
  */
 export const snakeToTitleCase = (str) => {
   return str
-    .split('_')
+    // Split where a letter is followed by a digit,
+    // a digit is followed by a letter, or at an underscore
+    .split(/(?=[0-9])|(?<=[0-9])|_/)
+    // Filter out empty strings that might result from double separators (e.g., _1)
+    .filter(Boolean)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
@@ -28,6 +32,9 @@ export const categorizeSpecifications = (partData) => {
       'product_status',
       'category1',
       'category2',
+      'category3',
+      'category4',
+      'category5',
       'supplier_device_package'
     ],
     'Electrical Characteristics': [
