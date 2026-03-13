@@ -38,27 +38,11 @@ const Header = () => {
               <FontAwesomeIcon icon={faSearch} />
             </Button>
           </Form>
-
-          <Nav className="ms-auto align-items-center">
-            <Nav.Link href="#products" className="d-flex align-items-center">
-              <span className="d-none d-md-inline">Products</span>
-              <span className="d-md-none">Products</span>
-            </Nav.Link>
-            <Nav.Link href="#manufacturers">
-              <span className="d-none d-md-inline">Manufacturers</span>
-              <span className="d-md-none">Brands</span>
-            </Nav.Link>
-            <Nav.Link href="#resources">Resources</Nav.Link>
-            <Nav.Link href="#cart" className="position-relative">
-              <FontAwesomeIcon icon={faShoppingCart} />
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                3
-              </span>
-            </Nav.Link>
-            <Nav.Link href="#account">
-              <FontAwesomeIcon icon={faUser} />
-            </Nav.Link>
-          </Nav>
+          {/* 3. The Spacer: This replaces your old Nav */}
+          <div className="d-none d-lg-flex ms-auto" style={{ visibility: 'hidden', width: 'auto' }}>
+             {/* This invisible div balances the Brand's width on the left */}
+             <div style={{ width: '150px' }}></div>
+          </div>
 
           {/* Mobile Search Bar */}
           <Form className="d-lg-none mt-3" onSubmit={handleSearch}>
