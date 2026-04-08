@@ -88,7 +88,7 @@ const Footer = () => {
         <Row className="py-3">
           <Col className="text-center text-muted small">
             <p className="mb-0">
-              © 2025 ComponentSearch. All rights reserved. | ISO 9001:2015 Certified
+              © 2026 ComponentSearch. All rights reserved. | ISO 9001:2015 Certified
             </p>
           </Col>
         </Row>
