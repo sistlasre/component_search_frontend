@@ -6,7 +6,7 @@ import {
   faMicrochip, faMemory, faPlug, faSatelliteDish, 
   faBatteryFull, faWifi, faLightbulb, faTools,
   faShippingFast, faShieldAlt, faAward, faHeadset,
-  faGears, faIndustry
+  faGears, faIndustry, faChevronDown, faChevronUp // Added carets
 } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from './SearchBar';
 import SEO from './SEO';
@@ -22,9 +22,16 @@ const LandingPage = () => {
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categoriesError, setCategoriesError] = useState(null);
+  const [showAllCategories, setShowAllCategories] = useState(false); // State for Categories
+
   const [manufacturers, setManufacturers] = useState([]);
   const [loadingManufacturers, setLoadingManufacturers] = useState(true);
   const [manufacturersError, setManufacturersError] = useState(null);
+  const [showAllManufacturers, setShowAllManufacturers] = useState(false); // State for Manufacturers
+
+  const ITEMS_PER_ROW = 4;
+  const INITIAL_ROWS = 2;
+  const LIMIT = ITEMS_PER_ROW * INITIAL_ROWS;
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -55,28 +62,25 @@ const LandingPage = () => {
     loadCategories();
     loadManufacturers();
   }, []);
+
+  // Helper to determine what to display
+  const visibleCategories = showAllCategories ? categories : categories.slice(0, LIMIT);
+  const visibleManufacturers = showAllManufacturers ? manufacturers : manufacturers.slice(0, LIMIT);
+
   return (
     <>
-      <SEO 
+      <SEO
         title="Electronic Components & Parts Search"
-        description="Find millions of electronic components from trusted suppliers. Real-time inventory, competitive pricing, and fast shipping."
+        description="Find millions of electronic components from trusted suppliers."
         keywords="electronic components, semiconductors, IC chips, passive components, connectors"
       />
-      
+
       {/* Hero Section */}
-      <section className="hero-section">
+      <section className="hero-section text-center py-5 bg-light">
         <Container>
-          <Row className="align-items-center">
-            <Col lg={12} className="text-center">
-              <h1 className="display-4 fw-bold mb-3">
-                Find Electronic Components Instantly
-              </h1>
-              <p className="lead mb-4">
-                Search millions of parts from authorized distributors worldwide
-              </p>
-              <SearchBar />
-            </Col>
-          </Row>
+          <h1 className="display-4 fw-bold mb-3">Find Electronic Components Instantly</h1>
+          <p className="lead mb-4">Search millions of parts from authorized distributors worldwide</p>
+          <SearchBar />
         </Container>
       </section>
 
@@ -84,108 +88,94 @@ const LandingPage = () => {
       <section className="py-5">
         <Container>
           <h2 className="text-center mb-4">Browse by Category</h2>
-          
-          {/* Loading State */}
+
           {loadingCategories && (
             <div className="text-center py-5">
-              <Spinner animation="border" role="status" variant="primary">
-                <span className="visually-hidden">Loading categories...</span>
-              </Spinner>
-              <p className="mt-3 text-muted">Loading categories...</p>
+              <Spinner animation="border" variant="primary" />
             </div>
           )}
-          
-          {/* Error State */}
-          {categoriesError && !loadingCategories && (
-            <Alert variant="danger" className="text-center">
-              <h5>Error Loading Categories</h5>
-              <p>{categoriesError}</p>
-              <Button 
-                variant="outline-danger" 
-                onClick={() => window.location.reload()}
-              >
-                Try Again
-              </Button>
-            </Alert>
-          )}
-          
-          {/* Categories Grid */}
+
           {!loadingCategories && !categoriesError && (
-            <Row>
-              {categories.map((category, index) => (
-                <Col key={index} xs={6} md={4} lg={3} className="mb-4">
-                  <Link to={`/category/${encodeURIComponent(category.category)}`} className="category-card">
-                    <div className="icon">
-                      <FontAwesomeIcon icon={iconMap[getCategoryIcon(category.category)]} />
-                    </div>
-                    <h6 className="mb-1">{category.category}</h6>
-                    <small className="text-muted">{category.count.toLocaleString()} Parts</small>
-                  </Link>
-                </Col>
-              ))}
-            </Row>
+            <>
+              <Row>
+                {visibleCategories.map((category, index) => (
+                  <Col key={index} xs={6} md={4} lg={3} className="mb-4">
+                    <Link to={`/category/${encodeURIComponent(category.category)}`} className="category-card text-decoration-none">
+                      <div className="icon mb-2">
+                        <FontAwesomeIcon icon={iconMap[getCategoryIcon(category.category)]} />
+                      </div>
+                      <h6 className="mb-1">{category.category}</h6>
+                      <small className="text-muted">{category.count.toLocaleString()} Parts</small>
+                    </Link>
+                  </Col>
+                ))}
+              </Row>
+
+              {categories.length > LIMIT && (
+                <div className="text-center mt-2">
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => setShowAllCategories(!showAllCategories)}
+                  >
+                    {showAllCategories ? 'See Less ' : 'See More '}
+                    <FontAwesomeIcon icon={showAllCategories ? faChevronUp : faChevronDown} className="ms-2" />
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </Container>
       </section>
 
       {/* Manufacturers Section */}
-      <section className="py-5">
+      <section className="py-5 bg-light">
         <Container>
           <h2 className="text-center mb-4">Browse by Manufacturer</h2>
 
-          {/* Loading State */}
           {loadingManufacturers && (
             <div className="text-center py-5">
-              <Spinner animation="border" role="status" variant="primary">
-                <span className="visually-hidden">Loading manufacturers...</span>
-              </Spinner>
-              <p className="mt-3 text-muted">Loading manufacturers...</p>
+              <Spinner animation="border" variant="primary" />
             </div>
           )}
 
-          {/* Error State */}
-          {manufacturersError && !loadingManufacturers && (
-            <Alert variant="danger" className="text-center">
-              <h5>Error Loading Manufacturers</h5>
-              <p>{manufacturersError}</p>
-              <Button
-                variant="outline-danger"
-                onClick={() => window.location.reload()}
-              >
-                Try Again
-              </Button>
-            </Alert>
-          )}
-
-          {/* Categories Grid */}
           {!loadingManufacturers && !manufacturersError && (
-            <Row>
-              {manufacturers.map((mfr, index) => (
-                <Col key={index} xs={6} md={4} lg={3} className="mb-4">
-                  <Link to={`/search?manufacturer=${encodeURIComponent(mfr.manufacturer)}`} className="category-card">
-                    <div className="icon">
-                      <FontAwesomeIcon icon={faIndustry} />
-                    </div>
-                    <h6 className="mb-1">{mfr.manufacturer}</h6>
-                    <small className="text-muted">{mfr.count.toLocaleString()} Parts</small>
-                  </Link>
-                </Col>
-              ))}
-            </Row>
+            <>
+              <Row>
+                {visibleManufacturers.map((mfr, index) => (
+                  <Col key={index} xs={6} md={4} lg={3} className="mb-4">
+                    <Link to={`/search?manufacturer=${encodeURIComponent(mfr.manufacturer)}`} className="category-card text-decoration-none">
+                      <div className="icon mb-2">
+                        <FontAwesomeIcon icon={faIndustry} />
+                      </div>
+                      <h6 className="mb-1">{mfr.manufacturer}</h6>
+                      <small className="text-muted">{mfr.count.toLocaleString()} Parts</small>
+                    </Link>
+                  </Col>
+                ))}
+              </Row>
+
+              {manufacturers.length > LIMIT && (
+                <div className="text-center mt-2">
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => setShowAllManufacturers(!showAllManufacturers)}
+                  >
+                    {showAllManufacturers ? 'See Less ' : 'See More '}
+                    <FontAwesomeIcon icon={showAllManufacturers ? faChevronUp : faChevronDown} className="ms-2" />
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </Container>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-primary-tint text-white py-5">
-        <Container>
-          <Row className="text-center">
-            <Col>
-              <h3 className="mb-3">Need Help Finding Parts?</h3>
-              <p className="mb-4">Our experts are ready to help you source hard-to-find components</p>
-              <Button variant="light" size="lg">Request a Quote</Button>
-            </Col>
-          </Row>
+      <section className="bg-primary text-white py-5">
+        <Container className="text-center">
+          <h3 className="mb-3">Need Help Finding Parts?</h3>
+          <p className="mb-4">Our experts are ready to help you source hard-to-find components</p>
+          <Button variant="light" size="lg">Request a Quote</Button>
         </Container>
       </section>
     </>
