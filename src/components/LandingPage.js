@@ -6,12 +6,11 @@ import {
   faMicrochip, faMemory, faPlug, faSatelliteDish, 
   faBatteryFull, faWifi, faLightbulb, faTools,
   faShippingFast, faShieldAlt, faAward, faHeadset,
-  faGears
+  faGears, faIndustry
 } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from './SearchBar';
 import SEO from './SEO';
-import { featuredParts, featuredManufacturers } from '../data/mockData';
-import { fetchCategories, getCategoryIcon } from '../services/api';
+import { fetchCategories, getCategoryIcon, fetchManufacturers } from '../services/api';
 
 const iconMap = {
   faMicrochip, faMemory, faPlug, faSatelliteDish,
@@ -23,6 +22,9 @@ const LandingPage = () => {
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [categoriesError, setCategoriesError] = useState(null);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [loadingManufacturers, setLoadingManufacturers] = useState(true);
+  const [manufacturersError, setManufacturersError] = useState(null);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -37,8 +39,21 @@ const LandingPage = () => {
         setLoadingCategories(false);
       }
     };
+    const loadManufacturers = async () => {
+      try {
+        const data = await fetchManufacturers();
+        setManufacturers(data);
+        setManufacturersError(null);
+      } catch (error) {
+        console.error('Failed to load manufacturers:', error);
+        setManufacturersError('Failed to load manufacturers. Please try again later.');
+      } finally {
+        setLoadingManufacturers(false);
+      }
+    };
 
     loadCategories();
+    loadManufacturers();
   }, []);
   return (
     <>
@@ -105,6 +120,54 @@ const LandingPage = () => {
                     </div>
                     <h6 className="mb-1">{category.category}</h6>
                     <small className="text-muted">{category.count.toLocaleString()} Parts</small>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          )}
+        </Container>
+      </section>
+
+      {/* Manufacturers Section */}
+      <section className="py-5">
+        <Container>
+          <h2 className="text-center mb-4">Browse by Manufacturer</h2>
+
+          {/* Loading State */}
+          {loadingManufacturers && (
+            <div className="text-center py-5">
+              <Spinner animation="border" role="status" variant="primary">
+                <span className="visually-hidden">Loading manufacturers...</span>
+              </Spinner>
+              <p className="mt-3 text-muted">Loading manufacturers...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {manufacturersError && !loadingManufacturers && (
+            <Alert variant="danger" className="text-center">
+              <h5>Error Loading Manufacturers</h5>
+              <p>{manufacturersError}</p>
+              <Button
+                variant="outline-danger"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </Button>
+            </Alert>
+          )}
+
+          {/* Categories Grid */}
+          {!loadingManufacturers && !manufacturersError && (
+            <Row>
+              {manufacturers.map((mfr, index) => (
+                <Col key={index} xs={6} md={4} lg={3} className="mb-4">
+                  <Link to={`/search?manufacturer=${encodeURIComponent(mfr.manufacturer)}`} className="category-card">
+                    <div className="icon">
+                      <FontAwesomeIcon icon={faIndustry} />
+                    </div>
+                    <h6 className="mb-1">{mfr.manufacturer}</h6>
+                    <small className="text-muted">{mfr.count.toLocaleString()} Parts</small>
                   </Link>
                 </Col>
               ))}

@@ -39,6 +39,20 @@ export const fetchSubcategories = async (category) => {
   }
 };
 
+export const fetchManufacturers = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/manufacturers`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch manufacturers: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching manufacturers:', error);
+    throw error;
+  }
+};
+
 /**
  * Map category names to appropriate icons
  * @param {string} categoryName - The category name
