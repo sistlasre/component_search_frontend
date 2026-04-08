@@ -126,10 +126,20 @@ export const categorizeSpecifications = (partData) => {
 
 /**
  * Transform raw part data from API to the format expected by the component
- * @param {Object} rawData - The raw part data from API
+ * @param {Object} apiResponse - The full API response object
  * @returns {Object} Transformed part data
  */
-export const transformPartData = (rawData) => {
+export const transformPartData = (apiResponse) => {
+  const rawData = apiResponse.part_data || apiResponse;
+  const pricingInfoList = apiResponse.part_pricing_info || [];
+  const pricingType = apiResponse.part_pricing_type || null;
+
+  // Use price_breaks from the first element
+  const priceBreaks = pricingInfoList.length > 0 ? (pricingInfoList[0].price_breaks || []) : [];
+
+  // Sum quantities across all entries
+  const totalQuantity = pricingInfoList.reduce((sum, entry) => sum + (entry.qty || 0), 0);
+
   return {
     partNumber: rawData.part_number,
     manufacturer: rawData.manufacturer || 'Unknown',
@@ -138,6 +148,10 @@ export const transformPartData = (rawData) => {
     subcategory: rawData.category2 || '',
     image: 'https://via.placeholder.com/400x300/f0f0f0/666?text=' + encodeURIComponent(rawData.part_number),
     specifications: categorizeSpecifications(rawData),
+    // Pricing info
+    priceBreaks: priceBreaks,
+    totalQuantity: totalQuantity,
+    pricingType: pricingType,
     // Preserve mock data for sections we'll integrate later
     suppliers: [],
     documents: [],

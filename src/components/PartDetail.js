@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Container, Row, Col, Card, Table, Button, Badge, Nav, Tab, Breadcrumb, Alert } from 'react-bootstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faDownload, faShoppingCart, faCheck, faTruck, faFileAlt, 
-  faCube, faClipboardList, faExclamationTriangle
-} from '@fortawesome/free-solid-svg-icons';
+import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert } from 'react-bootstrap';
 import SEO from './SEO';
 import { getPartDetails } from '../data/mockData';
 import { fetchPartDetails } from '../services/api';
@@ -14,8 +9,6 @@ import { transformPartData } from '../utils/dataTransformers';
 const PartDetail = () => {
   const { partNumber } = useParams();
   const [part, setPart] = useState(null);
-  const [selectedSupplier, setSelectedSupplier] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,10 +57,8 @@ const PartDetail = () => {
     );
   }
 
-  const getCurrentPrice = () => {
-    const supplier = part.suppliers[selectedSupplier];
-    const priceBreak = supplier.price.find(p => quantity >= p.qty) || supplier.price[0];
-    return (priceBreak.price * quantity).toFixed(2);
+  const formatQuantity = (qty) => {
+    return Number.isInteger(qty) ? qty.toLocaleString() : qty.toLocaleString();
   };
 
   return (
@@ -99,265 +90,142 @@ const PartDetail = () => {
         {/* Part Header */}
         <div className="part-detail-header mb-4">
           <Row>
-            <Col lg={4}>
+            <Col md={4}>
               <div className="part-image-gallery">
-                <img 
-                  src={part.image} 
+                <img
+                  src={part.image}
                   alt={part.partNumber}
                   style={{ maxWidth: '100%', maxHeight: '250px' }}
                 />
               </div>
             </Col>
-            <Col lg={8}>
-              <h1 className="h2 mb-1">{part.partNumber}</h1>
-              <p className="text-muted mb-3">
-                by <Link to={`/search?manufacturer=${part.manufacturer}`}>{part.manufacturer}</Link>
-              </p>
+            <Col md={8}>
+              <h1 className="h2 mb-1">
+                <span className="text-muted" style={{ fontWeight: 400 }}>{part.manufacturer}</span>{' '}
+                {part.partNumber}
+              </h1>
               <p className="lead mb-3">{part.description}</p>
-
-              <Row className="mb-3">
-                <Col xs={6} md={4}>
-                  <small className="text-muted d-block">Category</small>
-                  <strong>{part.category}</strong>
-                </Col>
-                {part.subcategory && (
-                  <Col xs={6} md={4}>
-                    <small className="text-muted d-block">Subcategory</small>
-                    <strong>{part.subcategory}</strong>
-                  </Col>
-                )}
-                {part.rawData?.product_status && (
-                  <Col xs={6} md={4}>
-                    <small className="text-muted d-block">Product Status</small>
-                    <strong>{part.rawData.product_status}</strong>
-                  </Col>
-                )}
-              </Row>
-
-              {/* Quick Actions - commented out for future use */}
-              {/* <div className="d-flex gap-2 flex-wrap">
-                <Button variant="primary" size="sm">
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                  Datasheet
-                </Button>
-                <Button variant="outline-primary" size="sm">
-                  <FontAwesomeIcon icon={faCube} className="me-2" />
-                  3D Model
-                </Button>
-                <Button variant="outline-primary" size="sm">
-                  <FontAwesomeIcon icon={faClipboardList} className="me-2" />
-                  Request Sample
-                </Button>
-              </div> */}
+              <Table borderless size="sm" className="part-info-table mb-0">
+                <tbody>
+                  <tr>
+                    <td className="part-info-label">Manufacturer</td>
+                    <td><Link to={`/search?manufacturer=${part.manufacturer}`}>{part.manufacturer}</Link></td>
+                  </tr>
+                  <tr>
+                    <td className="part-info-label">Part #</td>
+                    <td>{part.partNumber}</td>
+                  </tr>
+                  <tr>
+                    <td className="part-info-label">Category</td>
+                    <td><Link to={`/search?category=${part.category}`}>{part.category}</Link></td>
+                  </tr>
+                  {part.subcategory && (
+                    <tr>
+                      <td className="part-info-label">Subcategory</td>
+                      <td>
+                        <Link to={`/search?category=${part.category}&subcategory=${part.subcategory}`}>
+                          {part.subcategory}
+                        </Link>
+                      </td>
+                    </tr>
+                  )}
+                  {part.rawData?.product_status && (
+                    <tr>
+                      <td className="part-info-label">Status</td>
+                      <td>
+                        <Badge bg={part.rawData.product_status === 'Active' ? 'success' : 'secondary'}>
+                          {part.rawData.product_status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
             </Col>
           </Row>
         </div>
 
-        {/* Tabs */}
-        <Tab.Container defaultActiveKey="specifications">
-          <Nav variant="tabs" className="mb-4">
-            {false && (
-              <Nav.Item>
-                <Nav.Link eventKey="pricing">Pricing & Availability</Nav.Link>
-              </Nav.Item>
-            )}
-            <Nav.Item>
-              <Nav.Link eventKey="specifications">Specifications</Nav.Link>
-            </Nav.Item>
-            {false && (
-              <>
-                <Nav.Item>
-                  <Nav.Link eventKey="documents">Documents</Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link eventKey="related">Related Products</Nav.Link>
-                </Nav.Item>
-              </>
-            )}
-          </Nav>
-
-          <Tab.Content>
-            {/* Pricing Tab - kept for future use */}
-            {false && (
-              <Tab.Pane eventKey="pricing">
-              <Card>
-                <Card.Body>
-                  <h5 className="mb-3">Supplier Pricing & Availability</h5>
-                  <div className="table-responsive">
-                    <Table className="pricing-table mb-0">
-                      <thead>
-                        <tr>
-                          <th>Supplier</th>
-                          <th>Stock</th>
-                          <th>MOQ</th>
-                          <th>1+</th>
-                          <th>10+</th>
-                          <th>100+</th>
-                          <th>1000+</th>
-                          <th>Lead Time</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
+        {/* Two-column layout: Specs + Pricing */}
+        <Row>
+          {/* Left column: Specifications */}
+          <Col lg={8}>
+            <Card className="specifications-table mb-4">
+              <Card.Header className="bg-white">
+                <h5 className="mb-0">Product Specifications</h5>
+              </Card.Header>
+              <Card.Body>
+                {Object.entries(part.specifications).map(([section, specs]) => (
+                  <div key={section} className="mb-4">
+                    <h6 className="spec-section-title mb-3">{section}</h6>
+                    <Table bordered size="sm" className="spec-table mb-0">
                       <tbody>
-                        {part.suppliers.map((supplier, index) => (
-                          <tr key={index} className={selectedSupplier === index ? 'table-primary supplier-row' : 'supplier-row'}>
-                            <td className="fw-semibold">{supplier.name}</td>
-                            <td>
-                              <Badge bg={supplier.stock > 1000 ? 'success' : 'warning'}>
-                                {supplier.stock.toLocaleString()}
-                              </Badge>
+                        {Object.entries(specs).map(([key, value]) => (
+                          <tr key={key}>
+                            <td className="spec-key">
+                              {key}
                             </td>
-                            <td>{supplier.moq}</td>
-                            {[1, 10, 100, 1000].map(qty => {
-                              const price = supplier.price.find(p => p.qty <= qty);
-                              return (
-                                <td key={qty}>
-                                  {price ? `$${price.price.toFixed(3)}` : '-'}
-                                </td>
-                              );
-                            })}
-                            <td>
-                              <FontAwesomeIcon icon={faTruck} className="me-1 text-muted" />
-                              {supplier.leadTime}
-                            </td>
-                            <td>
-                              <Button 
-                                variant={selectedSupplier === index ? 'success' : 'outline-success'}
-                                size="sm"
-                                onClick={() => setSelectedSupplier(index)}
-                              >
-                                {selectedSupplier === index ? 'Selected' : 'Select'}
-                              </Button>
-                            </td>
+                            <td className="spec-value">{Array.isArray(value) ? value.join(', ') : value}</td>
                           </tr>
                         ))}
                       </tbody>
                     </Table>
                   </div>
-
-                  {/* Order Section */}
-                  <Card className="mt-4 bg-light">
-                    <Card.Body>
-                      <Row className="align-items-center">
-                        <Col md={3}>
-                          <label className="form-label">Quantity</label>
-                          <input 
-                            type="number" 
-                            className="form-control" 
-                            value={quantity}
-                            min={part.suppliers[selectedSupplier].moq}
-                            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                          />
-                        </Col>
-                        <Col md={3}>
-                          <label className="form-label">Unit Price</label>
-                          <div className="h5 mb-0">
-                            ${(getCurrentPrice() / quantity).toFixed(3)}
-                          </div>
-                        </Col>
-                        <Col md={3}>
-                          <label className="form-label">Total Price</label>
-                          <div className="h4 mb-0 text-primary">
-                            ${getCurrentPrice()}
-                          </div>
-                        </Col>
-                        <Col md={3}>
-                          <label className="form-label d-none d-md-block">&nbsp;</label>
-                          <Button variant="primary" size="lg" className="w-100">
-                            <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
-                            Add to Cart
-                          </Button>
-                        </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
-                </Card.Body>
-              </Card>
-              </Tab.Pane>
-            )}
-
-            {/* Specifications Tab */}
-            <Tab.Pane eventKey="specifications">
-              <Card className="specifications-table">
-                <Card.Body>
-                  {Object.entries(part.specifications).map(([section, specs]) => (
-                    <div key={section} className="mb-4">
-                      <h5 className="mb-3">{section}</h5>
-                      <Table striped bordered hover size="sm">
-                        <tbody>
-                          {Object.entries(specs).map(([key, value]) => (
-                            <tr key={key}>
-                              <td className="w-40" style={{ width: '40%' }}>
-                                <strong>{key}</strong>
-                              </td>
-                              <td>{value}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </div>
-                  ))}
-                </Card.Body>
-              </Card>
-            </Tab.Pane>
-
-            {/* Documents Tab - kept for future use */}
-            {false && (
-              <Tab.Pane eventKey="documents">
-              <Card>
-                <Card.Body>
-                  <h5 className="mb-3">Available Documents</h5>
-                  <Row>
-                    {part.documents.map((doc, index) => (
-                      <Col key={index} md={6} className="mb-3">
-                        <Card className="hover-shadow">
-                          <Card.Body className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <h6 className="mb-1">{doc.type}</h6>
-                              <small className="text-muted">{doc.name} • {doc.size}</small>
-                            </div>
-                            <Button variant="outline-primary" size="sm">
-                              <FontAwesomeIcon icon={faDownload} />
-                            </Button>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                </Card.Body>
-              </Card>
-              </Tab.Pane>
-            )}
-
-            {/* Related Products Tab - kept for future use */}
-            {false && (
-              <Tab.Pane eventKey="related">
-              <Row>
-                {part.relatedParts.map((relatedPart) => (
-                  <Col key={relatedPart.id} xs={12} sm={6} md={3} className="mb-4">
-                    <Card className="product-card h-100">
-                      <Link to={`/part/${relatedPart.partNumber}`} className="text-decoration-none text-dark">
-                        <div className="product-image-container">
-                          <img src={relatedPart.image} alt={relatedPart.partNumber} />
-                        </div>
-                        <Card.Body>
-                          <h6 className="text-primary-tint mb-1">{relatedPart.partNumber}</h6>
-                          <small className="text-muted d-block mb-2">{relatedPart.manufacturer}</small>
-                          <p className="small text-truncate-2">{relatedPart.description}</p>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <span className="h6 mb-0 text-accent">{relatedPart.price}</span>
-                            <Badge bg="success">In Stock</Badge>
-                          </div>
-                        </Card.Body>
-                      </Link>
-                    </Card>
-                  </Col>
                 ))}
-              </Row>
-              </Tab.Pane>
-            )}
-          </Tab.Content>
-        </Tab.Container>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Right column: Pricing & Availability */}
+          <Col lg={4}>
+            <div className="pricing-panel">
+              <Card className="pricing-card mb-4">
+                <Card.Body>
+                  {/* Stock status */}
+                  <div className="stock-status mb-3">
+                    {part.pricingType && (
+                      <Badge
+                        bg={part.pricingType === 'In Stock' ? 'success' : 'info'}
+                        className="stock-badge-label mb-2"
+                      >
+                        {part.pricingType}
+                      </Badge>
+                    )}
+                    {part.totalQuantity > 0 && (
+                      <div className="stock-quantity">
+                        <span className="stock-number">{formatQuantity(part.totalQuantity)}</span>
+                        <span className="text-muted"> available</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Price breaks table */}
+                  {part.priceBreaks && part.priceBreaks.length > 0 && (
+                    <Table bordered size="sm" className="price-breaks-table mb-0 mt-3">
+                      <thead>
+                        <tr>
+                          <th>Qty.</th>
+                          <th>Unit Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {part.priceBreaks.map((pb) => (
+                          <tr key={pb.break_qty}>
+                            <td className="price-break-qty">{formatQuantity(pb.break_qty)}+</td>
+                            <td className="price-break-price">${pb.price.toFixed(4)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
+
+                  {(!part.priceBreaks || part.priceBreaks.length === 0) && !part.pricingType && (
+                    <p className="text-muted mb-0">Pricing information not available.</p>
+                  )}
+                </Card.Body>
+              </Card>
+            </div>
+          </Col>
+        </Row>
       </Container>
     </>
   );

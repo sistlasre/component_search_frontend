@@ -142,7 +142,7 @@
 /* Part Detail Page Styles */
 .part-detail-header {
   background: white;
-  padding: 30px 0;
+  padding: 24px 0;
   border-bottom: 1px solid #E5E7EB;
 }
 
@@ -150,39 +150,113 @@
   background: #f8f9fa;
   border-radius: 12px;
   padding: 20px;
-  min-height: 300px;
+  min-height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.part-info-table {
+  max-width: 500px;
+}
+
+.part-info-table .part-info-label {
+  width: 140px;
+  color: #6B7280;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 4px 8px;
+}
+
+.part-info-table td {
+  padding: 4px 8px;
+  font-size: 0.875rem;
+}
+
+/* Specifications */
 .specifications-table {
   background: white;
   border-radius: 12px;
   overflow: hidden;
 }
 
-.specifications-table th {
-  background-color: #f8f9fa;
+.specifications-table .card-header {
+  border-bottom: 2px solid #6fa5ff;
+}
+
+.spec-section-title {
+  color: #374151;
   font-weight: 600;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.spec-table .spec-key {
+  width: 40%;
+  background-color: #f9fafb;
   color: #6B7280;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.5px;
+  font-weight: 500;
+  font-size: 0.875rem;
 }
 
-.pricing-table {
+.spec-table .spec-value {
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+/* Pricing Panel */
+.pricing-panel {
+  position: sticky;
+  top: 20px;
+}
+
+.pricing-card {
   border-radius: 12px;
-  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.pricing-table thead {
-  background: linear-gradient(135deg, #6fa5ff 0%, #5a8fff 100%);
-  color: white;
+.stock-status {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #E5E7EB;
 }
 
-.supplier-row:hover {
+.stock-badge-label {
+  font-size: 0.85rem;
+  padding: 5px 12px;
+  border-radius: 4px;
+}
+
+.stock-quantity {
+  margin-top: 8px;
+}
+
+.stock-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Price Breaks Table */
+.price-breaks-table thead th {
   background-color: #f0f7ff;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.price-breaks-table .price-break-qty {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.price-breaks-table .price-break-price {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #111827;
 }
 
 /* Navigation Breadcrumb */

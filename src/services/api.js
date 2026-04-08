@@ -76,7 +76,7 @@ export const fetchPartDetails = async (partNumber) => {
       throw new Error(`Failed to fetch part details: ${response.status}`);
     }
     const data = await response.json();
-    return data.part_data;
+    return data;
   } catch (error) {
     console.error(`Error fetching part details for ${partNumber}:`, error);
     throw error;
