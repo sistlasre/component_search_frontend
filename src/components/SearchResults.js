@@ -33,9 +33,6 @@ const SearchResults = () => {
     }
   });
 
-  // State for pending filters (before applying)
-  const [pendingFilters, setPendingFilters] = useState(selectedFilters);
-
   // State for expanded filter sections
   const [expandedFacets, setExpandedFacets] = useState({});
 
@@ -77,11 +74,6 @@ const SearchResults = () => {
 
     return `${baseUrl}?${params.toString()}`;
   }, [categoryFilter, subcategoryFilter, manufacturerFilter, searchParams, query, currentPage, pageSize]);
-
-  // Update pending filters when URL changes
-  useEffect(() => {
-    setPendingFilters(selectedFilters);
-  }, [searchParams]); // Update when URL params change
 
   // Fetch data from API
   useEffect(() => {
@@ -151,11 +143,12 @@ const SearchResults = () => {
 
     // Update URL without refreshing the page
     setSearchParams(params, { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [categoryFilter, subcategoryFilter, query, currentPage, pageSize, setSearchParams]);
 
-  // Handle filter toggle for any facet (updates pending filters)
+  // Handle filter toggle for any facet (applies immediately)
   const handleFilterToggle = (facetKey, value) => {
-    const newFilters = { ...pendingFilters };
+    const newFilters = { ...selectedFilters };
 
     if (!newFilters[facetKey]) {
       newFilters[facetKey] = [];
@@ -173,29 +166,17 @@ const SearchResults = () => {
       newFilters[facetKey].push(value);
     }
 
-    setPendingFilters(newFilters);
-  };
-
-  // Apply filters - updates URL and triggers API call
-  const applyFilters = () => {
-    updateUrlParams(pendingFilters);
+    updateUrlParams(newFilters);
   };
 
   // Clear all filters
   const clearFilters = () => {
-    const emptyFilters = {};
-    setPendingFilters(emptyFilters);
-    updateUrlParams(emptyFilters);
+    updateUrlParams({});
   };
 
-  // Check if a filter value is selected in pending filters
+  // Check if a filter value is selected
   const isFilterSelected = (facetKey, value) => {
-    return pendingFilters[facetKey] && pendingFilters[facetKey].includes(value);
-  };
-
-  // Check if there are pending changes
-  const hasPendingChanges = () => {
-    return JSON.stringify(pendingFilters) !== JSON.stringify(selectedFilters);
+    return selectedFilters[facetKey] && selectedFilters[facetKey].includes(value);
   };
 
   // Remove a specific filter value
@@ -242,6 +223,7 @@ const SearchResults = () => {
       params.delete('page');
     }
     setSearchParams(params, { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Calculate total pages
@@ -327,7 +309,7 @@ const SearchResults = () => {
           <Col lg={3} className="mb-4">
             <Card>
               <Card.Header>
-                <div className="d-flex justify-content-between align-items-center mb-2">
+                <div className="d-flex justify-content-between align-items-center">
                   <span>
                     <FontAwesomeIcon icon={faFilter} className="me-2" />
                     Filters
@@ -336,17 +318,6 @@ const SearchResults = () => {
                     Clear All
                   </Button>
                 </div>
-                {hasPendingChanges() && (
-                  <Button 
-                    variant="primary" 
-                    size="sm" 
-                    className="w-100"
-                    onClick={applyFilters}
-                    disabled={loading}
-                  >
-                    Apply Filters
-                  </Button>
-                )}
               </Card.Header>
               <Card.Body>
                 {/* Current Category and Subcategory - Only show if we have a category */}
@@ -541,7 +512,7 @@ const SearchResults = () => {
                   <Card.Body className="text-center py-5">
                     <h5>No results found</h5>
                     <p className="text-muted">Try adjusting your search or filters</p>
-                    {(Object.keys(selectedFilters).length > 0 || Object.keys(pendingFilters).length > 0) && (
+                    {Object.keys(selectedFilters).length > 0 && (
                       <Button variant="primary" onClick={clearFilters}>Clear All Filters</Button>
                     )}
                   </Card.Body>
