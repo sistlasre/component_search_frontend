@@ -14,13 +14,24 @@ const Header = () => {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+  // Custom gradient style
+  const navbarStyle = {
+    background: 'linear-gradient(220deg, #1e3a8a 0%, #3b82f6 100%)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Enhanced shadow for depth
+    borderBottom: 'none'
+  };
 
   return (
-    <Navbar bg="white" expand="lg" className="shadow-sm border-bottom sticky-top">
+    <Navbar variant="dark" expand="lg" className="shadow-sm sticky-top" style={navbarStyle}>
       <Container>
         <Navbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center text-primary-tint">
-          <FontAwesomeIcon icon={faMicrochip} className="me-2" size="lg" />
-          <span>ComponentSearch</span>
+          <img
+            src="/logo_white_small.webp" // Replace with your actual filename
+            alt="ComponentSearch Logo"
+            height="50"
+            width="125"
+            className="d-inline-block align-top me-2"
+          />
         </Navbar.Brand>
         
         <Navbar.Toggle aria-controls="navbar-nav" />
