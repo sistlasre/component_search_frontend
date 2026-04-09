@@ -436,7 +436,7 @@ const SearchResults = () => {
 
                     // Explicitly pull these fields for display
                     const manufacturer = part.manufacturer || 'Unknown';
-                    const packaging = part.packaging || '';
+                    const packaging = (part.packaging || []).join(', ');
                     const type = part.type || '';
 
                     // Get category types that ARE NOT currently active filters

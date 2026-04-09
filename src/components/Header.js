@@ -16,9 +16,9 @@ const Header = () => {
   };
   // Custom gradient style
   const navbarStyle = {
-    background: 'linear-gradient(220deg, #1e3a8a 0%, #3b82f6 100%)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Enhanced shadow for depth
-    borderBottom: 'none'
+    background: 'linear-gradient(140deg, #60a5fa 0%, #dbeafe 100%)',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)', // Subtle blue-tinted shadow
+    borderBottom: '1px solid #bfdbfe'
   };
 
   return (
@@ -26,13 +26,31 @@ const Header = () => {
       <Container>
         <Navbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center text-primary-tint">
           <img
-            src="/logo_white_small.webp" // Replace with your actual filename
+            src="/logo_white_small.webp"
             alt="ComponentSearch Logo"
             height="50"
             width="125"
             className="d-inline-block align-top me-2"
           />
         </Navbar.Brand>
+        <img
+          src="/as9120-color.png"
+          alt="AS 9120 Certification Logo"
+          height="50"
+          className="d-inline-block align-top me-2"
+        />
+        <img
+          src="/ISO_9001-2015.png"
+          alt="ISO 9001 Certification"
+          height="50"
+          className="d-inline-block align-top me-2"
+        />
+        <img
+          src="/nqa-as6081.png"
+          alt="nqa AS6081 Certification"
+          height="50"
+          className="d-inline-block align-top me-2"
+        />
         
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav">
