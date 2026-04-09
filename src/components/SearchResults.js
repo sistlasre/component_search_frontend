@@ -35,7 +35,6 @@ const SearchResults = () => {
 
   // State for pending filters (before applying)
   const [pendingFilters, setPendingFilters] = useState(selectedFilters);
-  const [sortBy, setSortBy] = useState('relevance');
 
   // State for expanded filter sections
   const [expandedFacets, setExpandedFacets] = useState({});
@@ -186,7 +185,6 @@ const SearchResults = () => {
   const clearFilters = () => {
     const emptyFilters = {};
     setPendingFilters(emptyFilters);
-    setSortBy('relevance');
     updateUrlParams(emptyFilters);
   };
 
@@ -283,17 +281,6 @@ const SearchResults = () => {
               {query && ` - "${query}"`}
               <span className="text-muted ms-2">({total} results)</span>
             </h5>
-            <Form.Select 
-              style={{ width: 'auto' }}
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              disabled={loading}
-            >
-              <option value="relevance">Sort by: Relevance</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="stock">Stock Availability</option>
-            </Form.Select>
           </div>
 
           {/* Applied Filters Display */}
