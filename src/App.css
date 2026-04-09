@@ -6,7 +6,6 @@
 
 /* Color Scheme from template */
 .btn-primary {
-  background-color: #6fa5ff;
   border-color: #6fa5ff;
 }
 
@@ -33,7 +32,7 @@
 
 /* Hero Section Styles */
 .hero-section {
-  background: linear-gradient(135deg, #6fa5ff 0%, #5a8fff 100%);
+  background: linear-gradient(135deg, #a1c4fd 0%, #7697ee 100%);
   color: white;
   padding: 60px 0;
   position: relative;
