@@ -4,16 +4,21 @@ import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert, Form, Butto
 import SEO from './SEO';
 import { fetchPartDetails } from '../services/api';
 import { transformPartData } from '../utils/dataTransformers';
+import { useCart } from '../context/CartContext';
 
 const PartDetail = () => {
   const { partNumber } = useParams();
   const [part, setPart] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Mock hooks for cart logic
   const [quantity, setQuantity] = useState(1);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const { addToCart } = useCart();
+
   const handleAddToCart = () => {
-    console.log(`Adding ${quantity} of ${part?.partNumber} to cart`);
+    if (!part) return;
+    addToCart({ partNumber: part.partNumber, manufacturer: part.manufacturer, quantity });
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 3000);
   };
 
   useEffect(() => {
@@ -36,7 +41,6 @@ const PartDetail = () => {
   if (!part) return <Container className="py-5"><Alert variant="warning">Part Not Found</Alert></Container>;
 
   const formatQuantity = (qty) => Number(qty).toLocaleString();
-  debugger;
 
   return (
     <>
@@ -158,6 +162,11 @@ const PartDetail = () => {
                   <Button variant="primary" className="w-100 fw-bold py-2 shadow-sm" onClick={handleAddToCart}>
                     Add to Cart
                   </Button>
+                  {addedToCart && (
+                    <Alert variant="success" className="mt-2 mb-0 py-2 text-center small">
+                      Added to cart!
+                    </Alert>
+                  )}
                 </div>
 
                 <div className="mt-4 text-center opacity-50">

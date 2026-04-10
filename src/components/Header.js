@@ -1,12 +1,14 @@
 import React from 'react';
-import { Navbar, Nav, Container, Form, FormControl, Button } from 'react-bootstrap';
+import { Navbar, Nav, Container, Form, FormControl, Button, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faMicrochip, faShoppingCart, faUser } from '@fortawesome/free-solid-svg-icons';
+import { useCart } from '../context/CartContext';
 
 const Header = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = React.useState('');
+  const { cartCount } = useCart();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -67,11 +69,21 @@ const Header = () => {
               <FontAwesomeIcon icon={faSearch} />
             </Button>
           </Form>
-          {/* 3. The Spacer: This replaces your old Nav */}
-          <div className="d-none d-lg-flex ms-auto" style={{ visibility: 'hidden', width: 'auto' }}>
-             {/* This invisible div balances the Brand's width on the left */}
-             <div style={{ width: '150px' }}></div>
-          </div>
+          {/* Cart Icon */}
+          <Nav className="ms-auto">
+            <Nav.Link as={Link} to="/cart" className="position-relative px-3">
+              <FontAwesomeIcon icon={faShoppingCart} size="lg" style={{ color: '#1a56db' }} />
+              {cartCount > 0 && (
+                <Badge
+                  bg="danger"
+                  pill
+                  className="cart-badge"
+                >
+                  {cartCount}
+                </Badge>
+              )}
+            </Nav.Link>
+          </Nav>
 
           {/* Mobile Search Bar */}
           <Form className="d-lg-none mt-3" onSubmit={handleSearch}>
