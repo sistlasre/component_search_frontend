@@ -6,7 +6,7 @@ import { faTrash, faShoppingCart, faArrowRight, faCheck, faTimes } from '@fortaw
 import { useCart } from '../context/CartContext';
 
 const CartPage = () => {
-  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
   const [editQuantities, setEditQuantities] = useState({});
 
   // Sync local edit state when cartItems change (e.g. after a delete)
@@ -119,9 +119,14 @@ const CartPage = () => {
       </Table>
 
       <div className="d-flex justify-content-between align-items-center mt-4">
-        <Button as={Link} to="/" variant="outline-secondary">
-          Continue Shopping
-        </Button>
+        <div className="d-flex gap-2">
+          <Button as={Link} to="/" variant="outline-secondary">
+            Continue Shopping
+          </Button>
+          <Button variant="outline-danger" onClick={clearCart}>
+            <FontAwesomeIcon icon={faTrash} className="me-2" />Clear Cart
+          </Button>
+        </div>
         <Button as={Link} to="/checkout" variant="primary" size="lg" className="fw-bold">
           Proceed to Checkout <FontAwesomeIcon icon={faArrowRight} className="ms-2" />
         </Button>

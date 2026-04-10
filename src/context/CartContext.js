@@ -13,39 +13,45 @@ const loadCart = () => {
   }
 };
 
+const saveCart = (items) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+};
+
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(loadCart);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cartItems));
-  }, [cartItems]);
-
   const addToCart = useCallback((item) => {
-    setCartItems((prev) => {
-      const existing = prev.find((i) => i.partNumber === item.partNumber);
-      if (existing) {
-        return prev.map((i) =>
-          i.partNumber === item.partNumber
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i
-        );
-      }
-      return [...prev, { partNumber: item.partNumber, manufacturer: item.manufacturer, quantity: item.quantity }];
-    });
+    const current = loadCart();
+    const existing = current.find((i) => i.partNumber === item.partNumber);
+    let updated;
+    if (existing) {
+      updated = current.map((i) =>
+        i.partNumber === item.partNumber
+          ? { ...i, quantity: i.quantity + item.quantity }
+          : i
+      );
+    } else {
+      updated = [...current, { partNumber: item.partNumber, manufacturer: item.manufacturer, quantity: item.quantity }];
+    }
+    saveCart(updated);
+    setCartItems(updated);
   }, []);
 
   const removeFromCart = useCallback((partNumber) => {
-    setCartItems((prev) => prev.filter((i) => i.partNumber !== partNumber));
+    const updated = loadCart().filter((i) => i.partNumber !== partNumber);
+    saveCart(updated);
+    setCartItems(updated);
   }, []);
 
   const updateQuantity = useCallback((partNumber, quantity) => {
     if (quantity < 1) return;
-    setCartItems((prev) =>
-      prev.map((i) => (i.partNumber === partNumber ? { ...i, quantity } : i))
-    );
+    const updated = loadCart().map((i) => (i.partNumber === partNumber ? { ...i, quantity } : i));
+    saveCart(updated);
+    setCartItems(updated);
   }, []);
 
   const clearCart = useCallback(() => {
+    saveCart([]);
     setCartItems([]);
   }, []);
 
