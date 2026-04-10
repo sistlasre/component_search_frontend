@@ -156,7 +156,7 @@ const PartDetail = () => {
                     </InputGroup>
                   </Form.Group>
                   <Button variant="primary" className="w-100 fw-bold py-2 shadow-sm" onClick={handleAddToCart}>
-                    QTY shopping cart add
+                    Add to Cart
                   </Button>
                 </div>
 
