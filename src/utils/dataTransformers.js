@@ -25,16 +25,15 @@ export const categorizeSpecifications = (partData) => {
   // Define categories and their associated fields
   const categoryMappings = {
     'General': [
-      'part_number', 
-      'manufacturer', 
-      'series', 
-      'packaging', 
-      'product_status',
+      'part_number',
+      'manufacturer',
       'category1',
       'category2',
       'category3',
       'category4',
       'category5',
+      'series',
+      'packaging',
       'supplier_device_package'
     ],
     'Electrical Characteristics': [
@@ -78,46 +77,40 @@ export const categorizeSpecifications = (partData) => {
 
   // Fields to exclude from specifications display
   const excludeFields = ['url', 'created_at', 'updated_at', 'id'];
+  Object.entries(categoryMappings).forEach(([category, fields]) => {
+    fields.forEach(fieldKey => {
+      const value = partData[fieldKey];
 
-  // Categorize each field
+      // Original validation logic
+      if (value === null || value === undefined || value === '' || value === '-') {
+        return;
+      }
+
+      if (!specifications[category]) {
+        specifications[category] = {};
+      }
+
+      specifications[category][snakeToTitleCase(fieldKey)] = value;
+    });
+  });
+
+  // Handle "Other Specifications" and Uncategorized fields
+  const categorizedKeys = Object.values(categoryMappings).flat();
+
   Object.entries(partData).forEach(([key, value]) => {
-    // Skip excluded fields
-    if (excludeFields.includes(key)) {
+    if (excludeFields.includes(key) || categorizedKeys.includes(key)) {
       return;
     }
 
-    // Skip null or undefined values
     if (value === null || value === undefined || value === '' || value === '-') {
       return;
     }
 
-    let categorized = false;
-    
-    // Find the appropriate category for this field
-    for (const [category, fields] of Object.entries(categoryMappings)) {
-      if (fields.includes(key)) {
-        if (!specifications[category]) {
-          specifications[category] = {};
-        }
-        specifications[category][snakeToTitleCase(key)] = value;
-        categorized = true;
-        break;
-      }
-    }
-
-    // If not categorized, put in "Other Specifications"
-    if (!categorized && key != 'price' && key != 'quantity_available') {
+    if (key !== 'price' && key !== 'quantity_available') {
       if (!specifications['Other Specifications']) {
         specifications['Other Specifications'] = {};
       }
       specifications['Other Specifications'][snakeToTitleCase(key)] = value;
-    }
-  });
-
-  // Remove empty categories
-  Object.keys(specifications).forEach(key => {
-    if (Object.keys(specifications[key]).length === 0) {
-      delete specifications[key];
     }
   });
 
