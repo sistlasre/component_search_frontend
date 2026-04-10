@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Table, Button, Form, InputGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faShoppingCart, faArrowRight, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faShoppingCart, faArrowRight, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '../context/CartContext';
 
 const CartPage = () => {
@@ -26,6 +26,11 @@ const CartPage = () => {
 
   const applyQuantity = (partNumber) => {
     updateQuantity(partNumber, editQuantities[partNumber]);
+  };
+
+  const discardQuantity = (partNumber) => {
+    const original = cartItems.find((i) => i.partNumber === partNumber)?.quantity;
+    setEditQuantities((prev) => ({ ...prev, [partNumber]: original }));
   };
 
   const isChanged = (partNumber) => {
@@ -86,6 +91,15 @@ const CartPage = () => {
                     title="Apply quantity"
                   >
                     <FontAwesomeIcon icon={faCheck} />
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    disabled={!isChanged(item.partNumber)}
+                    onClick={() => discardQuantity(item.partNumber)}
+                    title="Discard change"
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
                   </Button>
                 </div>
               </td>
