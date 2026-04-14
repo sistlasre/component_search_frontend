@@ -78,52 +78,60 @@ const PartDetail = () => {
         <h1 className="h2 mb-4" style={{ fontWeight: 400 }}>{part.partNumber}</h1>
 
         <Row>
-          {/* Left Column: Image (Top) and Part Header Info (Below) */}
-          <Col lg={8} className="d-flex flex-column ps-5">
-            <div className="part-image-gallery">
-                <img
-                  src={part.image}
-                  alt={part.partNumber}
-                  style={{ maxWidth: '100%', maxHeight: '250px' }}
-                />
-              </div>
+          {/* Left Column: Image and Header Info side-by-side */}
+          <Col lg={8}>
+            <Row>
+              {/* Image Section */}
+              <Col md={5} className="mb-4">
+                <div className="border p-3 rounded bg-white text-center d-flex align-items-center justify-content-center" style={{ minHeight: '250px' }}>
+                  <img
+                    src={part.image}
+                    alt={part.partNumber}
+                    style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain' }}
+                  />
+                </div>
+              </Col>
 
-            <div className="part-header-info">
-              <h2 className="h4 mb-1" style={{ fontWeight: 500 }}>{part.manufacturer}</h2>
-              <p className="text-muted mb-3">{part.description}</p>
+              {/* Info Section */}
+              <Col md={7}>
+                <div className="ps-md-2">
+                  <h2 className="h4 mb-1" style={{ fontWeight: 500 }}>{part.manufacturer}</h2>
+                  <p className="text-muted mb-3">{part.description}</p>
 
-              <Table borderless size="sm" className="mb-4" style={{ maxWidth: '500px' }}>
-                <tbody>
-                  <tr>
-                    <td className="part-info-label">Manufacturer</td>
-                    <td><Link to={`/search?manufacturer=${part.manufacturer}`}>{part.manufacturer}</Link></td>
-                  </tr>
-                  <tr>
-                    <td className="part-info-label">Part #</td>
-                    <td>{part.partNumber}</td>
-                  </tr>
-                  <tr>
-                    <td className="part-info-label">Category</td>
-                    <td><Link to={`/search?category=${part.category}`}>{part.category}</Link></td>
-                  </tr>
-                  {part.subcategory && (
-                    <tr>
-                      <td className="part-info-label">Subcategory</td>
-                      <td>
-                        <Link to={`/search?category=${part.category}&subcategory=${part.subcategory}`}>
-                          {part.subcategory}
-                        </Link>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-            </div>
+                  <Table borderless size="sm" className="mb-4">
+                    <tbody>
+                      <tr>
+                        <td className="fw-bold py-1" style={{ width: '120px' }}>Manufacturer</td>
+                        <td className="py-1"><Link to={`/search?manufacturer=${part.manufacturer}`} className="text-decoration-none">{part.manufacturer}</Link></td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold py-1">Part #</td>
+                        <td className="py-1">{part.partNumber}</td>
+                      </tr>
+                      <tr>
+                        <td className="fw-bold py-1">Category</td>
+                        <td className="py-1"><Link to={`/search?category=${part.category}`} className="text-decoration-none">{part.category}</Link></td>
+                      </tr>
+                      {part.subcategory && (
+                        <tr>
+                          <td className="fw-bold py-1">Subcategory</td>
+                          <td className="py-1">
+                            <Link to={`/search?category=${part.category}&subcategory=${part.subcategory}`} className="text-decoration-none">
+                              {part.subcategory}
+                            </Link>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </Table>
+                </div>
+              </Col>
+            </Row>
           </Col>
 
-          {/* Right Column: Pricing Card (Design from first output) */}
+          {/* Right Column: Pricing Card */}
           <Col lg={4}>
-            <Card className="shadow-sm border-0">
+            <Card className="shadow-sm">
               <Card.Body>
                 <div className="mb-3">
                   <span className="h4 text-success fw-bold">{formatQuantity(part.totalQuantity)}</span>
@@ -133,21 +141,20 @@ const PartDetail = () => {
                 <Table bordered hover size="sm" className="small mb-4">
                   <thead className="bg-light">
                     <tr>
-                      <th className="text-primary py-2">QTY.</th>
-                      <th className="text-primary py-2">UNIT PRICE</th>
+                      <th className="text-primary py-2 px-3">QTY.</th>
+                      <th className="text-primary py-2 px-3">UNIT PRICE</th>
                     </tr>
                   </thead>
                   <tbody>
                     {part.priceBreaks?.map((pb) => (
                       <tr key={pb.break_qty}>
-                        <td className="py-2">{formatQuantity(pb.break_qty)}+</td>
-                        <td className="py-2">${pb.price.toFixed(4)}</td>
+                        <td className="py-2 px-3">{formatQuantity(pb.break_qty)}+</td>
+                        <td className="py-2 px-3">${pb.price.toFixed(4)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </Table>
 
-                {/* Integrated Shopping Cart Section */}
                 <div className="bg-light p-3 rounded border">
                   <Form.Group className="mb-3">
                     <InputGroup>
@@ -163,7 +170,7 @@ const PartDetail = () => {
                     Add to Cart
                   </Button>
                   {addedToCart && (
-                    <Alert variant="success" className="mt-2 mb-0 py-2 text-center small">
+                    <Alert variant="success" className="mt-2 mb-0 py-2 text-center small border-0">
                       Added to cart!
                     </Alert>
                   )}
@@ -185,7 +192,7 @@ const PartDetail = () => {
         {/* Bottom Section: Specifications (Full Width) */}
         <Row className="mt-5">
           <Col xs={12}>
-            <Card className="border-0 shadow-sm">
+            <Card className="shadow-sm">
               <Card.Header className="bg-white py-3 border-bottom">
                 <h5 className="mb-0 fw-bold">Product Specifications</h5>
               </Card.Header>
