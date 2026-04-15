@@ -1,24 +1,18 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Container,
   Row,
   Col,
   Card,
   Spinner,
-  Alert,
   Button,
-  Badge,
-  Toast,
-  ToastContainer,
   Form,
-  InputGroup
+  Toast,
+  ToastContainer
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faUser, faCheck, faTimes, faPencil} from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCheck, faTimes, faPencil, faTruck } from '@fortawesome/free-solid-svg-icons';
 import { apiService } from '../services/userManagementService';
-
-const normalize = (str) => (str || "").toLowerCase().replace(/[^a-z0-9]/gi, "");
 
 const AccountManagement = () => {
   const [requestingUser, setRequestingUser] = useState(null);
@@ -26,37 +20,36 @@ const AccountManagement = () => {
   const [error, setError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
-  const [actionLoading, setActionLoading] = useState(null);
 
   // Requesting user editing state
   const [editingRequestingUser, setEditingRequestingUser] = useState(false);
   const [requestingUserEditData, setRequestingUserEditData] = useState({});
   const [savingRequestingUser, setSavingRequestingUser] = useState(false);
 
-  // Refs for inline editing inputs
-  const passwordInputRefs = useRef({});
-
-  const USER_STATUS_MAPPINGS = {
-    'active': { badge_type: 'success', label: 'Active' },
-    'inactive': { badge_type: 'danger', label: 'Inactive' },
-    'pending': { badge_type: 'warning', label: 'Pending' },
-  };
-
   const fetchUser = async () => {
     try {
       setLoading(true);
       setError('');
       const response = await apiService.getUser();
-      setRequestingUser(response.data?.requesting_user || null);
+      const userData = response.data?.requesting_user || null;
+      // Handle stringified JSON from the database
+      if (userData && typeof userData.shipping_address === 'string') {
+        try {
+          userData.shipping_address = JSON.parse(userData.shipping_address);
+        } catch (e) {
+          console.error("Failed to parse shipping address", e);
+          userData.shipping_address = { street: '', city: '', state: '', zip: '' };
+        }
+      }
+      setRequestingUser(userData);
     } catch (err) {
       console.error('Failed to fetch user:', err);
-      setError('Failed to load user information. Please try again.');
+      setError('Failed to load user information');
     } finally {
       setLoading(false);
     }
   };
 
-  // Requesting user functions
   const startEditingRequestingUser = () => {
     setRequestingUserEditData({
       password: '',
@@ -66,8 +59,14 @@ const AccountManagement = () => {
       originalFirstName: requestingUser?.first_name || '',
       lastName: requestingUser?.last_name || '',
       originalLastName: requestingUser?.last_name || '',
-      pricingPlan: requestingUser?.pricing_plan || 'free',
-      originalPricingPlan: requestingUser?.pricing_plan || 'free'
+      // Initialize shipping address from existing data or empty fields
+      shippingAddress: requestingUser?.shipping_address || {
+        street: '',
+        city: '',
+        state: '',
+        zip: ''
+      },
+      originalShippingAddress: JSON.stringify(requestingUser?.shipping_address || {})
     });
     setEditingRequestingUser(true);
   };
@@ -78,11 +77,9 @@ const AccountManagement = () => {
   };
 
   const saveRequestingUserChanges = async () => {
-    // Track credits for local update only
-    let creditsForLocalUpdate = null;
-
     try {
       const payload = {};
+
       if (requestingUserEditData.password?.trim()) {
         payload.new_password = requestingUserEditData.password.trim();
       }
@@ -96,6 +93,13 @@ const AccountManagement = () => {
         payload.new_last_name = requestingUserEditData.lastName.trim();
       }
 
+      // Check if shipping address has changed
+      const currentAddressJson = JSON.stringify(requestingUserEditData.shippingAddress);
+      if (currentAddressJson !== requestingUserEditData.originalShippingAddress) {
+        // Send the address as a JSON string per your requirement
+        payload.new_shipping_address = currentAddressJson;
+      }
+
       if (Object.keys(payload).length === 0) {
         cancelEditingRequestingUser();
         return;
@@ -104,14 +108,14 @@ const AccountManagement = () => {
       setSavingRequestingUser(true);
       await apiService.updateUser(requestingUser.user_id, payload);
 
-      // Update local state
+      // Update local state (parse back to object for UI display)
       setRequestingUser(prev => ({
         ...prev,
         ...(payload.new_email ? { email: payload.new_email } : {}),
         ...(payload.new_first_name ? { first_name: payload.new_first_name } : {}),
         ...(payload.new_last_name ? { last_name: payload.new_last_name } : {}),
-        ...(payload.new_pricing_plan ? { pricing_plan: payload.new_pricing_plan } : {}),
-        ...(creditsForLocalUpdate !== null ? { num_part_credits: creditsForLocalUpdate } : {})
+        // payload.new_shipping_address is currently a string, so parse it for the UI
+        ...(payload.new_shipping_address ? { shipping_address: JSON.parse(payload.new_shipping_address) } : {})
       }));
 
       setToastMessage('Your account updated successfully.');
@@ -130,9 +134,10 @@ const AccountManagement = () => {
     fetchUser();
   }, []);
 
+  if (loading) return <Container className="py-5 text-center"><Spinner animation="border" /></Container>;
+
   return (
     <Container fluid className="py-3">
-      {/* Requesting User Section */}
       {requestingUser && (
         <Row className="mb-4">
           <Col>
@@ -141,40 +146,21 @@ const AccountManagement = () => {
                 <h5 className="mb-0">Account Information</h5>
               </Card.Header>
               <Card.Body>
-                <div className="d-flex justify-content-between align-items-center mb-3">
+                <div className="d-flex justify-content-between align-items-center mb-4">
                   <h6 className="mb-0">
                     <FontAwesomeIcon icon={faUser} className="me-2" />
                     Your Account Details
                   </h6>
                   {!editingRequestingUser ? (
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={startEditingRequestingUser}
-                    >
-                      <FontAwesomeIcon icon={faPencil} className="me-2" />
-                      Edit
+                    <Button variant="outline-primary" size="sm" onClick={startEditingRequestingUser}>
+                      <FontAwesomeIcon icon={faPencil} className="me-2" /> Edit
                     </Button>
                   ) : (
                     <div className="d-flex gap-2">
-                      <Button
-                        variant="success"
-                        size="sm"
-                        onClick={saveRequestingUserChanges}
-                        disabled={savingRequestingUser}
-                      >
-                        {savingRequestingUser ? (
-                          <Spinner as="span" animation="border" size="sm" />
-                        ) : (
-                          <><FontAwesomeIcon icon={faCheck} className="me-1" /> Save</>
-                        )}
+                      <Button variant="success" size="sm" onClick={saveRequestingUserChanges} disabled={savingRequestingUser}>
+                        {savingRequestingUser ? <Spinner as="span" animation="border" size="sm" /> : <><FontAwesomeIcon icon={faCheck} className="me-1" /> Save</>}
                       </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={cancelEditingRequestingUser}
-                        disabled={savingRequestingUser}
-                      >
+                      <Button variant="secondary" size="sm" onClick={cancelEditingRequestingUser} disabled={savingRequestingUser}>
                         <FontAwesomeIcon icon={faTimes} className="me-1" /> Cancel
                       </Button>
                     </div>
@@ -186,6 +172,7 @@ const AccountManagement = () => {
                     <div className="mb-3">
                       <strong>Username:</strong> <span className="ms-2">{requestingUser.username}</span>
                     </div>
+
                     <div className="mb-3">
                       <strong>Name:</strong>
                       {editingRequestingUser ? (
@@ -195,7 +182,6 @@ const AccountManagement = () => {
                             placeholder="First name"
                             value={requestingUserEditData.firstName || ''}
                             onChange={(e) => setRequestingUserEditData(prev => ({...prev, firstName: e.target.value}))}
-                            disabled={savingRequestingUser}
                             style={{ width: '140px' }}
                           />
                           <Form.Control
@@ -203,66 +189,120 @@ const AccountManagement = () => {
                             placeholder="Last name"
                             value={requestingUserEditData.lastName || ''}
                             onChange={(e) => setRequestingUserEditData(prev => ({...prev, lastName: e.target.value}))}
-                            disabled={savingRequestingUser}
                             style={{ width: '140px' }}
                           />
                         </div>
                       ) : (
                         <span className="ms-2">
-                          {requestingUser.first_name || requestingUser.last_name
-                            ? `${requestingUser.first_name || ''} ${requestingUser.last_name || ''}`.trim()
-                            : 'Not provided'}
+                          {`${requestingUser.first_name || ''} ${requestingUser.last_name || ''}`.trim() || 'Not provided'}
                         </span>
                       )}
                     </div>
-                    {requestingUser.share_id && (
-                        <div className="mb-3">
-                          <strong>Affiliate Link:</strong>
-                          <Button
-                            variant="link"
-                            className="p-0 ms-1"
-                            onClick={() => onCopyAffiliateUrl(requestingUser.share_id)}
-                          >
-                            Share Affiliate URL
-                          </Button>
-                        </div>
-                    )}
-                    {requestingUser.affiliate_username && (
-                      <div className="mb-3">
-                        <strong>Referrer User:</strong> <span className="ms-2">{requestingUser.affiliate_username}</span>
-                      </div>
-                    )}
+
                     <div className="mb-3">
                       <strong>Email:</strong>
                       {editingRequestingUser ? (
                         <Form.Control
                           type="email"
-                          placeholder="Email address"
                           value={requestingUserEditData.email || ''}
                           onChange={(e) => setRequestingUserEditData(prev => ({...prev, email: e.target.value}))}
-                          disabled={savingRequestingUser}
                           className="ms-2 d-inline-block"
-                          style={{ width: 'auto', maxWidth: '300px' }}
+                          style={{ width: 'auto', minWidth: '250px' }}
                         />
                       ) : (
-                        <span className="ms-2">{requestingUser.email || 'Not provided'}</span>
+                        <span className="ms-2">{requestingUser.email}</span>
                       )}
                     </div>
+
                     <div className="mb-3">
                       <strong>Password:</strong>
                       {editingRequestingUser ? (
                         <Form.Control
                           type="password"
-                          autoComplete="off"
-                          placeholder="New password (leave blank to keep current)"
+                          placeholder="New password (leave blank)"
                           value={requestingUserEditData.password || ''}
                           onChange={(e) => setRequestingUserEditData(prev => ({...prev, password: e.target.value}))}
-                          disabled={savingRequestingUser}
                           className="ms-2 d-inline-block"
-                          style={{ width: 'auto', maxWidth: '300px' }}
+                          style={{ width: 'auto', minWidth: '250px' }}
                         />
                       ) : (
                         <span className="ms-2 text-muted">••••••••</span>
+                      )}
+                    </div>
+                  </Col>
+
+                  <Col md={6}>
+                    <div className="mb-3">
+                      <h6 className="text-muted border-bottom pb-2">
+                        <FontAwesomeIcon icon={faTruck} className="me-2" />
+                        Shipping Address
+                      </h6>
+                      {editingRequestingUser ? (
+                        <div className="mt-2 p-3 border rounded bg-light">
+                          <Form.Group className="mb-2">
+                            <Form.Label className="small mb-1">Street Address</Form.Label>
+                            <Form.Control
+                              type="text"
+                              value={requestingUserEditData.shippingAddress?.street || ''}
+                              onChange={(e) => setRequestingUserEditData(prev => ({
+                                ...prev,
+                                shippingAddress: { ...prev.shippingAddress, street: e.target.value }
+                              }))}
+                            />
+                          </Form.Group>
+                          <Row>
+                            <Col sm={6}>
+                              <Form.Group className="mb-2">
+                                <Form.Label className="small mb-1">City</Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  value={requestingUserEditData.shippingAddress?.city || ''}
+                                  onChange={(e) => setRequestingUserEditData(prev => ({
+                                    ...prev,
+                                    shippingAddress: { ...prev.shippingAddress, city: e.target.value }
+                                  }))}
+                                />
+                              </Form.Group>
+                            </Col>
+                            <Col sm={3}>
+                              <Form.Group className="mb-2">
+                                <Form.Label className="small mb-1">State</Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  value={requestingUserEditData.shippingAddress?.state || ''}
+                                  onChange={(e) => setRequestingUserEditData(prev => ({
+                                    ...prev,
+                                    shippingAddress: { ...prev.shippingAddress, state: e.target.value }
+                                  }))}
+                                />
+                              </Form.Group>
+                            </Col>
+                            <Col sm={3}>
+                              <Form.Group className="mb-2">
+                                <Form.Label className="small mb-1">Zip</Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  value={requestingUserEditData.shippingAddress?.zip || ''}
+                                  onChange={(e) => setRequestingUserEditData(prev => ({
+                                    ...prev,
+                                    shippingAddress: { ...prev.shippingAddress, zip: e.target.value }
+                                  }))}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
+                        </div>
+                      ) : (
+                        <div className="p-2">
+                          {requestingUser.shipping_address?.street ? (
+                            <address className="mb-0">
+                              {requestingUser.shipping_address.street}<br />
+                              {requestingUser.shipping_address.city}, {requestingUser.shipping_address.state} {requestingUser.shipping_address.zip}
+                            </address>
+                          ) : (
+                            <span className="text-muted italic">No shipping address provided.</span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </Col>
@@ -273,7 +313,6 @@ const AccountManagement = () => {
         </Row>
       )}
 
-      {/* Toast */}
       <ToastContainer className="p-3" position="top-end">
         <Toast
           show={showToast}
@@ -283,9 +322,7 @@ const AccountManagement = () => {
           bg={toastMessage?.toLowerCase()?.includes('successfully') ? "success" : "danger"}
         >
           <Toast.Header>
-            <strong className="me-auto">
-              {toastMessage?.toLowerCase()?.includes('successfully') ? 'Success' : 'Error'}
-            </strong>
+            <strong className="me-auto">Notification</strong>
           </Toast.Header>
           <Toast.Body className="text-white">{toastMessage}</Toast.Body>
         </Toast>
