@@ -2,13 +2,21 @@ import React from 'react';
 import { Navbar, Nav, Container, Form, FormControl, Button, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faMicrochip, faShoppingCart, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faMicrochip, faShoppingCart, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const Header = () => {
+  const { user, logout } = useAuth();
+
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = React.useState('');
   const { cartCount } = useCart();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -71,6 +79,23 @@ const Header = () => {
           </Form>
           {/* Cart Icon */}
           <Nav className="ms-auto">
+            {user ? (
+              <>
+                <Navbar.Text className="me-3 text-dark">
+                  <FontAwesomeIcon icon={faUser} className="me-1" />
+                  Welcome, {user.username || user.user_id}
+                </Navbar.Text>
+                <Button variant="outline-primary" size="sm" onClick={handleLogout}>
+                  <FontAwesomeIcon icon={faSignOutAlt} className="me-1" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Nav.Link as={Link} to="/login" className="text-dark">Login</Nav.Link>
+                <Nav.Link as={Link} to="/register" className="text-dark">Register</Nav.Link>
+              </>
+            )}
             <Nav.Link as={Link} to="/cart" className="position-relative px-3">
               <FontAwesomeIcon icon={faShoppingCart} size="lg" style={{ color: '#1a56db' }} />
               {cartCount > 0 && (
