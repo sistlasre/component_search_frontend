@@ -84,7 +84,7 @@ const Header = () => {
                 <Navbar.Text className="me-3 text-dark">
                   <Link to="/account" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <FontAwesomeIcon icon={faUser} className="me-1" />
-                    Account Page
+                    {user.username || user.user_id}
                   </Link>
                 </Navbar.Text>
                 <Button variant="outline-primary" size="sm" onClick={handleLogout}>
