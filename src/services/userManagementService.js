@@ -79,6 +79,10 @@ class ApiService {
     return this.api.get('/users', { params });
   }
 
+  async getUser() {
+    return this.api.get('/user');
+  }
+
   async updateUser(userId, userData) {
     return this.api.put(`/user/${userId}`, userData);
   }
