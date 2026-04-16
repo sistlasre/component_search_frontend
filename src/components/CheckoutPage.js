@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Table, Form, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Form, Button, Alert, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import { useCart } from '../context/CartContext';
 import { apiService } from '../services/userManagementService';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +24,11 @@ const CheckoutPage = () => {
   const [form, setForm] = useState(initialForm);
   const [validated, setValidated] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  // 'order' = firm purchase; 'request' = inquiry (may include notes, pricing TBD)
+  const [recordType, setRecordType] = useState('order');
+  const [submittedRecord, setSubmittedRecord] = useState(null);
 
   const fillFormFromUserInfo = async () => {
     if (user) {
@@ -60,7 +65,7 @@ const CheckoutPage = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formEl = e.currentTarget;
     if (!formEl.checkValidity()) {
@@ -69,35 +74,63 @@ const CheckoutPage = () => {
       return;
     }
 
+    const { notes, ...contact } = form;
+
     const payload = {
-      contact: { ...form },
+      recordType,
+      contact,
+      notes,
       items: cartItems.map((item) => ({
-        partNumber: item.partNumber,
+        part_number: item.partNumber,
         manufacturer: item.manufacturer,
         quantity: item.quantity,
       })),
     };
 
-    // Ready for future backend API call
-    console.log('Checkout payload:', payload);
-
-    clearCart();
-    setSubmitted(true);
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const resp = await apiService.createOrder(payload);
+      setSubmittedRecord(resp.data?.record || null);
+      // Both Orders and Requests clear the cart on submission.
+      await clearCart();
+      setSubmitted(true);
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Submission failed';
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
+    const submittedWasRequest = submittedRecord?.record_type === 'request';
+    const headline = submittedWasRequest ? 'Request Submitted!' : 'Order Submitted!';
+    const subline = submittedWasRequest
+      ? 'Thank you — your inquiry has been received. Our team will review and respond shortly.'
+      : 'Thank you for your order. We will review and follow up with you shortly.';
     return (
       <Container className="py-5 text-center">
         <div className="mb-4">
           <span style={{ fontSize: '3rem' }}>✓</span>
         </div>
-        <h2 className="mb-3">Order Submitted!</h2>
-        <p className="text-muted mb-4">
-          Thank you for your order. We will review your request and reach out to you shortly.
-        </p>
-        <Button as={Link} to="/" variant="primary">
-          Back to Home
-        </Button>
+        <h2 className="mb-3">{headline}</h2>
+        <p className="text-muted mb-2">{subline}</p>
+        {submittedRecord?.record_id && (
+          <p className="text-muted mb-4">
+            Reference ID: <code>{submittedRecord.record_id}</code>
+          </p>
+        )}
+        <div className="d-flex justify-content-center gap-2">
+          {user && (
+            <Button as={Link} to="/orders" variant="outline-primary">
+              View My Orders &amp; Requests
+            </Button>
+          )}
+          <Button as={Link} to="/" variant="primary">
+            Back to Home
+          </Button>
+        </div>
       </Container>
     );
   }
@@ -166,6 +199,30 @@ const CheckoutPage = () => {
               <h5 className="mb-0 fw-bold">Contact &amp; Shipping Information</h5>
             </Card.Header>
             <Card.Body>
+              {submitError && <Alert variant="danger">{submitError}</Alert>}
+
+              <div className="mb-3">
+                <div className="mb-2 fw-semibold">What would you like to submit?</div>
+                <ToggleButtonGroup
+                  type="radio"
+                  name="recordType"
+                  value={recordType}
+                  onChange={setRecordType}
+                >
+                  <ToggleButton id="rt-order" value="order" variant={recordType === 'order' ? 'primary' : 'outline-primary'}>
+                    Order
+                  </ToggleButton>
+                  <ToggleButton id="rt-request" value="request" variant={recordType === 'request' ? 'primary' : 'outline-primary'}>
+                    Request / Inquiry
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                <div className="text-muted small mt-1">
+                  {recordType === 'order'
+                    ? 'Firm purchase — we\u2019ll follow up to finalize shipping and pricing.'
+                    : 'Inquiry only — use the notes field below to describe what you need. Pricing may be provided back to you.'}
+                </div>
+              </div>
+
               <Form noValidate validated={validated} onSubmit={handleSubmit}>
                 <Row className="mb-3">
                   <Col md={6}>
@@ -291,8 +348,18 @@ const CheckoutPage = () => {
                   />
                 </Form.Group>
 
-                <Button type="submit" variant="primary" size="lg" className="w-100 fw-bold">
-                  Submit Order
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-100 fw-bold"
+                  disabled={submitting}
+                >
+                  {submitting
+                    ? 'Submitting…'
+                    : recordType === 'order'
+                      ? 'Submit Order'
+                      : 'Submit Request'}
                 </Button>
               </Form>
             </Card.Body>

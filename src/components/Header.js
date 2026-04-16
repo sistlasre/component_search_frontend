@@ -2,7 +2,7 @@ import React from 'react';
 import { Navbar, Nav, Container, Form, FormControl, Button, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faMicrochip, faShoppingCart, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faMicrochip, faShoppingCart, faUser, faSignOutAlt, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -87,6 +87,10 @@ const Header = () => {
                     {user.username || user.user_id}
                   </Link>
                 </Navbar.Text>
+                <Nav.Link as={Link} to="/orders" className="text-dark me-2" title="My Orders & Requests">
+                  <FontAwesomeIcon icon={faFileInvoice} className="me-1" />
+                  Orders
+                </Nav.Link>
                 <Button variant="outline-primary" size="sm" onClick={handleLogout}>
                   <FontAwesomeIcon icon={faSignOutAlt} className="me-1" />
                   Logout

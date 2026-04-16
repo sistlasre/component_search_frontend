@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { apiService, getOrCreateSessionId } from '../services/userManagementService';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -14,51 +16,216 @@ const loadCart = () => {
 };
 
 const saveCart = (items) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    /* ignore */
+  }
+};
+
+// The backend uses snake_case (part_number). The frontend historically uses
+// camelCase (partNumber). These helpers keep the two worlds in sync.
+const fromServerItem = (it) => ({
+  partNumber: it.part_number || it.partNumber,
+  manufacturer: it.manufacturer || '',
+  quantity: Number(it.quantity) || 1,
+});
+
+const toServerItem = (it) => ({
+  part_number: it.partNumber,
+  manufacturer: it.manufacturer || '',
+  quantity: Number(it.quantity) || 1,
+});
+
+const mergeLocalAndRemote = (localItems, remoteItems) => {
+  // Sum quantities by part number, preferring remote manufacturer if missing.
+  const map = new Map();
+  for (const it of remoteItems || []) {
+    map.set(it.partNumber, { ...it });
+  }
+  for (const it of localItems || []) {
+    const existing = map.get(it.partNumber);
+    if (existing) {
+      existing.quantity = (existing.quantity || 0) + (it.quantity || 0);
+      if (!existing.manufacturer && it.manufacturer) {
+        existing.manufacturer = it.manufacturer;
+      }
+    } else {
+      map.set(it.partNumber, { ...it });
+    }
+  }
+  return Array.from(map.values());
 };
 
 export const CartProvider = ({ children }) => {
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState(loadCart);
+  const [syncing, setSyncing] = useState(false);
+  const mountedRef = useRef(false);
+  const lastUserIdRef = useRef(user ? (user.user_id || user.username) : null);
 
-  const addToCart = useCallback((item) => {
+  // --- Local cache helpers --------------------------------------------------
+  const persist = useCallback((items) => {
+    saveCart(items);
+    setCartItems(items);
+  }, []);
+
+  // --- Initial reconcile from backend --------------------------------------
+  useEffect(() => {
+    let cancelled = false;
+
+    const reconcile = async () => {
+      setSyncing(true);
+      try {
+        const resp = await apiService.getCart();
+        const remote = (resp.data?.cart?.items || []).map(fromServerItem);
+        const local = loadCart();
+        const merged = mergeLocalAndRemote(local, remote);
+
+        // If the merged list differs from remote, push it back so the server
+        // has the canonical copy. This also covers the "local-only" case when
+        // the user was adding items while offline.
+        const sameAsRemote = (
+          remote.length === merged.length &&
+          remote.every((r) => {
+            const m = merged.find((x) => x.partNumber === r.partNumber);
+            return m && m.quantity === r.quantity;
+          })
+        );
+        if (!sameAsRemote) {
+          try {
+            await apiService.putCart(merged.map(toServerItem));
+          } catch (err) {
+            console.warn('Cart reconcile PUT failed:', err?.message || err);
+          }
+        }
+
+        if (!cancelled) {
+          persist(merged);
+        }
+      } catch (err) {
+        console.warn('Cart reconcile failed, using local cache:', err?.message || err);
+      } finally {
+        if (!cancelled) setSyncing(false);
+        mountedRef.current = true;
+      }
+    };
+
+    reconcile();
+    return () => {
+      cancelled = true;
+    };
+  }, [persist]);
+
+  // --- Mutations (optimistic local update, then background sync) -----------
+  const addToCart = useCallback(async (item) => {
     const current = loadCart();
     const existing = current.find((i) => i.partNumber === item.partNumber);
-    let updated;
-    if (existing) {
-      updated = current.map((i) =>
-        i.partNumber === item.partNumber
-          ? { ...i, quantity: i.quantity + item.quantity }
-          : i
-      );
-    } else {
-      updated = [...current, { partNumber: item.partNumber, manufacturer: item.manufacturer, quantity: item.quantity }];
+    const updated = existing
+      ? current.map((i) =>
+          i.partNumber === item.partNumber
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i,
+        )
+      : [...current, {
+          partNumber: item.partNumber,
+          manufacturer: item.manufacturer,
+          quantity: item.quantity,
+        }];
+    persist(updated);
+    try {
+      await apiService.addCartItem(toServerItem(item));
+    } catch (err) {
+      console.warn('addCartItem sync failed:', err?.message || err);
     }
-    saveCart(updated);
-    setCartItems(updated);
-  }, []);
+  }, [persist]);
 
-  const removeFromCart = useCallback((partNumber) => {
+  const removeFromCart = useCallback(async (partNumber) => {
     const updated = loadCart().filter((i) => i.partNumber !== partNumber);
-    saveCart(updated);
-    setCartItems(updated);
-  }, []);
+    persist(updated);
+    try {
+      await apiService.removeCartItem(partNumber);
+    } catch (err) {
+      console.warn('removeCartItem sync failed:', err?.message || err);
+    }
+  }, [persist]);
 
-  const updateQuantity = useCallback((partNumber, quantity) => {
+  const updateQuantity = useCallback(async (partNumber, quantity) => {
     if (quantity < 1) return;
-    const updated = loadCart().map((i) => (i.partNumber === partNumber ? { ...i, quantity } : i));
-    saveCart(updated);
-    setCartItems(updated);
-  }, []);
+    const updated = loadCart().map((i) =>
+      i.partNumber === partNumber ? { ...i, quantity } : i,
+    );
+    persist(updated);
+    try {
+      await apiService.updateCartItem(partNumber, quantity);
+    } catch (err) {
+      console.warn('updateCartItem sync failed:', err?.message || err);
+    }
+  }, [persist]);
 
-  const clearCart = useCallback(() => {
-    saveCart([]);
-    setCartItems([]);
-  }, []);
+  const clearCart = useCallback(async () => {
+    persist([]);
+    try {
+      await apiService.clearRemoteCart();
+    } catch (err) {
+      console.warn('clearRemoteCart sync failed:', err?.message || err);
+    }
+  }, [persist]);
+
+  // Called by AuthContext immediately after a successful login so the
+  // anonymous session cart is merged into the authenticated user's cart.
+  const mergeSessionCartIntoUserCart = useCallback(async () => {
+    try {
+      const sessionId = getOrCreateSessionId();
+      await apiService.mergeCart(sessionId);
+      const resp = await apiService.getCart();
+      const merged = (resp.data?.cart?.items || []).map(fromServerItem);
+      persist(merged);
+    } catch (err) {
+      console.warn('mergeSessionCartIntoUserCart failed:', err?.message || err);
+    }
+  }, [persist]);
+
+  // Called by AuthContext on logout: reset local cart since the user's cart
+  // is server-owned and an anonymous session cart should start empty.
+  const resetLocalCart = useCallback(() => {
+    persist([]);
+  }, [persist]);
+
+  // Watch for login/logout transitions and reconcile the cart accordingly.
+  useEffect(() => {
+    const currentId = user ? (user.user_id || user.username) : null;
+    const prevId = lastUserIdRef.current;
+    if (!mountedRef.current) {
+      lastUserIdRef.current = currentId;
+      return;
+    }
+    if (!prevId && currentId) {
+      // Anonymous -> authenticated: merge session cart into user cart
+      mergeSessionCartIntoUserCart();
+    } else if (prevId && !currentId) {
+      // Authenticated -> anonymous: clear local cache; new session cart starts empty
+      resetLocalCart();
+    }
+    lastUserIdRef.current = currentId;
+  }, [user, mergeSessionCartIntoUserCart, resetLocalCart]);
 
   const cartCount = cartItems.length;
 
   return (
-    <CartContext.Provider value={{ cartItems, cartCount, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        cartCount,
+        syncing,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        mergeSessionCartIntoUserCart,
+        resetLocalCart,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

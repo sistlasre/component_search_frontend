@@ -5,6 +5,7 @@ import './App.css';
 // Context
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { SessionProvider } from './context/SessionContext';
 
 // Components
 import Header from './components/Header';
@@ -21,11 +22,13 @@ import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import VerifyAccount from './components/VerifyAccount';
 import AccountManagement from './components/AccountManagement';
+import MyOrders from './components/MyOrders';
 import PublicRoute from './components/PublicRoute';
 
 function App() {
   return (
     <Router>
+      <SessionProvider>
       <AuthProvider>
       <CartProvider>
         <div className="App d-flex flex-column min-vh-100">
@@ -41,6 +44,7 @@ function App() {
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/account" element={<AccountManagement />} />
+              <Route path="/orders" element={<MyOrders />} />
               <Route path="/login" element={
                 <PublicRoute>
                   <Login />
@@ -62,6 +66,7 @@ function App() {
         </div>
       </CartProvider>
       </AuthProvider>
+      </SessionProvider>
     </Router>
   );
 }

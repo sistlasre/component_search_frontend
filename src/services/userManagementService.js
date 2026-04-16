@@ -3,6 +3,32 @@ import axios from 'axios';
 // Base API URL - update this with your actual API Gateway URL
 const API_BASE_URL = 'https://e1hygwwcle.execute-api.us-west-2.amazonaws.com/dev';
 
+// Session id lives in localStorage so it survives reloads. Generated lazily
+// on first access. Kept stable across logins/logouts (we rotate only on
+// explicit reset) so anonymous activity can be merged on login.
+export const SESSION_ID_STORAGE_KEY = 'cs_session_id';
+
+const generateSessionId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID().replace(/-/g, '');
+  }
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+};
+
+export const getOrCreateSessionId = () => {
+  try {
+    let id = localStorage.getItem(SESSION_ID_STORAGE_KEY);
+    if (!id) {
+      id = generateSessionId();
+      localStorage.setItem(SESSION_ID_STORAGE_KEY, id);
+    }
+    return id;
+  } catch {
+    // SSR / private-mode fallback
+    return generateSessionId();
+  }
+};
+
 class ApiService {
   constructor() {
     this.api = axios.create({
@@ -12,7 +38,7 @@ class ApiService {
       },
     });
 
-    // Request interceptor to add auth token
+    // Request interceptor to add auth token and session header
     this.api.interceptors.request.use(
       (config) => {
         // Skip authorization header when on the register page
@@ -30,6 +56,18 @@ class ApiService {
             delete config.headers.Authorization;
           }
         }
+
+        // Always attach the session id so cart/order endpoints can resolve
+        // an anonymous cart owner when no bearer token is present.
+        try {
+          const sessionId = getOrCreateSessionId();
+          if (sessionId) {
+            config.headers['X-Session-Id'] = sessionId;
+          }
+        } catch {
+          /* ignore */
+        }
+
         return config;
       },
       (error) => {
@@ -108,6 +146,59 @@ class ApiService {
       password,
       requestType: 'update'
     });
+  }
+
+  // -------------------- Session --------------------
+  async ensureSession() {
+    const session_id = getOrCreateSessionId();
+    return this.api.post('/session', { session_id });
+  }
+
+  // -------------------- Cart --------------------
+  async getCart() {
+    return this.api.get('/cart');
+  }
+
+  async putCart(items) {
+    return this.api.put('/cart', { items });
+  }
+
+  async addCartItem(item) {
+    return this.api.post('/cart/items', item);
+  }
+
+  async updateCartItem(partNumber, quantity) {
+    return this.api.patch(`/cart/items/${encodeURIComponent(partNumber)}`, { quantity });
+  }
+
+  async removeCartItem(partNumber) {
+    return this.api.delete(`/cart/items/${encodeURIComponent(partNumber)}`);
+  }
+
+  async clearRemoteCart() {
+    return this.api.delete('/cart');
+  }
+
+  async mergeCart(sessionId) {
+    return this.api.post('/cart/merge', { session_id: sessionId });
+  }
+
+  // -------------------- Orders & Requests --------------------
+  async createOrder({ recordType = 'order', contact, items, notes }) {
+    return this.api.post('/orders', {
+      record_type: recordType,
+      contact,
+      items,
+      notes,
+    });
+  }
+
+  async getMyOrders(params = {}) {
+    return this.api.get('/orders', { params });
+  }
+
+  async getOrder(recordId) {
+    return this.api.get(`/orders/${encodeURIComponent(recordId)}`);
   }
 }
 
