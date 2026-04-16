@@ -37,26 +37,6 @@ const toServerItem = (it) => ({
   quantity: Number(it.quantity) || 1,
 });
 
-const mergeLocalAndRemote = (localItems, remoteItems) => {
-  // Sum quantities by part number, preferring remote manufacturer if missing.
-  const map = new Map();
-  for (const it of remoteItems || []) {
-    map.set(it.partNumber, { ...it });
-  }
-  for (const it of localItems || []) {
-    const existing = map.get(it.partNumber);
-    if (existing) {
-      existing.quantity = (existing.quantity || 0) + (it.quantity || 0);
-      if (!existing.manufacturer && it.manufacturer) {
-        existing.manufacturer = it.manufacturer;
-      }
-    } else {
-      map.set(it.partNumber, { ...it });
-    }
-  }
-  return Array.from(map.values());
-};
-
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
   const [cartItems, setCartItems] = useState(loadCart);
@@ -70,48 +50,31 @@ export const CartProvider = ({ children }) => {
     setCartItems(items);
   }, []);
 
-  // --- Initial reconcile from backend --------------------------------------
+  // --- Initial load: server is source of truth, local cache mirrors it. ----
+  // We intentionally do NOT merge local + remote here — local is only a
+  // mirror of the last known server state, so merging would double-count
+  // items on every reload. If the server call fails, we fall back to the
+  // local cache so the UI still renders something.
   useEffect(() => {
     let cancelled = false;
 
-    const reconcile = async () => {
+    const loadFromServer = async () => {
       setSyncing(true);
       try {
         const resp = await apiService.getCart();
         const remote = (resp.data?.cart?.items || []).map(fromServerItem);
-        const local = loadCart();
-        const merged = mergeLocalAndRemote(local, remote);
-
-        // If the merged list differs from remote, push it back so the server
-        // has the canonical copy. This also covers the "local-only" case when
-        // the user was adding items while offline.
-        const sameAsRemote = (
-          remote.length === merged.length &&
-          remote.every((r) => {
-            const m = merged.find((x) => x.partNumber === r.partNumber);
-            return m && m.quantity === r.quantity;
-          })
-        );
-        if (!sameAsRemote) {
-          try {
-            await apiService.putCart(merged.map(toServerItem));
-          } catch (err) {
-            console.warn('Cart reconcile PUT failed:', err?.message || err);
-          }
-        }
-
         if (!cancelled) {
-          persist(merged);
+          persist(remote);
         }
       } catch (err) {
-        console.warn('Cart reconcile failed, using local cache:', err?.message || err);
+        console.warn('Cart load failed, keeping local cache:', err?.message || err);
       } finally {
         if (!cancelled) setSyncing(false);
         mountedRef.current = true;
       }
     };
 
-    reconcile();
+    loadFromServer();
     return () => {
       cancelled = true;
     };
