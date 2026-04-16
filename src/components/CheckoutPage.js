@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Table, Form, Button, Alert } from 'react-bootstrap';
 import { useCart } from '../context/CartContext';
+import { apiService } from '../services/userManagementService';
+import { useAuth } from '../context/AuthContext';
 
 const initialForm = {
   fullName: '',
@@ -16,11 +18,42 @@ const initialForm = {
 };
 
 const CheckoutPage = () => {
+  const { user } = useAuth();
   const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [validated, setValidated] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const fillFormFromUserInfo = async () => {
+    if (user) {
+      const response = await apiService.getUser();
+      const userData = response.data?.requesting_user || null;
+      const topLevelUserInfo = {
+        fullName: userData.first_name + " " + userData.last_name,
+        email: userData.email
+      };
+      let shippingAddress;
+      // Handle stringified JSON from the database
+      if (userData && typeof userData.shipping_address === 'string') {
+        try {
+          shippingAddress = JSON.parse(userData.shipping_address);
+        } catch (e) {
+          console.error("Failed to parse shipping address", e);
+          shippingAddress = { street: '', city: '', state: '', zip: '' };
+        }
+      }
+      setForm({
+        ...form,
+        ...topLevelUserInfo,
+        ...shippingAddress
+      });
+    }
+  };
+
+  useEffect(() => {
+    fillFormFromUserInfo();
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,7 +137,11 @@ const CheckoutPage = () => {
                 <tbody>
                   {cartItems.map((item) => (
                     <tr key={item.partNumber}>
-                      <td className="py-2">{item.partNumber}</td>
+                      <td className="py-2">
+                        <Link to={`/part/${encodeURIComponent(item.partNumber)}`} target="_blank" rel="noopener noreferrer">
+                          {item.partNumber}
+                        </Link>
+                      </td>
                       <td className="py-2">{item.manufacturer}</td>
                       <td className="py-2 text-center">{item.quantity.toLocaleString()}</td>
                     </tr>
