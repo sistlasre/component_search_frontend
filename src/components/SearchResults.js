@@ -456,6 +456,7 @@ const SearchResults = () => {
                         <Card className="product-card h-100">
                           <Link to={`/part/${encodeURIComponent(part.part_number)}`} className="text-decoration-none text-dark">
                             <div className="product-image-container">
+                              <img src="/generic-part.png" alt="Product Image" />
                               {/* Use placeholder image if not available */}
                               {/*
                               <img

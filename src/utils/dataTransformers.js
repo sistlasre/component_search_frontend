@@ -95,23 +95,6 @@ export const categorizeSpecifications = (partData) => {
   // Handle "Other Specifications" and Uncategorized fields
   const categorizedKeys = Object.values(categoryMappings).flat();
 
-  Object.entries(partData).forEach(([key, value]) => {
-    if (excludeFields.includes(key) || categorizedKeys.includes(key)) {
-      return;
-    }
-
-    if (value === null || value === undefined || value === '' || value === '-') {
-      return;
-    }
-
-    if (key !== 'price' && key !== 'quantity_available') {
-      if (!specifications['Other Specifications']) {
-        specifications['Other Specifications'] = {};
-      }
-      specifications['Other Specifications'][snakeToTitleCase(key)] = value;
-    }
-  });
-
   return specifications;
 };
 

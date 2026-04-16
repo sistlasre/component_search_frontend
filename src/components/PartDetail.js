@@ -84,11 +84,16 @@ const PartDetail = () => {
               {/* Image Section */}
               <Col md={5} className="mb-4">
                 <div className="border p-3 rounded bg-white text-center d-flex align-items-center justify-content-center" style={{ minHeight: '250px' }}>
-                  <img
-                    src={part.image}
-                    alt={part.partNumber}
-                    style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain' }}
-                  />
+                  <div className="image-overlay-wrapper">
+                      <img
+                        src="/generic-part.png"
+                        alt={part.partNumber}
+                        className="part-image"
+                      />
+                      <div className="overlay-badge">
+                        {part.partNumber}
+                      </div>
+                  </div>
                 </div>
               </Col>
 
