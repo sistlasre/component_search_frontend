@@ -75,94 +75,98 @@ const PartDetail = () => {
         </Breadcrumb>
 
         {/* Part Number Heading */}
-        <h1 className="h2 mb-4" style={{ fontWeight: 400 }}>{part.partNumber}</h1>
+        <h1 className="h2 mb-3 pb-3 border-bottom" style={{ fontWeight: 400 }}>{part.partNumber}</h1>
 
         <Row>
           {/* Left Column: Image and Header Info side-by-side */}
           <Col lg={8}>
-            <Row>
-              {/* Image Section */}
-              <Col md={5} className="mb-4">
-                <div className="border p-3 rounded bg-white text-center d-flex align-items-center justify-content-center" style={{ minHeight: '250px' }}>
-                  <div className="image-overlay-wrapper">
-                      <img
-                        src="/generic-part.png"
-                        alt={part.partNumber}
-                        className="part-image"
-                      />
-                      <div className="overlay-badge">
-                        {part.partNumber}
+            <Card className="shadow-sm mb-4">
+              <Card.Body>
+                <Row>
+                  {/* Image Section */}
+                  <Col md={5} className="mb-4 mb-md-0 border-end-md">
+                    <div className="border p-3 rounded bg-white text-center d-flex align-items-center justify-content-center" style={{ minHeight: '250px' }}>
+                      <div className="image-overlay-wrapper">
+                          <img
+                            src="/generic-part.png"
+                            alt={part.partNumber}
+                            className="part-image"
+                          />
+                          <div className="overlay-badge">
+                            {part.partNumber}
+                          </div>
                       </div>
-                  </div>
-                </div>
-              </Col>
+                    </div>
+                  </Col>
 
-              {/* Info Section */}
-              <Col md={7}>
-                <div className="ps-md-2">
-                  <h2 className="h4 mb-1" style={{ fontWeight: 500 }}>{part.manufacturer}</h2>
-                  <p className="text-muted mb-3">{part.description}</p>
+                  {/* Info Section */}
+                  <Col md={7}>
+                    <div className="ps-md-3">
+                      <h2 className="h4 mb-1" style={{ fontWeight: 500 }}>{part.manufacturer}</h2>
+                      <p className="text-muted pb-3 mb-3 border-bottom">{part.description}</p>
 
-                  <Table borderless size="sm" className="mb-4">
-                    <tbody>
-                      <tr>
-                        <td className="fw-bold py-1" style={{ width: '120px' }}>Manufacturer</td>
-                        <td className="py-1"><Link to={`/search?manufacturer=${part.manufacturer}`} className="text-decoration-none">{part.manufacturer}</Link></td>
-                      </tr>
-                      <tr>
-                        <td className="fw-bold py-1">Part #</td>
-                        <td className="py-1">{part.partNumber}</td>
-                      </tr>
-                      <tr>
-                        <td className="fw-bold py-1">Category</td>
-                        <td className="py-1"><Link to={`/search?category=${part.category}`} className="text-decoration-none">{part.category}</Link></td>
-                      </tr>
-                      {part.subcategory && (
-                        <tr>
-                          <td className="fw-bold py-1">Subcategory</td>
-                          <td className="py-1">
-                            <Link to={`/search?category=${part.category}&subcategory=${part.subcategory}`} className="text-decoration-none">
-                              {part.subcategory}
-                            </Link>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </Table>
-                </div>
-              </Col>
-            </Row>
+                      <Table bordered size="sm" className="mb-0">
+                        <tbody>
+                          <tr>
+                            <td className="fw-bold py-1 bg-light" style={{ width: '120px' }}>Manufacturer</td>
+                            <td className="py-1"><Link to={`/search?manufacturer=${part.manufacturer}`} className="text-decoration-none">{part.manufacturer}</Link></td>
+                          </tr>
+                          <tr>
+                            <td className="fw-bold py-1 bg-light">Part #</td>
+                            <td className="py-1">{part.partNumber}</td>
+                          </tr>
+                          <tr>
+                            <td className="fw-bold py-1 bg-light">Category</td>
+                            <td className="py-1"><Link to={`/search?category=${part.category}`} className="text-decoration-none">{part.category}</Link></td>
+                          </tr>
+                          {part.subcategory && (
+                            <tr>
+                              <td className="fw-bold py-1 bg-light">Subcategory</td>
+                              <td className="py-1">
+                                <Link to={`/search?category=${part.category}&subcategory=${part.subcategory}`} className="text-decoration-none">
+                                  {part.subcategory}
+                                </Link>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
           </Col>
 
           {/* Right Column: Pricing Card */}
           <Col lg={4}>
             <Card className="shadow-sm">
-              <Card.Body>
-                <div className="mb-3">
-                  <span className="h4 text-success fw-bold">{formatQuantity(part.totalQuantity)}</span>
-                  <span className="text-muted ms-2">available</span>
+              <Card.Body className="p-0">
+                <div className="px-3 py-2 border-bottom">
+                  <span className="h5 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
+                  <span className="text-muted ms-2 small">available</span>
                 </div>
 
-                <Table bordered hover size="sm" className="small mb-4">
+                <Table bordered hover size="sm" className="small mb-0">
                   <thead className="bg-light">
                     <tr>
-                      <th className="text-primary py-2 px-3">QTY.</th>
-                      <th className="text-primary py-2 px-3">UNIT PRICE</th>
+                      <th className="text-primary py-1 px-2">QTY.</th>
+                      <th className="text-primary py-1 px-2">UNIT PRICE</th>
                     </tr>
                   </thead>
                   <tbody>
                     {part.priceBreaks?.map((pb) => (
                       <tr key={pb.break_qty}>
-                        <td className="py-2 px-3">{formatQuantity(pb.break_qty)}+</td>
-                        <td className="py-2 px-3">${pb.price.toFixed(4)}</td>
+                        <td className="py-1 px-2">{formatQuantity(pb.break_qty)}+</td>
+                        <td className="py-1 px-2">${pb.price.toFixed(4)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </Table>
 
-                <div className="bg-light p-3 rounded border">
-                  <Form.Group className="mb-3">
-                    <InputGroup>
+                <div className="bg-light px-3 py-2 border-top border-bottom">
+                  <Form.Group className="mb-2">
+                    <InputGroup size="sm">
                       <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
                       <Form.Control
                         type="number"
@@ -171,22 +175,22 @@ const PartDetail = () => {
                       />
                     </InputGroup>
                   </Form.Group>
-                  <Button variant="primary" className="w-100 fw-bold py-2 shadow-sm" onClick={handleAddToCart}>
+                  <Button variant="primary" size="sm" className="w-100 fw-bold shadow-sm" onClick={handleAddToCart}>
                     Add to Cart
                   </Button>
                   {addedToCart && (
-                    <Alert variant="success" className="mt-2 mb-0 py-2 text-center small border-0">
+                    <Alert variant="success" className="mt-2 mb-0 py-1 text-center small border-0">
                       Added to cart!
                     </Alert>
                   )}
                 </div>
 
-                <div className="mt-4 text-center opacity-50">
+                <div className="px-3 py-2 text-center opacity-50">
                    <div className="d-flex justify-content-center gap-3">
-                     <i className="fab fa-cc-visa fa-2x"></i>
-                     <i className="fab fa-cc-amex fa-2x"></i>
-                     <i className="fab fa-cc-discover fa-2x"></i>
-                     <i className="fab fa-cc-mastercard fa-2x"></i>
+                     <i className="fab fa-cc-visa fa-lg"></i>
+                     <i className="fab fa-cc-amex fa-lg"></i>
+                     <i className="fab fa-cc-discover fa-lg"></i>
+                     <i className="fab fa-cc-mastercard fa-lg"></i>
                    </div>
                 </div>
               </Card.Body>
@@ -195,21 +199,21 @@ const PartDetail = () => {
         </Row>
 
         {/* Bottom Section: Specifications (Full Width) */}
-        <Row className="mt-5">
+        <Row className="mt-3">
           <Col xs={12}>
             <Card className="shadow-sm">
               <Card.Header className="bg-white py-3 border-bottom">
                 <h5 className="mb-0 fw-bold">Product Specifications</h5>
               </Card.Header>
               <Card.Body>
-                {Object.entries(part.specifications).map(([section, specs]) => (
-                  <div key={section} className="mb-4">
+                {Object.entries(part.specifications).map(([section, specs], idx, arr) => (
+                  <div key={section} className={`mb-4 pb-4 ${idx < arr.length - 1 ? 'border-bottom' : ''}`}>
                     <h6 className="text-uppercase small fw-bold text-muted border-bottom pb-2 mb-3">{section}</h6>
-                    <Table bordered hover size="sm">
+                    <Table bordered hover size="sm" className="mb-0">
                       <tbody>
                         {Object.entries(specs).map(([key, value]) => (
                           <tr key={key}>
-                            <td className="bg-light fw-bold text-muted" style={{ width: '30%' }}>{key}</td>
+                            <td className="bg-light fw-bold text-muted border-end" style={{ width: '30%' }}>{key}</td>
                             <td>{Array.isArray(value) ? value.join(', ') : value}</td>
                           </tr>
                         ))}
