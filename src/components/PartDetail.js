@@ -6,6 +6,33 @@ import { fetchPartDetails } from '../services/api';
 import { transformPartData } from '../utils/dataTransformers';
 import { useCart } from '../context/CartContext';
 
+const ProductSpecsCard = ({part}) => {
+  return (
+    <Card className="shadow-sm">
+      <Card.Header className="bg-white py-3 border-bottom">
+        <h5 className="mb-0 fw-bold text-center">Product Specifications</h5>
+      </Card.Header>
+      <Card.Body>
+        {Object.entries(part.specifications).map(([section, specs], idx, arr) => (
+          <div key={section} className={`mb-4 pb-4 ${idx < arr.length - 1 ? 'border-bottom' : ''}`}>
+            <h6 className="text-uppercase small fw-bold text-muted border-bottom pb-2 mb-3 text-center">{section}</h6>
+            <Table bordered hover size="sm" className="mb-0">
+              <tbody>
+                {Object.entries(specs).map(([key, value]) => (
+                  <tr key={key}>
+                    <td className="bg-light fw-bold text-muted border-end" style={{ width: '30%' }}>{key}</td>
+                    <td>{Array.isArray(value) ? value.join(', ') : value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        ))}
+      </Card.Body>
+    </Card>
+  );
+};
+
 const PartDetail = () => {
   const { partNumber } = useParams();
   const [part, setPart] = useState(null);
@@ -76,11 +103,12 @@ const PartDetail = () => {
 
         <Row>
           {/* Left Column: Image and Header Info side-by-side */}
-          <Col lg={8}>
+          <Col lg={8} xs={12} className="order-1">
+            {/* Header card */}
             <Card className="shadow-sm mb-4">
               <Card.Body>
                 {/* Part Number Heading */}
-                <h1 className="h2 mb-3 pb-3 border-bottom part-number" style={{ fontWeight: 400, textAlign: 'center' }}>{part.partNumber}</h1>
+                <h1 className="h2 mb-3 pb-3 border-bottom part-number text-center" style={{ fontWeight: 400 }}>{part.partNumber}</h1>
                 <Row>
                   {/* Image Section */}
                   <Col md={5} className="mb-4 mb-md-0 border-end-md">
@@ -135,13 +163,17 @@ const PartDetail = () => {
                 </Row>
               </Card.Body>
             </Card>
+            {/* 2. Specs Card (Desktop: Below Header | Mobile: Below Pricing) */}
+            {/* Use d-none and d-lg-block to only show this version on desktop */}
+            <div className="d-none d-lg-block">
+              <ProductSpecsCard part={part} />
+            </div>
           </Col>
-
           {/* Right Column: Pricing Card */}
-          <Col lg={4}>
-            <Card className="shadow-sm">
+          <Col lg={4} xs={12} className="order-2">
+            <Card className="shadow-sm sticky-pricing-card">
               <Card.Body className="p-0">
-                <div className="px-3 py-2 border-bottom">
+                <div className="px-3 py-2 border-bottom text-center">
                   <span className="h3 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
                   <span className="text-muted ms-2">available</span>
                 </div>
@@ -183,9 +215,6 @@ const PartDetail = () => {
                     ))}
                   </tbody>
                 </Table>
-
-
-
                 <div className="px-3 py-2 text-center opacity-50">
                    <div className="d-flex justify-content-center gap-3">
                      <i className="fab fa-cc-visa fa-lg"></i>
@@ -197,33 +226,10 @@ const PartDetail = () => {
               </Card.Body>
             </Card>
           </Col>
-        </Row>
 
-        {/* Bottom Section: Specifications (Full Width) */}
-        <Row className="mt-0">
-          <Col xs={8}>
-            <Card className="shadow-sm">
-              <Card.Header className="bg-white py-3 border-bottom">
-                <h5 className="mb-0 fw-bold">Product Specifications</h5>
-              </Card.Header>
-              <Card.Body>
-                {Object.entries(part.specifications).map(([section, specs], idx, arr) => (
-                  <div key={section} className={`mb-4 pb-4 ${idx < arr.length - 1 ? 'border-bottom' : ''}`}>
-                    <h6 className="text-uppercase small fw-bold text-muted border-bottom pb-2 mb-3">{section}</h6>
-                    <Table bordered hover size="sm" className="mb-0">
-                      <tbody>
-                        {Object.entries(specs).map(([key, value]) => (
-                          <tr key={key}>
-                            <td className="bg-light fw-bold text-muted border-end" style={{ width: '30%' }}>{key}</td>
-                            <td>{Array.isArray(value) ? value.join(', ') : value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  </div>
-                ))}
-              </Card.Body>
-            </Card>
+          {/* Column 3: Specs for Mobile Only */}
+          <Col xs={12} className="order-3 d-block d-lg-none">
+            <ProductSpecsCard part={part} />
           </Col>
         </Row>
       </Container>

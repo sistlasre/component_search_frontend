@@ -469,3 +469,11 @@ body {
   font-size: 0.9rem;
   vertical-align: middle;
 }
+@media (min-width: 992px) {
+  .sticky-pricing-card {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 90px;
+    margin-bottom: 2rem;
+  }
+}
