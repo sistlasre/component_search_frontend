@@ -80,7 +80,7 @@ const PartDetail = () => {
             <Card className="shadow-sm mb-4">
               <Card.Body>
                 {/* Part Number Heading */}
-                <h1 className="h2 mb-3 pb-3 border-bottom" style={{ fontWeight: 400, textAlign: 'center' }}>{part.partNumber}</h1>
+                <h1 className="h2 mb-3 pb-3 border-bottom part-number" style={{ fontWeight: 400, textAlign: 'center' }}>{part.partNumber}</h1>
                 <Row>
                   {/* Image Section */}
                   <Col md={5} className="mb-4 mb-md-0 border-end-md">
@@ -112,7 +112,7 @@ const PartDetail = () => {
                           </tr>
                           <tr>
                             <td className="fw-bold py-1 bg-light">Part #</td>
-                            <td className="py-1">{part.partNumber}</td>
+                            <td className="py-1 part-number">{part.partNumber}</td>
                           </tr>
                           <tr>
                             <td className="fw-bold py-1 bg-light">Category</td>

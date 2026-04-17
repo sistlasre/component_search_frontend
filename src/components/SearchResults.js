@@ -468,7 +468,7 @@ const SearchResults = () => {
                               {/* Pricing/Stock badges removed */}
                             </div>
                             <Card.Body>
-                              <h6 className="text-primary-tint mb-1">{part.part_number || part.partNumber}</h6>
+                              <h6 className="text-primary-tint mb-1 part-number">{part.part_number || part.partNumber}</h6>
 
                               {/* 1. Manufacturer */}
                               <div className="small mb-0">
