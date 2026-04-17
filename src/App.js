@@ -33,7 +33,7 @@ function App() {
       <CartProvider>
         <div className="App d-flex flex-column min-vh-100">
           <Header />
-          <main className="flex-grow-1">
+          <main className="flex-grow-1" style={{ backgroundColor: '#f4f6f8', minHeight: '100vh' }}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/category/:categoryName" element={<SubcategoryPage />} />

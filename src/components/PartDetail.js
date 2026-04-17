@@ -74,14 +74,13 @@ const PartDetail = () => {
           <Breadcrumb.Item active>{part.partNumber}</Breadcrumb.Item>
         </Breadcrumb>
 
-        {/* Part Number Heading */}
-        <h1 className="h2 mb-3 pb-3 border-bottom" style={{ fontWeight: 400 }}>{part.partNumber}</h1>
-
         <Row>
           {/* Left Column: Image and Header Info side-by-side */}
           <Col lg={8}>
             <Card className="shadow-sm mb-4">
               <Card.Body>
+                {/* Part Number Heading */}
+                <h1 className="h2 mb-3 pb-3 border-bottom" style={{ fontWeight: 400, textAlign: 'center' }}>{part.partNumber}</h1>
                 <Row>
                   {/* Image Section */}
                   <Col md={5} className="mb-4 mb-md-0 border-end-md">
@@ -143,8 +142,29 @@ const PartDetail = () => {
             <Card className="shadow-sm">
               <Card.Body className="p-0">
                 <div className="px-3 py-2 border-bottom">
-                  <span className="h5 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
-                  <span className="text-muted ms-2 small">available</span>
+                  <span className="h3 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
+                  <span className="text-muted ms-2">available</span>
+                </div>
+
+                <div className="bg-light px-3 py-2 border-top border-bottom">
+                  <Form.Group className="mb-2">
+                    <InputGroup size="md">
+                      <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      />
+                    </InputGroup>
+                  </Form.Group>
+                  <Button variant="primary" size="md" className="w-100 fw-bold shadow-sm" onClick={handleAddToCart}>
+                    Add to Cart
+                  </Button>
+                  {addedToCart && (
+                    <Alert variant="success" className="mt-2 mb-0 py-1 text-center small border-0">
+                      Added to cart!
+                    </Alert>
+                  )}
                 </div>
 
                 <Table bordered hover size="sm" className="small mb-0">
@@ -155,7 +175,7 @@ const PartDetail = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {part.priceBreaks?.map((pb) => (
+                    {part.priceBreaks?.filter((pb) => pb.price > 0).map((pb) => (
                       <tr key={pb.break_qty}>
                         <td className="py-1 px-2">{formatQuantity(pb.break_qty)}+</td>
                         <td className="py-1 px-2">${pb.price.toFixed(4)}</td>
@@ -164,26 +184,7 @@ const PartDetail = () => {
                   </tbody>
                 </Table>
 
-                <div className="bg-light px-3 py-2 border-top border-bottom">
-                  <Form.Group className="mb-2">
-                    <InputGroup size="sm">
-                      <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
-                      <Form.Control
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      />
-                    </InputGroup>
-                  </Form.Group>
-                  <Button variant="primary" size="sm" className="w-100 fw-bold shadow-sm" onClick={handleAddToCart}>
-                    Add to Cart
-                  </Button>
-                  {addedToCart && (
-                    <Alert variant="success" className="mt-2 mb-0 py-1 text-center small border-0">
-                      Added to cart!
-                    </Alert>
-                  )}
-                </div>
+
 
                 <div className="px-3 py-2 text-center opacity-50">
                    <div className="d-flex justify-content-center gap-3">
@@ -199,8 +200,8 @@ const PartDetail = () => {
         </Row>
 
         {/* Bottom Section: Specifications (Full Width) */}
-        <Row className="mt-3">
-          <Col xs={12}>
+        <Row className="mt-0">
+          <Col xs={8}>
             <Card className="shadow-sm">
               <Card.Header className="bg-white py-3 border-bottom">
                 <h5 className="mb-0 fw-bold">Product Specifications</h5>
