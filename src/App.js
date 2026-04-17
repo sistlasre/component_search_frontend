@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import "@fontsource/ibm-plex-sans/400.css"; // Regular weight
+import "@fontsource/ibm-plex-sans/500.css"; // Medium weight (good for UI)
+import "@fontsource/ibm-plex-sans/700.css"; // Bold
 import './App.css';
 // Context
 import { CartProvider } from './context/CartContext';

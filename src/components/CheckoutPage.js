@@ -171,7 +171,7 @@ const CheckoutPage = () => {
                   {cartItems.map((item) => (
                     <tr key={item.partNumber}>
                       <td className="py-2">
-                        <Link to={`/part/${encodeURIComponent(item.partNumber)}`} target="_blank" rel="noopener noreferrer">
+                        <Link className="part-number" to={`/part/${encodeURIComponent(item.partNumber)}`} target="_blank" rel="noopener noreferrer">
                           {item.partNumber}
                         </Link>
                       </td>

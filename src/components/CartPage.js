@@ -68,7 +68,7 @@ const CartPage = () => {
           {cartItems.map((item) => (
             <tr key={item.partNumber}>
               <td>
-                <Link to={`/part/${encodeURIComponent(item.partNumber)}`} className="fw-semibold">
+                <Link to={`/part/${encodeURIComponent(item.partNumber)}`} className="fw-semibold part-number">
                   {item.partNumber}
                 </Link>
               </td>

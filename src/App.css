@@ -1,5 +1,16 @@
 /* Custom styles for Component Search Website */
 
+body {
+  font-family: "IBM Plex Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optional: Make your part numbers look extra sharp */
+.part-number {
+  letter-spacing: 0.01em;
+}
+
 .App {
   min-height: 100vh;
 }
