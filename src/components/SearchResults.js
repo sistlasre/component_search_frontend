@@ -22,6 +22,7 @@ const SearchResults = () => {
   const [results, setResults] = useState([]);
   const [facets, setFacets] = useState({});
   const [total, setTotal] = useState(0);
+  const [imageUrls, setImageUrls] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -103,6 +104,7 @@ const SearchResults = () => {
         setResults(data.results || []);
         setFacets(data.facets || {});
         setTotal(data.total || 0);
+        setImageUrls(data.imageUrls || {});
 
       } catch (err) {
         setError(err.message);
@@ -449,23 +451,18 @@ const SearchResults = () => {
                       const isExplicitField = ['manufacturer', 'packaging', 'type'].includes(cleanKey);
                       const isRemovedField = ['price', 'stock_status', 'stock', 'inventory'].includes(cleanKey);
                       return value && !isFilter && !isExplicitField && !isRemovedField && key.endsWith('.value');
-                  });
+                    });
 
                     return (
                       <Col key={part.id} xs={12} sm={6} md={4} className="mb-4">
                         <Card className="product-card h-100">
                           <Link to={`/part/${encodeURIComponent(part.part_number)}`} className="text-decoration-none text-dark">
                             <div className="product-image-container">
-                              <img src="/generic-part.png" alt="Product Image" />
-                              {/* Use placeholder image if not available */}
-                              {/*
-                              <img
-                                src={part.image || 'https://via.placeholder.com/200x150?text=No+Image'}
-                                alt={part.part_number || part.partNumber}
-                                onError={(e) => { e.target.src = 'https://via.placeholder.com/200x150?text=No+Image' }}
-                              />
-                              */}
-                              {/* Pricing/Stock badges removed */}
+                              {imageUrls[part.part_number] ? (
+                                <img src={imageUrls[part.part_number]} alt="Product Image" />
+                              ) : (
+                                <img src="/generic-part.png" alt="Product Image" />
+                              )}
                             </div>
                             <Card.Body>
                               <h6 className="text-primary-tint mb-1 part-number">{part.part_number || part.partNumber}</h6>
