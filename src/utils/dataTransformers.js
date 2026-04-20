@@ -107,6 +107,7 @@ export const transformPartData = (apiResponse) => {
   const rawData = apiResponse.part_data || apiResponse;
   const pricingInfoList = apiResponse.part_pricing_info || [];
   const pricingType = apiResponse.part_pricing_type || null;
+  const imageUrl = apiResponse.part_image_url || '';
 
   // Use price_breaks from the first element
   const priceBreaks = pricingInfoList.length > 0 ? (pricingInfoList[0].price_breaks || []) : [];
@@ -120,7 +121,7 @@ export const transformPartData = (apiResponse) => {
     description: `${rawData.category2 || ''} - ${rawData.series || ''} Series`.trim(),
     category: rawData.category1 || 'Electronic Components',
     subcategory: rawData.category2 || '',
-    image: 'https://via.placeholder.com/400x300/f0f0f0/666?text=' + encodeURIComponent(rawData.part_number),
+    image: imageUrl,
     specifications: categorizeSpecifications(rawData),
     // Pricing info
     priceBreaks: priceBreaks,

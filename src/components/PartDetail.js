@@ -115,7 +115,7 @@ const PartDetail = () => {
                     <div className="border p-3 rounded bg-white text-center d-flex align-items-center justify-content-center" style={{ minHeight: '250px' }}>
                       <div className="image-overlay-wrapper">
                           <img
-                            src="/generic-part.png"
+                            src={part.image}
                             alt={part.partNumber}
                             className="part-image"
                           />
