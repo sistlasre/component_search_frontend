@@ -29,6 +29,9 @@ const CheckoutPage = () => {
   // 'order' = firm purchase; 'request' = inquiry (may include notes, pricing TBD)
   const [recordType, setRecordType] = useState('order');
   const [submittedRecord, setSubmittedRecord] = useState(null);
+  // Purchase order PDF (required for orders, optional for requests).
+  const [purchaseOrderFile, setPurchaseOrderFile] = useState(null);
+  const [purchaseOrderError, setPurchaseOrderError] = useState('');
 
   const fillFormFromUserInfo = async () => {
     if (user) {
@@ -65,11 +68,30 @@ const CheckoutPage = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handlePurchaseOrderChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setPurchaseOrderError('');
+    if (file && file.type !== 'application/pdf') {
+      setPurchaseOrderError('Purchase order must be a PDF file.');
+      setPurchaseOrderFile(null);
+      e.target.value = '';
+      return;
+    }
+    setPurchaseOrderFile(file);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formEl = e.currentTarget;
     if (!formEl.checkValidity()) {
       e.stopPropagation();
+      setValidated(true);
+      return;
+    }
+
+    // Orders MUST have a PO attached; requests are optional.
+    if (recordType === 'order' && !purchaseOrderFile) {
+      setPurchaseOrderError('Please attach a purchase order PDF to submit an order.');
       setValidated(true);
       return;
     }
@@ -90,6 +112,13 @@ const CheckoutPage = () => {
     setSubmitting(true);
     setSubmitError('');
     try {
+      // Upload the PO PDF first (if any) so the order record can reference
+      // the resulting S3 key. This also avoids creating an order record when
+      // the upload itself fails.
+      if (purchaseOrderFile) {
+        payload.purchaseOrder = await apiService.uploadPurchaseOrderPdf(purchaseOrderFile);
+      }
+
       const resp = await apiService.createOrder(payload);
       setSubmittedRecord(resp.data?.record || null);
       // Both Orders and Requests clear the cart on submission.
@@ -346,6 +375,32 @@ const CheckoutPage = () => {
                     onChange={handleChange}
                     placeholder="Any special instructions or requirements..."
                   />
+                </Form.Group>
+
+                <Form.Group className="mb-4" controlId="purchaseOrder">
+                  <Form.Label>
+                    Purchase Order (PDF)
+                    {recordType === 'order' && <span className="text-danger"> *</span>}
+                  </Form.Label>
+                  <Form.Control
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePurchaseOrderChange}
+                    isInvalid={!!purchaseOrderError}
+                  />
+                  <Form.Text className="text-muted">
+                    {recordType === 'order'
+                      ? 'Attach your PO as a PDF. It will be stored with your order.'
+                      : 'Optional for requests \u2014 attach a PO PDF if you have one.'}
+                  </Form.Text>
+                  {purchaseOrderError && (
+                    <Form.Control.Feedback type="invalid">{purchaseOrderError}</Form.Control.Feedback>
+                  )}
+                  {purchaseOrderFile && (
+                    <div className="small text-success mt-1">
+                      Selected: {purchaseOrderFile.name} ({Math.round(purchaseOrderFile.size / 1024)} KB)
+                    </div>
+                  )}
                 </Form.Group>
 
                 <Button

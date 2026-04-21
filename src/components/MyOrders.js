@@ -41,6 +41,19 @@ const MyOrders = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
 
+  const handleViewPurchaseOrder = async (recordId) => {
+    try {
+      const resp = await apiService.getPurchaseOrderDownloadUrl(recordId);
+      const url = resp.data?.presigned_url;
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err) {
+      // Surface the error inline so users know why nothing opened.
+      setError(err.response?.data?.error || err.message || 'Failed to open purchase order');
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -170,6 +183,21 @@ const MyOrders = () => {
                             <div className="mb-3">
                               <strong>Your notes:</strong>
                               <div className="text-muted" style={{ whiteSpace: 'pre-wrap' }}>{r.notes}</div>
+                            </div>
+                          )}
+                          {r.purchase_order?.key && (
+                            <div className="mb-3">
+                              <strong>Purchase Order:</strong>{' '}
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                onClick={() => handleViewPurchaseOrder(r.record_id)}
+                              >
+                                View Purchase Order
+                              </Button>
+                              {r.purchase_order.filename && (
+                                <span className="text-muted ms-2 small">({r.purchase_order.filename})</span>
+                              )}
                             </div>
                           )}
                           <Table bordered size="sm" className="mb-0">

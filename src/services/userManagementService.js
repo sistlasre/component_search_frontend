@@ -184,12 +184,13 @@ class ApiService {
   }
 
   // -------------------- Orders & Requests --------------------
-  async createOrder({ recordType = 'order', contact, items, notes }) {
+  async createOrder({ recordType = 'order', contact, items, notes, purchaseOrder }) {
     return this.api.post('/orders', {
       record_type: recordType,
       contact,
       items,
       notes,
+      purchase_order: purchaseOrder,
     });
   }
 
@@ -199,6 +200,38 @@ class ApiService {
 
   async getOrder(recordId) {
     return this.api.get(`/orders/${encodeURIComponent(recordId)}`);
+  }
+
+  // -------------------- Purchase Order PDF --------------------
+  async getPurchaseOrderUploadUrl({ filename } = {}) {
+    return this.api.post('/orders/purchase-order-url', {
+      filename,
+      content_type: 'application/pdf',
+    });
+  }
+
+  async getPurchaseOrderDownloadUrl(recordId) {
+    return this.api.get(`/orders/${encodeURIComponent(recordId)}/purchase-order`);
+  }
+
+  /**
+   * Convenience: obtain a presigned URL, PUT the file to S3, and return the
+   * `purchase_order` payload to attach to an order.
+   */
+  async uploadPurchaseOrderPdf(file) {
+    if (!file) throw new Error('File is required');
+    if (file.type !== 'application/pdf') {
+      throw new Error('Purchase order must be a PDF');
+    }
+    const { data } = await this.getPurchaseOrderUploadUrl({ filename: file.name });
+    await axios.put(data.presigned_url, file, {
+      headers: { 'Content-Type': 'application/pdf' },
+    });
+    return {
+      key: data.upload_key,
+      bucket: data.bucket,
+      filename: file.name,
+    };
   }
 }
 
