@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserPlus, faUser, faLock, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { faUserPlus, faUser, faLock, faEnvelope, faIdCard } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
+import SEO from './SEO';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -22,10 +23,7 @@ const Register = () => {
   const [searchParams] = useSearchParams();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -35,7 +33,14 @@ const Register = () => {
     setSuccess(false);
 
     try {
-      const result = await register(formData.username.trim() || formData.email.trim(), formData.password, formData.email.trim(), formData.firstName.trim(), formData.lastName.trim(), searchParams.get('affiliate_id'));
+      const result = await register(
+        formData.username.trim() || formData.email.trim(),
+        formData.password,
+        formData.email.trim(),
+        formData.firstName.trim(),
+        formData.lastName.trim(),
+        searchParams.get('affiliate_id')
+      );
 
       if (result.success) {
         setSuccess(true);
@@ -51,149 +56,140 @@ const Register = () => {
   };
 
   return (
-    <Container className="py-5">
-      <Row className="justify-content-center">
-        <Col md={6} lg={4}>
-          <Card className="shadow">
-            <Card.Header className="bg-success text-white text-center">
-              <h4 className="mb-0">
-                <FontAwesomeIcon icon={faUserPlus} className="me-2" />
-                Register
-              </h4>
-            </Card.Header>
-            <Card.Body className="p-4">
-              {error && (
-                <Alert variant="danger" className="mb-3">
-                  {error}
-                </Alert>
-              )}
-              {success && (
-                <Alert variant="success" className="mb-3">
-                  Registration successful! Redirecting to login...
-                </Alert>
-              )}
+    <div className="login-wrapper bg-light" style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', padding: '40px 0' }}>
+      <SEO title="Register | Electronic Components Search" />
 
-              <Form onSubmit={handleSubmit}>
+      <Container>
+        <Row className="justify-content-center">
+          <Col md={8} lg={5}>
+            <div className="text-center mb-4">
+              <h2 className="fw-bold">Create Account</h2>
+              <p className="text-muted small">Join our network of electronic component suppliers and buyers</p>
+            </div>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>
-                    <FontAwesomeIcon icon={faEnvelope} className="me-2" />
-                    Email <span className="fst-italic text-muted">(used to verify your account)</span>
-                  </Form.Label>
-                  <Form.Control
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Enter email"
-                    required
-                    disabled={loading}
-                  />
-                </Form.Group>
+            <Card className="border-0 shadow-sm">
+              <Card.Body className="p-4 p-md-5">
+                {error && <Alert variant="danger" className="py-2 small">{error}</Alert>}
+                {success && <Alert variant="success" className="py-2 small">Success! Redirecting...</Alert>}
 
-                <Form.Group className="mb-3">
-                  <Form.Label>
-                    <FontAwesomeIcon icon={faUser} className="me-2" />
-                    First Name
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder="Enter first name"
-                    required
-                    disabled={loading}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>
-                    <FontAwesomeIcon icon={faUser} className="me-2" />
-                    Last Name
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    placeholder="Enter last name"
-                    required
-                    disabled={loading}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>
-                    <FontAwesomeIcon icon={faUser} className="me-2" />
-                    Username <span className="fst-italic text-muted">(optional)</span>
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    placeholder="Enter username"
-                    disabled={loading}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-4">
-                  <Form.Label>
-                    <FontAwesomeIcon icon={faLock} className="me-2" />
-                    Password
-                  </Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter password"
-                    required
-                    disabled={loading}
-                  />
-                </Form.Group>
-
-                <Button
-                  variant="success"
-                  type="submit"
-                  className="w-100 mb-3"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Spinner
-                        as="span"
-                        animation="border"
-                        size="sm"
-                        role="status"
-                        aria-hidden="true"
-                        className="me-2"
+                <Form onSubmit={handleSubmit}>
+                  {/* Email Field */}
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted">EMAIL ADDRESS</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-white border-end-0">
+                        <FontAwesomeIcon icon={faEnvelope} className="text-primary" />
+                      </span>
+                      <Form.Control
+                        className="border-start-0"
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="name@company.com"
+                        required
+                        disabled={loading}
                       />
-                      Registering...
-                    </>
-                  ) : (
-                    <>
-                      <FontAwesomeIcon icon={faUserPlus} className="me-2" />
-                      Register
-                    </>
-                  )}
-                </Button>
-              </Form>
+                    </div>
+                  </Form.Group>
 
-              <div className="text-center">
-                <p className="mb-0">
-                  Already have an account?{' '}
-                  <Link to="/login" className="text-decoration-none">
-                    Log in here
-                  </Link>
-                </p>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold text-muted">FIRST NAME</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleChange}
+                          required
+                          disabled={loading}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="small fw-bold text-muted">LAST NAME</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleChange}
+                          required
+                          disabled={loading}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Username Field */}
+                  <Form.Group className="mb-3">
+                    <Form.Label className="small fw-bold text-muted d-flex justify-content-between">
+                      USERNAME <span className="text-lowercase fw-normal fst-italic">(optional)</span>
+                    </Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-white border-end-0">
+                        <FontAwesomeIcon icon={faIdCard} className="text-primary" />
+                      </span>
+                      <Form.Control
+                        className="border-start-0"
+                        type="text"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleChange}
+                        disabled={loading}
+                      />
+                    </div>
+                  </Form.Group>
+
+                  {/* Password Field */}
+                  <Form.Group className="mb-4">
+                    <Form.Label className="small fw-bold text-muted">PASSWORD</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text bg-white border-end-0">
+                        <FontAwesomeIcon icon={faLock} className="text-primary" />
+                      </span>
+                      <Form.Control
+                        className="border-start-0"
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  </Form.Group>
+
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    className="w-100 py-2 fw-bold"
+                    disabled={loading}
+                  >
+                    {loading ? <Spinner animation="border" size="sm" /> : (
+                      <>
+                        <FontAwesomeIcon icon={faUserPlus} className="me-2" />
+                        Create Account
+                      </>
+                    )}
+                  </Button>
+                </Form>
+
+                <div className="text-center mt-4">
+                  <p className="small mb-0 text-muted">
+                    Already have an account?{' '}
+                    <Link to="/login" className="fw-bold text-decoration-none">
+                      Log in here
+                    </Link>
+                  </p>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
 
