@@ -170,15 +170,6 @@ const LandingPage = () => {
           )}
         </Container>
       </section>
-
-      {/* CTA Section */}
-      <section className="bg-primary text-white py-5">
-        <Container className="text-center">
-          <h3 className="mb-3">Need Help Finding Parts?</h3>
-          <p className="mb-4">Our experts are ready to help you source hard-to-find components</p>
-          <Button variant="light" size="lg">Request a Quote</Button>
-        </Container>
-      </section>
     </>
   );
 };

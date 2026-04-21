@@ -34,33 +34,33 @@ const Footer = () => {
           <Col lg={2} md={6} className="mb-4 mb-lg-0">
             <h6 className="text-white mb-3">Quick Links</h6>
             <ul className="list-unstyled small">
-              <li className="mb-2"><a href="#products">All Products</a></li>
-              <li className="mb-2"><a href="#manufacturers">Manufacturers</a></li>
-              <li className="mb-2"><a href="#new-products">New Products</a></li>
-              <li className="mb-2"><a href="#hot-offers">Hot Offers</a></li>
-              <li className="mb-2"><a href="#rfq">Request Quote</a></li>
+              <li className="mb-2"><a href="#about-us">About Us</a></li>
+              <li className="mb-2"><a href="#excess">Excess</a></li>
+              <li className="mb-2"><a href="#e-waste">E-waste/scrap</a></li>
+              <li className="mb-2"><a href="#consignment">Consignment</a></li>
+              <li className="mb-2"><a href="#scheduled-orders">Scheduled Orders</a></li>
             </ul>
           </Col>
           
           <Col lg={2} md={6} className="mb-4 mb-lg-0">
             <h6 className="text-white mb-3">Categories</h6>
             <ul className="list-unstyled small">
-              <li className="mb-2"><a href="#semiconductors">Semiconductors</a></li>
-              <li className="mb-2"><a href="#passives">Passive Components</a></li>
-              <li className="mb-2"><a href="#connectors">Connectors</a></li>
-              <li className="mb-2"><a href="#sensors">Sensors</a></li>
-              <li className="mb-2"><a href="#power">Power Solutions</a></li>
+              <li className="mb-2"><a href="/category/Integrated%20Circuits%20(ICs)">Integrated Circuits</a></li>
+              <li className="mb-2"><a href="/category/Resistors">Resistors</a></li>
+              <li className="mb-2"><a href="/category/Capacitors">Capacitors</a></li>
+              <li className="mb-2"><a href="/category/Connectors%2C%20Interconnects">Connectors</a></li>
+              <li className="mb-2"><a href="/category/Discrete%20Semiconductor%20Products">Semiconductors</a></li>
             </ul>
           </Col>
           
           <Col lg={2} md={6} className="mb-4 mb-lg-0">
             <h6 className="text-white mb-3">Support</h6>
             <ul className="list-unstyled small">
-              <li className="mb-2"><a href="#help">Help Center</a></li>
-              <li className="mb-2"><a href="#shipping">Shipping Info</a></li>
-              <li className="mb-2"><a href="#returns">Returns</a></li>
-              <li className="mb-2"><a href="#terms">Terms of Service</a></li>
-              <li className="mb-2"><a href="#privacy">Privacy Policy</a></li>
+              <li className="mb-2"><a href="#help-center">Help Center</a></li>
+              <li className="mb-2"><a href="#quality-policy">Quality Policy</a></li>
+              <li className="mb-2"><a href="#terms-of-service">Terms of Service</a></li>
+              <li className="mb-2"><a href="#privacy-policy">Privacy Policy</a></li>
+              <li className="mb-2"><a href="#cookies-and-gdpr">Cookies/GDPR Policy</a></li>
             </ul>
           </Col>
           
@@ -77,7 +77,7 @@ const Footer = () => {
               </li>
               <li className="mb-2 d-flex align-items-start">
                 <FontAwesomeIcon icon={faMapMarkerAlt} className="me-2 mt-1" style={{ width: '16px' }} />
-                <span>123 Tech Drive<br />San Jose, CA 95110</span>
+                <span>2856 E Imperial Hwy<br />Brea, CA 92821</span>
               </li>
             </ul>
           </Col>
