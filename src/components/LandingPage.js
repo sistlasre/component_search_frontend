@@ -11,6 +11,7 @@ import {
 import SearchBar from './SearchBar';
 import SEO from './SEO';
 import { fetchCategories, getCategoryIcon, fetchManufacturers } from '../services/api';
+import ComponentSearchLandingSlides from './ComponentSearchLandingSlides';
 
 const iconMap = {
   faMicrochip, faMemory, faPlug, faSatelliteDish,
@@ -79,7 +80,7 @@ const LandingPage = () => {
       <section className="hero-section text-center py-5 bg-light">
         <Container>
           <h1 className="display-4 fw-bold mb-3">Find Electronic Components Instantly</h1>
-          <p className="lead mb-4">Search millions of parts from authorized distributors worldwide</p>
+          <p className="lead mb-4">Search millions of parts</p>
           <SearchBar />
         </Container>
       </section>

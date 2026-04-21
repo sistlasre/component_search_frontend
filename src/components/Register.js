@@ -122,26 +122,6 @@ const Register = () => {
                     </Col>
                   </Row>
 
-                  {/* Username Field */}
-                  <Form.Group className="mb-3">
-                    <Form.Label className="small fw-bold text-muted d-flex justify-content-between">
-                      USERNAME <span className="text-lowercase fw-normal fst-italic">(optional)</span>
-                    </Form.Label>
-                    <div className="input-group">
-                      <span className="input-group-text bg-white border-end-0">
-                        <FontAwesomeIcon icon={faIdCard} className="text-primary" />
-                      </span>
-                      <Form.Control
-                        className="border-start-0"
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        disabled={loading}
-                      />
-                    </div>
-                  </Form.Group>
-
                   {/* Password Field */}
                   <Form.Group className="mb-4">
                     <Form.Label className="small fw-bold text-muted">PASSWORD</Form.Label>

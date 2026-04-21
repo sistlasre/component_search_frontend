@@ -68,7 +68,7 @@ const Header = () => {
           <Form className="d-none d-lg-flex mx-auto" style={{ width: '40%' }} onSubmit={handleSearch}>
             <FormControl
               type="search"
-              placeholder="Search by part number, keyword, or description..."
+              placeholder="Search by part number"
               className="me-2"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
