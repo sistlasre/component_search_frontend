@@ -36,12 +36,17 @@ const Header = () => {
       <Container>
         <Navbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center text-primary-tint">
           <img
-            src="/component_search_logos.png"
+            src="/logo_white_small.webp"
             alt="ComponentSearch Logo"
-            height="60"
+            height="50"
+            width="125"
             className="d-inline-block align-top me-2"
           />
         </Navbar.Brand>
+        <a href="/certs/component_search_as9120_iso9001.pdf"><img src="/certs/nqa-iso9001-as9120.png" alt="AS 9120 ISO 9001 Certification" height="50" className="d-inline-block align-top me-2" /></a>
+        <a href="/certs/component_search_as6081.pdf"><img src="/certs/nqa-as6081.png" alt="AS 6081 Certification" height="50" className="d-inline-block align-top me-2" /></a>
+        <a href="#"><img src="/certs/itar.png" alt="ITAR Certification" height="50" className="d-inline-block align-top me-2" /></a>
+        <a href="#"><img src="/certs/gidep.png" alt="GIDEP Certification" height="50" className="d-inline-block align-top me-2" /></a>
         
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav">

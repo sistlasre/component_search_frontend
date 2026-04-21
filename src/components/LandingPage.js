@@ -80,7 +80,7 @@ const LandingPage = () => {
       <section className="hero-section text-center py-5 bg-light">
         <Container>
           <h1 className="display-4 fw-bold mb-3">Find Electronic Components Instantly</h1>
-          <p className="lead mb-4">Search millions of parts</p>
+          <p className="lead mb-4">Search from millions of parts in stock and available</p>
           <SearchBar />
         </Container>
       </section>
