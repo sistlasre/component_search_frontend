@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Badge, Form, Button, Spinner, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter, faSort, faTimes, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faSort, faTimes, faChevronLeft, faChevronRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import SearchBar from './SearchBar';
 
@@ -36,6 +36,16 @@ const SearchResults = () => {
 
   // State for expanded filter sections
   const [expandedFacets, setExpandedFacets] = useState({});
+
+  // State for showing/hiding the filter sidebar on mobile. Defaults to
+  // collapsed so filters don't push the results down on small screens.
+  const [showFiltersMobile, setShowFiltersMobile] = useState(false);
+
+  // Priority order for filters: these keys (normalized) should show up first
+  // if they are present in the returned facets. Anything not in this list
+  // retains its original order after these.
+  const FACET_PRIORITY = ['category', 'subcategory', 'manufacturer', 'packagecase'];
+  const normalizeFacetKey = (k) => String(k).toLowerCase().replace(/[\s_-]/g, '');
 
   // Build API URL with all parameters from URL
   const buildApiUrl = useCallback(() => {
@@ -309,6 +319,26 @@ const SearchResults = () => {
         <Row>
           {/* Filters Sidebar */}
           <Col lg={3} className="mb-4">
+            {/* Mobile-only toggle button. Hidden on lg and up where the
+                sidebar is always visible. */}
+            <Button
+              variant="outline-primary"
+              className="d-lg-none w-100 mb-2 d-flex justify-content-between align-items-center"
+              onClick={() => setShowFiltersMobile((prev) => !prev)}
+              aria-expanded={showFiltersMobile}
+            >
+              <span>
+                <FontAwesomeIcon icon={faFilter} className="me-2" />
+                {showFiltersMobile ? 'Hide Filters' : 'Show Filters'}
+                {Object.keys(selectedFilters).length > 0 && (
+                  <Badge bg="primary" className="ms-2">
+                    {Object.values(selectedFilters).reduce((acc, v) => acc + v.length, 0)}
+                  </Badge>
+                )}
+              </span>
+              <FontAwesomeIcon icon={showFiltersMobile ? faChevronUp : faChevronDown} />
+            </Button>
+            <div className={showFiltersMobile ? '' : 'd-none d-lg-block'}>
             <Card>
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
@@ -335,9 +365,19 @@ const SearchResults = () => {
                   </div>
                 )}
 
-                {/* Dynamic Facets from API - Only show facets that have values */}
+                {/* Dynamic Facets from API - Only show facets that have values.
+                    Sort so that Category, Subcategory, Manufacturer, and
+                    Package Case (when present) appear first. All other facets
+                    keep their original relative order. */}
                 {Object.entries(facets)
                   .filter(([_, facetData]) => facetData.values && facetData.values.length > 0)
+                  .sort(([keyA], [keyB]) => {
+                    const a = FACET_PRIORITY.indexOf(normalizeFacetKey(keyA));
+                    const b = FACET_PRIORITY.indexOf(normalizeFacetKey(keyB));
+                    const rankA = a === -1 ? Number.MAX_SAFE_INTEGER : a;
+                    const rankB = b === -1 ? Number.MAX_SAFE_INTEGER : b;
+                    return rankA - rankB;
+                  })
                   .map(([facetKey, facetData]) => {
                     const isExpanded = expandedFacets[facetKey];
                     const itemsToShow = isExpanded ? facetData.values : facetData.values.slice(0, 10);
@@ -383,6 +423,7 @@ const SearchResults = () => {
                 )}
               </Card.Body>
             </Card>
+            </div>
           </Col>
 
           {/* Results Grid */}

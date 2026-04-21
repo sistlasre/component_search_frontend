@@ -1,16 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert, Form, Button, InputGroup } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import { fetchPartDetails } from '../services/api';
 import { transformPartData } from '../utils/dataTransformers';
 import { useCart } from '../context/CartContext';
 
-const ProductSpecsCard = ({part}) => {
+// Fields that shouldn't be user-selectable as a spec search filter because they
+// wouldn't yield useful "similar parts" results (e.g. the exact part number).
+const NON_FILTERABLE_SPEC_KEYS = new Set(['part_number']);
+
+const ProductSpecsCard = ({ part, selectedSpecs, onToggleSpec, onSearch }) => {
+  // Count how many spec values are currently selected across all sections.
+  const selectedCount = Object.values(selectedSpecs).reduce(
+    (acc, values) => acc + (values ? values.length : 0),
+    0
+  );
+
+  const isSpecValueSelected = (key, value) => {
+    const selected = selectedSpecs[key];
+    return Array.isArray(selected) && selected.includes(value);
+  };
+
   return (
     <Card className="shadow-sm">
       <Card.Header className="bg-white py-3 border-bottom">
-        <h5 className="mb-0 fw-bold text-center">Product Specifications</h5>
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <h5 className="mb-0 fw-bold">Product Specifications</h5>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onSearch}
+          >
+            <FontAwesomeIcon icon={faSearch} className="me-2" />
+            Search similar parts{selectedCount > 0 ? ` (${selectedCount})` : ''}
+          </Button>
+        </div>
+        <div className="text-muted small mt-2">
+          Check specs below to narrow the search. Category and subcategory are always included.
+        </div>
       </Card.Header>
       <Card.Body>
         {Object.entries(part.specifications).map(([section, specs], idx, arr) => (
@@ -18,12 +48,41 @@ const ProductSpecsCard = ({part}) => {
             <h6 className="text-uppercase small fw-bold text-muted border-bottom pb-2 mb-3 text-center">{section}</h6>
             <Table bordered hover size="sm" className="mb-0">
               <tbody>
-                {Object.entries(specs).map(([key, value]) => (
-                  <tr key={key}>
-                    <td className="bg-light fw-bold text-muted border-end" style={{ width: '30%' }}>{key}</td>
-                    <td>{Array.isArray(value) ? value.join(', ') : value}</td>
-                  </tr>
-                ))}
+                {specs.map(({ key, label, value }) => {
+                  const isList = Array.isArray(value);
+                  const filterable = !NON_FILTERABLE_SPEC_KEYS.has(key);
+                  return (
+                    <tr key={key}>
+                      <td className="bg-light fw-bold text-muted border-end" style={{ width: '30%' }}>{label}</td>
+                      <td>
+                        {isList ? (
+                          <div className="d-flex flex-column gap-1">
+                            {value.map((item) => (
+                              <Form.Check
+                                key={`${key}-${item}`}
+                                type="checkbox"
+                                id={`spec-${key}-${item}`}
+                                label={String(item)}
+                                checked={isSpecValueSelected(key, item)}
+                                onChange={() => onToggleSpec(key, item)}
+                                disabled={!filterable}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <Form.Check
+                            type="checkbox"
+                            id={`spec-${key}`}
+                            label={String(value)}
+                            checked={isSpecValueSelected(key, value)}
+                            onChange={() => onToggleSpec(key, value)}
+                            disabled={!filterable}
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
           </div>
@@ -35,10 +94,13 @@ const ProductSpecsCard = ({part}) => {
 
 const PartDetail = () => {
   const { partNumber } = useParams();
+  const navigate = useNavigate();
   const [part, setPart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
+  // Map of original spec key -> array of selected values (supports list specs)
+  const [selectedSpecs, setSelectedSpecs] = useState({});
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
@@ -48,9 +110,46 @@ const PartDetail = () => {
     setTimeout(() => setAddedToCart(false), 3000);
   };
 
+  // Toggle a single spec value on or off.
+  const handleToggleSpec = (key, value) => {
+    setSelectedSpecs((prev) => {
+      const current = prev[key] ? [...prev[key]] : [];
+      const idx = current.indexOf(value);
+      if (idx > -1) {
+        current.splice(idx, 1);
+      } else {
+        current.push(value);
+      }
+      const next = { ...prev };
+      if (current.length === 0) {
+        delete next[key];
+      } else {
+        next[key] = current;
+      }
+      return next;
+    });
+  };
+
+  // Build a search URL that always includes category/subcategory and any
+  // selected spec values (joined with "||" to match the SearchResults format).
+  const handleSpecSearch = () => {
+    if (!part) return;
+    const params = new URLSearchParams();
+    if (part.category) params.append('category', part.category);
+    if (part.subcategory) params.append('subcategory', part.subcategory);
+    Object.entries(selectedSpecs).forEach(([key, values]) => {
+      if (values && values.length > 0) {
+        params.append(key, values.join('||'));
+      }
+    });
+    navigate(`/search?${params.toString()}`);
+  };
+
   useEffect(() => {
     const loadPartDetails = async () => {
       setLoading(true);
+      // Reset any selected specs when navigating to a new part.
+      setSelectedSpecs({});
       try {
         const apiData = await fetchPartDetails(partNumber);
         const transformedData = transformPartData(apiData);
@@ -166,7 +265,12 @@ const PartDetail = () => {
             {/* 2. Specs Card (Desktop: Below Header | Mobile: Below Pricing) */}
             {/* Use d-none and d-lg-block to only show this version on desktop */}
             <div className="d-none d-lg-block">
-              <ProductSpecsCard part={part} />
+              <ProductSpecsCard
+                part={part}
+                selectedSpecs={selectedSpecs}
+                onToggleSpec={handleToggleSpec}
+                onSearch={handleSpecSearch}
+              />
             </div>
           </Col>
           {/* Right Column: Pricing Card */}
@@ -229,7 +333,12 @@ const PartDetail = () => {
 
           {/* Column 3: Specs for Mobile Only */}
           <Col xs={12} className="order-3 d-block d-lg-none">
-            <ProductSpecsCard part={part} />
+            <ProductSpecsCard
+              part={part}
+              selectedSpecs={selectedSpecs}
+              onToggleSpec={handleToggleSpec}
+              onSearch={handleSpecSearch}
+            />
           </Col>
         </Row>
       </Container>

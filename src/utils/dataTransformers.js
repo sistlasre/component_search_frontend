@@ -85,10 +85,16 @@ export const categorizeSpecifications = (partData) => {
       }
 
       if (!specifications[category]) {
-        specifications[category] = {};
+        specifications[category] = [];
       }
 
-      specifications[category][snakeToTitleCase(fieldKey)] = value;
+      // Store as an array of spec objects so we can preserve the original
+      // snake_case key (for building search URLs) alongside a display label.
+      specifications[category].push({
+        key: fieldKey,
+        label: snakeToTitleCase(fieldKey),
+        value: value,
+      });
     });
   });
 
