@@ -61,25 +61,6 @@ const ComponentSearchLandingSlides = () => {
                     }}
                   >
                     <div className="w-100 mb-4">
-                      <div className="mb-4 d-flex align-items-center gap-3">
-                        <div
-                          className="d-flex align-items-center justify-content-center fw-bold"
-                          style={{
-                            height: '48px', width: '48px', borderRadius: '12px',
-                            backgroundColor: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
-                            border: '1px solid rgba(255,255,255,0.3)'
-                          }}
-                        >
-                          CS
-                        </div>
-                        <div>
-                          <div className="h5 mb-0 fw-bold">componentsearch</div>
-                          <small className="text-uppercase tracking-widest opacity-75" style={{ fontSize: '0.7rem' }}>
-                            Program {index + 1}
-                          </small>
-                        </div>
-                      </div>
-
                       <Badge
                         bg="transparent"
                         className="border border-white border-opacity-25 px-3 py-2 text-uppercase fw-bold mb-4"
@@ -127,9 +108,6 @@ const ComponentSearchLandingSlides = () => {
                       >
                         {slide.button}
                       </Button>
-                      <div className="small text-muted d-none d-sm-block">
-                        Target: <span className="fw-medium text-dark">{slide.href}</span>
-                      </div>
                     </div>
                   </Col>
                 </Row>
