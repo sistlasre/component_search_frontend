@@ -27,10 +27,12 @@ import VerifyAccount from './components/VerifyAccount';
 import AccountManagement from './components/AccountManagement';
 import MyOrders from './components/MyOrders';
 import PublicRoute from './components/PublicRoute';
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <SessionProvider>
       <AuthProvider>
       <CartProvider>
