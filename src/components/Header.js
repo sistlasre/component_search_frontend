@@ -43,10 +43,21 @@ const Header = () => {
             className="d-inline-block align-top me-2"
           />
         </Navbar.Brand>
-        <a href="/certs/component_search_as9120_iso9001.pdf"><img src="/certs/nqa-iso9001-as9120.png" alt="AS 9120 ISO 9001 Certification" height="50" className="d-inline-block align-top me-2" /></a>
-        <a href="/certs/component_search_as6081.pdf"><img src="/certs/nqa-as6081.png" alt="AS 6081 Certification" height="50" className="d-inline-block align-top me-2" /></a>
-        <a href="#"><img src="/certs/itar.png" alt="ITAR Certification" height="50" className="d-inline-block align-top me-2" /></a>
-        <a href="#"><img src="/certs/gidep.png" alt="GIDEP Certification" height="50" className="d-inline-block align-top me-2" /></a>
+        <a target="_blank" rel="noopener noreferrer" href="/certs/component_search_as9120_iso9001.pdf">
+          <img src="/certs/nqa-as9120.jpg" alt="AS 9120 Certification" height="50" className="d-inline-block align-top me-2" />
+        </a>
+        <a target="_blank" rel="noopener noreferrer" href="/certs/component_search_as9120_iso9001.pdf">
+          <img src="/certs/nqa-iso9001.jpg" alt="ISO 9001 Certification" height="50" className="d-inline-block align-top me-2" />
+        </a>
+        <a target="_blank" rel="noopener noreferrer" href="/certs/component_search_as6081.pdf">
+          <img src="/certs/nqa-as6081.jpg" alt="AS 6081 Certification" height="50" className="d-inline-block align-top me-2" />
+        </a>
+        <a href="#">
+          <img src="/certs/itar.png" alt="ITAR Certification" height="50" className="d-inline-block align-top me-2" />
+        </a>
+        <a href="#">
+          <img src="/certs/gidep.png" alt="GIDEP Certification" height="50" className="d-inline-block align-top me-2" />
+        </a>
         
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav">
