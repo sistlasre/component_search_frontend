@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Button, Badge, Carousel } from 'react-bootst
 import {
   FiClipboard, FiTruck, FiRefreshCw,
   FiSearch, FiTrendingUp, FiShield,
-  FiDollarSign, FiZap, FiTarget
+  FiDollarSign, FiZap, FiTarget, FiMonitor
 } from 'react-icons/fi';
 import './ComponentSearchLandingSlides.css';
 
@@ -30,15 +30,15 @@ const ComponentSearchLandingSlides = () => {
     {
       id: 'excess',
       eyebrow: 'EXCESS PROGRAM',
-      title: 'Turn Surplus Inventory Into Strategic Assets',
-      description: 'Market-driven analysis and active demand generation to help convert surplus electronic components into cash quickly and efficiently.',
+      title: 'Turn Excess Inventory into Working Capital',
+      description: 'Market-driven analysis, transparent reporting, and active demand generation to help convert surplus electronic components into cash.',
       button: 'Explore Our Excess Program',
       href: '/resource-center#excess',
       image: `${vignette}, url(https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=80)`,
       features: [
-        { icon: <FiSearch />, title: "Global Market Analysis", desc: "Real-time pricing data ensures you get the highest possible return for your specific components." },
-        { icon: <FiTrendingUp />, title: "Active Demand Generation", desc: "We leverage our global network to find buyers actively searching for your surplus stock." },
-        { icon: <FiShield />, title: "Transparent Reporting", desc: "Detailed monthly reports on inventory status, quotes generated, and successful sales." }
+        { icon: <FiMonitor />, title: "Full Transparency, Full Control", desc: "Access our ERP system to view all quotes and maintain full control over pricing decisions." },
+        { icon: <FiTrendingUp />, title: "Aggressive Marketing", desc: "Your inventory is marketed under direct MPNs and crosses to maximize advertising exposure on all major platforms and search engines." },
+        { icon: <FiSearch />, title: "Market Intelligence", desc: "Proprietary programs analyze market trends to price your inventory for maximum returns." }
       ]
     },
     {
