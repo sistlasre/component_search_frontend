@@ -8,7 +8,7 @@ const Footer = () => {
   return (
     <footer className="footer">
       <Container>
-        <Row className="py-4">
+        <Row className="py-2">
           <Col lg={4} md={6} className="mb-4 mb-lg-0">
             <h5 className="text-white mb-3">About ComponentSearch</h5>
             <p className="small" style={{color: "#9CA3AF"}}>
@@ -30,11 +30,11 @@ const Footer = () => {
           <Col lg={2} md={6} className="mb-4 mb-lg-0">
             <h6 className="text-white mb-3">Quick Links</h6>
             <ul className="list-unstyled small">
-              <li className="mb-2"><a href="#about-us">About Us</a></li>
-              <li className="mb-2"><a href="#excess">Excess</a></li>
-              <li className="mb-2"><a href="#e-waste">E-waste/scrap</a></li>
-              <li className="mb-2"><a href="#consignment">Consignment</a></li>
-              <li className="mb-2"><a href="#scheduled-orders">Scheduled Orders</a></li>
+              <li className="mb-2"><a href="/resource-center#about-us">About Us</a></li>
+              <li className="mb-2"><a href="/resource-center#excess">Excess</a></li>
+              <li className="mb-2"><a href="/resource-center#scrap">E-waste/scrap</a></li>
+              <li className="mb-2"><a href="/resource-center#consignment">Consignment</a></li>
+              <li className="mb-2"><a href="/resource-center#scheduled-orders">Scheduled Orders</a></li>
             </ul>
           </Col>
           
@@ -52,11 +52,11 @@ const Footer = () => {
           <Col lg={2} md={6} className="mb-4 mb-lg-0">
             <h6 className="text-white mb-3">Support</h6>
             <ul className="list-unstyled small">
-              <li className="mb-2"><a href="#help-center">Help Center</a></li>
-              <li className="mb-2"><a href="#quality-policy">Quality Policy</a></li>
-              <li className="mb-2"><a href="#terms-of-service">Terms of Service</a></li>
-              <li className="mb-2"><a href="#privacy-policy">Privacy Policy</a></li>
-              <li className="mb-2"><a href="#cookies-and-gdpr">Cookies/GDPR Policy</a></li>
+              <li className="mb-2"><a href="/resource-center">Help Center</a></li>
+              <li className="mb-2"><a href="/resource-center#quality-policy">Quality Policy</a></li>
+              <li className="mb-2"><a href="/resource-center#terms-of-service">Terms of Service</a></li>
+              <li className="mb-2"><a href="/resource-center#privacy-policy">Privacy Policy</a></li>
+              <li className="mb-2"><a href="/resource-center#cookies-and-gdpr">Cookies/GDPR Policy</a></li>
             </ul>
           </Col>
           
@@ -79,10 +79,8 @@ const Footer = () => {
           </Col>
         </Row>
         
-        <hr className="border-secondary" />
-        
-        <Row className="py-3">
-          <Col className="text-center text-muted small">
+        <Row className="py-1">
+          <Col className="text-center small">
             <p className="mb-0">
               © 2026 ComponentSearch. All rights reserved. | ISO 9001:2015 Certified
             </p>

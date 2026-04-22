@@ -58,7 +58,7 @@ const ComponentSearchLandingSlides = () => {
   ];
 
   return (
-    <div className="ComponentSearchLandingSlides-wrapper py-5 bg-light">
+    <div className="ComponentSearchLandingSlides-wrapper py-3 bg-light">
       <Container>
         <Carousel
           interval={8000}

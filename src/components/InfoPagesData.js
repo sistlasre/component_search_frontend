@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 
 export const PAGE_DATA = {
-  about: {
+  "about-us": {
     label: "About Us",
     title: "About Component Search",
     intro: "Component Search is an independent stocking distributor focused on helping customers solve sourcing challenges, reduce excess inventory, and keep supply chains moving.",
@@ -36,7 +36,7 @@ export const PAGE_DATA = {
     primaryCta: "Contact Us",
     secondaryCta: "Explore Our Services"
   },
-  excess: {
+  "excess": {
     label: "Excess",
     title: "Excess Inventory Program",
     intro: "Turn marketable surplus inventory into working capital through a structured recovery program built around visibility, pricing discipline, and active market exposure.",
@@ -68,7 +68,7 @@ export const PAGE_DATA = {
     primaryCta: "Submit Inventory",
     secondaryCta: "Talk to Our Team"
   },
-  consignment: {
+  "consignment": {
     label: "Consignment",
     title: "Consignment Program",
     intro: "Maximize returns on marketable inventory without giving up visibility, pricing involvement, or strategic control.",
@@ -100,7 +100,7 @@ export const PAGE_DATA = {
     primaryCta: "Discuss Consignment",
     secondaryCta: "Submit Inventory"
   },
-  scrap: {
+  "scrap": {
     label: "E-Waste / Scrap",
     title: "E-Waste / Scrap Program",
     intro: "Recover value from obsolete, damaged, and non-performing electronic material through practical evaluation, flexible structures, and organized disposition.",
@@ -132,7 +132,7 @@ export const PAGE_DATA = {
     primaryCta: "Request an Evaluation",
     secondaryCta: "Talk to Our Team"
   },
-  scheduled: {
+  "scheduled-orders": {
     label: "Scheduled Orders",
     title: "Scheduled Orders Program",
     intro: "Secure supply continuity with a structured ordering program designed to reduce market exposure, support forecasted demand, and improve purchasing consistency over time.",
@@ -164,7 +164,7 @@ export const PAGE_DATA = {
     primaryCta: "Discuss Scheduled Orders",
     secondaryCta: "Contact Sales"
   },
-  quality: {
+  "quality-policy": {
     label: "Quality Policy",
     title: "Quality Policy",
     intro: "Component Search is committed to supporting customer requirements through disciplined processes, clear accountability, and continuous improvement.",
@@ -196,7 +196,7 @@ export const PAGE_DATA = {
     primaryCta: "Contact Us",
     secondaryCta: "View Support Information"
   },
-  terms: {
+  "terms-of-service": {
     label: "Terms of Service",
     title: "Terms of Service",
     intro: "These Terms of Service govern the use of the Component Search website and related services.",
@@ -228,7 +228,7 @@ export const PAGE_DATA = {
     primaryCta: "Contact Us",
     secondaryCta: "Email Us"
   },
-  privacy: {
+  "privacy-policy": {
     label: "Privacy Policy",
     title: "Privacy Policy",
     intro: "Component Search respects your privacy and is committed to handling personal information responsibly.",
@@ -260,7 +260,7 @@ export const PAGE_DATA = {
     primaryCta: "Contact Us",
     secondaryCta: "Email Us"
   },
-  cookies: {
+  "cookies-and-gdpr": {
     label: "Cookies / GDPR Policy",
     title: "Cookies / GDPR Policy",
     intro: "This page explains how Component Search may use cookies and similar technologies and provides general information about privacy-related data handling principles.",

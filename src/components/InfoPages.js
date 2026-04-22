@@ -4,7 +4,7 @@ import { PAGE_DATA } from './InfoPagesData';
 
 const InfoPages = () => {
   // Logic for Deep Linking via URL Hash (#about, #excess, etc.)
-  const [activeKey, setActiveKey] = useState('about');
+  const [activeKey, setActiveKey] = useState('about-us');
 
   useEffect(() => {
     // Check hash on initial load

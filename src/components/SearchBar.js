@@ -45,9 +45,9 @@ const SearchBar = ({
           <Form.Control
             type="search"
             value={searchQuery}
-            placeholder="Search for parts"
+            placeholder="Search from millions of parts in stock and available"
             onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search for electronic parts"
+            aria-label="Search from millions of parts in stock and available"
           />
           <Button type="submit" variant="primary">
             <FontAwesomeIcon icon={faSearch} className="me-2 d-none d-sm-inline" />

@@ -80,7 +80,6 @@ const LandingPage = () => {
       <section className="hero-section text-center py-5 bg-light">
         <Container>
           <h1 className="display-4 fw-bold mb-3">Find Electronic Components Instantly</h1>
-          <p className="lead mb-4">Search from millions of parts in stock and available</p>
           <SearchBar />
         </Container>
       </section>
@@ -90,7 +89,7 @@ const LandingPage = () => {
       </section>
 
       {/* Categories Section */}
-      <section className="py-5">
+      <section className="py-4">
         <Container>
           <h2 className="text-center mb-4">Browse by Category</h2>
 
@@ -133,7 +132,7 @@ const LandingPage = () => {
       </section>
 
       {/* Manufacturers Section */}
-      <section className="py-5 bg-light">
+      <section className="py-4 bg-light">
         <Container>
           <h2 className="text-center mb-4">Browse by Manufacturer</h2>
 
