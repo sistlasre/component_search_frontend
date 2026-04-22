@@ -502,7 +502,7 @@ const SearchResults = () => {
                               {imageUrls[part.part_number] ? (
                                 <img src={imageUrls[part.part_number]} alt="Product Image" loading="lazy" />
                               ) : (
-                                <img src="/generic-part.png" alt="Product Image" loading="lazy" />
+                                <img src="/image_not_found.png" alt="Product Image" loading="lazy" />
                               )}
                             </div>
                             <Card.Body>

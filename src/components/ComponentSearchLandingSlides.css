@@ -133,14 +133,33 @@
         margin-bottom: 0 !important;
     }
 
+    .feature-text p.small {
+        display: block; /* Overrides -webkit-box */
+        height: auto;   /* Overrides the fixed 2.8em */
+        min-height: 0;  /* Allows it to be as small or large as needed */
+        overflow: visible;
+        -webkit-line-clamp: unset;
+    }
+
+    .feature-text .fw-bold {
+        white-space: normal; /* Overrides nowrap */
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .feature-row {
+        min-height: auto;
+        margin-bottom: 1.5rem !important;
+    }
+
     .slide-card {
         min-height: auto;
     }
 
-    /* On mobile, we let the height be flexible again to prevent massive gaps */
-    .feature-text p.small {
-        height: auto;
-        min-height: 2.8em;
+    /* Ensure the icon doesn't look tiny next to long text */
+    .icon-circle {
+        margin-top: 4px;
     }
 
     .hero-side {

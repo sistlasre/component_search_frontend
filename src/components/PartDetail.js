@@ -274,6 +274,7 @@ const PartDetail = () => {
                             src={part.image}
                             alt={part.partNumber}
                             className="part-image"
+                            loading="lazy"
                           />
                           <div className="overlay-badge">
                             {part.partNumber}
