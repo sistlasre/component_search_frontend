@@ -52,12 +52,8 @@ const Header = () => {
         <a target="_blank" rel="noopener noreferrer" href="/certs/component_search_as6081.pdf">
           <img src="/certs/nqa-as6081.jpg" alt="AS 6081 Certification" height="50" className="d-inline-block align-top me-2" />
         </a>
-        <a href="#">
-          <img src="/certs/itar.png" alt="ITAR Certification" height="50" className="d-inline-block align-top me-2" />
-        </a>
-        <a href="#">
-          <img src="/certs/gidep.png" alt="GIDEP Certification" height="50" className="d-inline-block align-top me-2" />
-        </a>
+        <img src="/certs/itar.png" alt="ITAR Certification" height="50" className="d-inline-block align-top me-2" />
+        <img src="/certs/gidep.png" alt="GIDEP Certification" height="50" className="d-inline-block align-top me-2" />
         
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav">

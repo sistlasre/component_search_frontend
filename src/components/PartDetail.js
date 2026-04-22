@@ -279,7 +279,7 @@ const PartDetail = () => {
               <Card.Body className="p-0">
                 <div className="px-3 py-2 border-bottom text-center">
                   <span className="h3 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
-                  <span className="text-muted ms-2">available</span>
+                  <span className="text-muted ms-2">{part.pricingType || "available"}</span>
                 </div>
 
                 <div className="bg-light px-3 py-2 border-top border-bottom">

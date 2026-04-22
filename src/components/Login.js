@@ -61,7 +61,7 @@ const Login = () => {
 
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
-                    <Form.Label className="small fw-bold text-muted">USERNAME</Form.Label>
+                    <Form.Label className="small fw-bold text-muted">EMAIL</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text bg-white border-end-0">
                         <FontAwesomeIcon icon={faUser} className="text-primary" />
