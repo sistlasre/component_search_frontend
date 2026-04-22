@@ -11,22 +11,18 @@ const Footer = () => {
         <Row className="py-4">
           <Col lg={4} md={6} className="mb-4 mb-lg-0">
             <h5 className="text-white mb-3">About ComponentSearch</h5>
-            <p className="text-muted small">
-              Your trusted source for electronic components. We connect buyers with verified suppliers worldwide, 
-              offering real-time inventory and competitive pricing.
+            <p className="small" style={{color: "#9CA3AF"}}>
+              Our mission at Component Search is to make finding components easier, faster, and tailored to support your unique needs.
             </p>
-            <div className="d-flex gap-3 mt-3">
-              <a href="#facebook" className="text-muted">
+            <div className="d-flex gap-3 mt-3" style={{color: "#9CA3AF"}}>
+              <a href="#facebook">
                 <FontAwesomeIcon icon={faFacebook} size="lg" />
               </a>
-              <a href="#twitter" className="text-muted">
+              <a href="#twitter">
                 <FontAwesomeIcon icon={faTwitter} size="lg" />
               </a>
-              <a href="#linkedin" className="text-muted">
+              <a href="#linkedin">
                 <FontAwesomeIcon icon={faLinkedin} size="lg" />
-              </a>
-              <a href="#youtube" className="text-muted">
-                <FontAwesomeIcon icon={faYoutube} size="lg" />
               </a>
             </div>
           </Col>

@@ -1,0 +1,104 @@
+/* Carousel General */
+.ComponentSearchLandingSlides-carousel {
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.slide-card {
+    border-radius: 24px;
+    min-height: 570px;
+}
+
+/* Image Panel (Left) */
+.hero-side {
+    position: relative;
+    border-right: 1px solid #eef2f6;
+}
+
+.program-badge {
+    background-color: #0052cc !important; /* Professional Blue */
+    padding: 8px 16px !important;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.slide-desc {
+    line-height: 1.7;
+    max-width: 480px;
+}
+
+/* Feature List (Right) */
+.tracking-widest {
+    letter-spacing: 0.15em;
+}
+
+.icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #f0f7ff;
+    color: #0052cc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    border: 1px solid #dbeafe;
+}
+
+.feature-row {
+    transition: transform 0.2s ease;
+}
+
+.feature-row:hover {
+    transform: translateX(8px);
+}
+
+/* UI Elements */
+.cta-button {
+    background-color: #0052cc !important;
+    border: none !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+}
+
+.cta-button:hover {
+    background-color: #0041a3 !important;
+    transform: translateY(-2px);
+}
+
+.ComponentSearchLandingSlides-carousel .carousel-indicators [data-bs-target] {
+    background-color: #0052cc;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin: 0 6px;
+}
+
+/* Mobile Fixes */
+@media (max-width: 991px) {
+    .slide-card {
+        min-height: auto;
+    }
+
+    .hero-side {
+        border-right: none;
+        min-height: 380px;
+        text-align: center;
+        /* Mobile-friendly vertical gradient */
+        background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%) !important;
+    }
+
+    .hero-side .hero-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .ComponentSearchLandingSlides-carousel .carousel-control-prev,
+    .ComponentSearchLandingSlides-carousel .carousel-control-next {
+        display: none;
+    }
+}
