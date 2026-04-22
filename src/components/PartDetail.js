@@ -225,9 +225,14 @@ const PartDetail = () => {
     `$${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
   const maxQuantity = Number(part.totalQuantity) || 0;
 
+  let seoTitle = part.partNumber;
+  if (part.manufacturer) {
+    seoTitle += ` - ${part.manufacturer}`;
+  }
+
   return (
     <>
-      <SEO title={`${part.partNumber} - ${part.manufacturer}`} description={part.description} />
+      <SEO title={seoTitle} description={part.description} />
 
       <Container className="py-4">
         <Breadcrumb className="small mb-2">
