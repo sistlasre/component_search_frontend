@@ -69,7 +69,7 @@ const Footer = () => {
             <ul className="list-unstyled small">
               <li className="mb-2 d-flex align-items-center">
                 <FontAwesomeIcon icon={faPhone} className="me-2" style={{ width: '16px' }} />
-                <span>1-800-PARTS</span>
+                <span>(800) 974-9947</span>
               </li>
               <li className="mb-2 d-flex align-items-center">
                 <FontAwesomeIcon icon={faEnvelope} className="me-2" style={{ width: '16px' }} />
