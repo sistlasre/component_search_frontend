@@ -18,7 +18,7 @@ const ComponentSearchLandingSlides = () => {
       title: 'Maximize Returns Without Giving Up Control',
       description: 'Our consignment program gives you visibility, flexibility, and operational support to help maximize returns while maintaining full control of your inventory.',
       button: 'Explore Our Consignment Program',
-      href: '/consignment-program',
+      href: '/resource-center#consignment',
       // Updated: High-end logistics/tech inventory background
       image: `${vignette}, url(https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1400&q=80)`,
       features: [
@@ -33,7 +33,7 @@ const ComponentSearchLandingSlides = () => {
       title: 'Turn Surplus Inventory Into Strategic Assets',
       description: 'Market-driven analysis and active demand generation to help convert surplus electronic components into cash quickly and efficiently.',
       button: 'Explore Our Excess Program',
-      href: '/excess-program',
+      href: '/resource-center#excess',
       image: `${vignette}, url(https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=80)`,
       features: [
         { icon: <FiSearch />, title: "Global Market Analysis", desc: "Real-time pricing data ensures you get the highest possible return for your specific components." },
@@ -47,7 +47,7 @@ const ComponentSearchLandingSlides = () => {
       title: 'Unlock Value From Obsolete and Scrap Inventory',
       description: 'Recover more value from obsolete material through higher-than-scrap pricing, on-site component recovery, and flexible deal structures.',
       button: 'Learn About Our Scrap Program',
-      href: '/ewaste-scrap-program',
+      href: '/resource-center#scrap',
       image: `${vignette}, url(https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1400&q=80)`,
       features: [
         { icon: <FiDollarSign />, title: "Top Dollar for Scrap", desc: "We pay above traditional scrap value to maximize recovery from your material." },
@@ -89,7 +89,7 @@ const ComponentSearchLandingSlides = () => {
                   </Col>
 
                   {/* Right Column: White Background with Features */}
-                  <Col lg={6} className="p-4 p-md-5 bg-white d-flex flex-column justify-content-between">
+                  <Col lg={6} className="p-4 p-md-5 bg-light d-flex flex-column justify-content-between">
                     <div>
                       <h6 className="text-primary fw-bold mb-4 tracking-widest small">WHY IT MATTERS</h6>
                       <div className="feature-stack">
@@ -110,6 +110,8 @@ const ComponentSearchLandingSlides = () => {
                     <div className="mt-4 pt-4 border-top">
                       <Button
                         href={slide.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="cta-button btn-lg px-5 py-2 fw-bold shadow-sm"
                       >
                         {slide.button} →

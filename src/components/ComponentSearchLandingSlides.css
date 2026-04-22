@@ -1,12 +1,15 @@
 /* Carousel General */
 .ComponentSearchLandingSlides-carousel {
     border-radius: 24px;
-    overflow: hidden;
+    /* We keep overflow visible so controls and dots have breathing room */
+    overflow: visible !important;
+    position: relative;
 }
 
 .slide-card {
     border-radius: 24px;
     min-height: 570px;
+    overflow: hidden; /* This keeps the image and content clipped to the rounded corners */
 }
 
 /* Image Panel (Left) */
@@ -16,7 +19,7 @@
 }
 
 .program-badge {
-    background-color: #0052cc !important; /* Professional Blue */
+    background-color: #0052cc !important;
     padding: 8px 16px !important;
     border-radius: 6px;
     font-size: 0.75rem;
@@ -69,16 +72,46 @@
     transform: translateY(-2px);
 }
 
+/* --- INDICATORS (THE DOTS) --- */
+/* Since variant="dark" is gone, we force our blue color here */
 .ComponentSearchLandingSlides-carousel .carousel-indicators [data-bs-target] {
-    background-color: #0052cc;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+    background-color: #0052cc !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
     margin: 0 6px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    opacity: 0.4;
+    transition: all 0.3s ease;
+}
+
+.ComponentSearchLandingSlides-carousel .carousel-indicators .active {
+    opacity: 1 !important;
+    transform: scale(1.2);
+    background-color: #0052cc !important;
+}
+
+/* --- ARROWS (THE CONTROLS) --- */
+.ComponentSearchLandingSlides-carousel .carousel-control-prev-icon,
+.ComponentSearchLandingSlides-carousel .carousel-control-next-icon {
+    width: 3rem;
+    height: 3rem;
+    /* Adding a shadow helps white arrows pop on lighter parts of images */
+    filter: drop-shadow(0px 0px 3px rgba(0,0,0,0.5));
 }
 
 /* Mobile Fixes */
 @media (max-width: 991px) {
+    .ComponentSearchLandingSlides-carousel {
+        /* Space for indicators below the card */
+        padding-bottom: 60px !important;
+    }
+
+    .ComponentSearchLandingSlides-carousel .carousel-indicators {
+        bottom: 10px !important;
+        margin-bottom: 0 !important;
+    }
+
     .slide-card {
         min-height: auto;
     }
@@ -87,7 +120,6 @@
         border-right: none;
         min-height: 380px;
         text-align: center;
-        /* Mobile-friendly vertical gradient */
         background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%) !important;
     }
 
@@ -97,8 +129,14 @@
         align-items: center;
     }
 
+    /* Keep controls visible and strictly over the image area */
     .ComponentSearchLandingSlides-carousel .carousel-control-prev,
     .ComponentSearchLandingSlides-carousel .carousel-control-next {
-        display: none;
+        display: flex !important;
+        height: 380px !important;
+        width: 15%; /* Slightly wider touch area for thumbs */
+        opacity: 1 !important;
+        top: 0;
+        position: absolute;
     }
 }

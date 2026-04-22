@@ -85,6 +85,10 @@ const LandingPage = () => {
         </Container>
       </section>
 
+      <section>
+        <ComponentSearchLandingSlides />
+      </section>
+
       {/* Categories Section */}
       <section className="py-5">
         <Container>
