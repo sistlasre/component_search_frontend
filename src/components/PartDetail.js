@@ -405,13 +405,13 @@ const PartDetail = () => {
                     ))}
                   </tbody>
                 </Table>
-                <div className="px-3 py-2 text-center opacity-50">
-                   <div className="d-flex justify-content-center gap-3">
-                     <i className="fab fa-cc-visa fa-lg"></i>
-                     <i className="fab fa-cc-amex fa-lg"></i>
-                     <i className="fab fa-cc-discover fa-lg"></i>
-                     <i className="fab fa-cc-mastercard fa-lg"></i>
-                   </div>
+                <div className="px-3 py-2 text-center">
+                  <div className="d-flex justify-content-center gap-3">
+                    <img src="/visa.webp" alt="Visa" className="img-fluid" style={{ maxHeight: '40px' }} />
+                    <img src="/mastercard.webp" alt="Mastercard" className="img-fluid" style={{ maxHeight: '40px' }} />
+                    <img src="/amex.webp" alt="American Express" className="img-fluid" style={{ maxHeight: '40px' }} />
+                    <img src="/discover.webp" alt="Discover" className="img-fluid" style={{ maxHeight: '40px' }} />
+                  </div>
                 </div>
               </Card.Body>
             </Card>
