@@ -1,9 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Table, Button, Form, InputGroup } from 'react-bootstrap';
+import { Container, Table, Button, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faShoppingCart, faArrowRight, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useCart } from '../context/CartContext';
+import { useCart, computeUnitPriceForQty } from '../context/CartContext';
+
+const formatCurrency = (amount) =>
+  `$${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+
+// Effective unit price for an item at a given qty. If price_breaks are
+// present we always recompute off them so the displayed subtotal matches
+// what would be charged. Falls back to whatever unit_price is stored on the
+// item (e.g. set on Part Detail) when no price_breaks are available.
+const effectiveUnitPrice = (item, qty) => {
+  const recomputed = computeUnitPriceForQty(item.price_breaks, qty);
+  if (recomputed != null) return recomputed;
+  if (item.unit_price != null && Number.isFinite(Number(item.unit_price))) {
+    return Number(item.unit_price);
+  }
+  return null;
+};
 
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -38,6 +54,18 @@ const CartPage = () => {
       && editQuantities[partNumber] !== cartItems.find((i) => i.partNumber === partNumber)?.quantity;
   };
 
+  // Running total across all items where we have enough info to price them.
+  // Items without unit pricing (e.g. request-style inquiries) contribute 0.
+  const grandTotal = useMemo(() => {
+    return cartItems.reduce((sum, item) => {
+      const price = effectiveUnitPrice(item, item.quantity);
+      if (price == null) return sum;
+      return sum + price * Number(item.quantity || 0);
+    }, 0);
+  }, [cartItems]);
+
+  const hasAnyPricing = cartItems.some((i) => effectiveUnitPrice(i, i.quantity) != null);
+
   if (cartItems.length === 0) {
     return (
       <Container className="py-5 text-center">
@@ -61,61 +89,85 @@ const CartPage = () => {
             <th>Part Number</th>
             <th>Manufacturer</th>
             <th style={{ width: '200px' }}>Quantity</th>
+            <th className="text-end" style={{ width: '120px' }}>Unit Price</th>
+            <th className="text-end" style={{ width: '140px' }}>Subtotal</th>
             <th style={{ width: '80px' }} className="text-center">Remove</th>
           </tr>
         </thead>
         <tbody>
-          {cartItems.map((item) => (
-            <tr key={item.partNumber}>
-              <td>
-                <Link to={`/part/${encodeURIComponent(item.partNumber)}`} className="fw-semibold part-number">
-                  {item.partNumber}
-                </Link>
-              </td>
-              <td>{item.manufacturer}</td>
-              <td>
-                <div className="d-flex align-items-center gap-2">
-                  <Form.Control
-                    type="number"
-                    min="1"
-                    value={editQuantities[item.partNumber] ?? item.quantity}
-                    onChange={(e) => handleQuantityChange(item.partNumber, e.target.value)}
-                    size="sm"
-                    style={{ maxWidth: '100px' }}
-                  />
+          {cartItems.map((item) => {
+            // Preview pricing against the pending edit so admins see the
+            // price_break that *would* apply if they commit the change.
+            const previewQty = editQuantities[item.partNumber] ?? item.quantity;
+            const previewUnit = effectiveUnitPrice(item, previewQty);
+            const previewSubtotal = previewUnit != null ? previewUnit * Number(previewQty || 0) : null;
+            return (
+              <tr key={item.partNumber}>
+                <td>
+                  <Link to={`/part/${encodeURIComponent(item.partNumber)}`} className="fw-semibold part-number">
+                    {item.partNumber}
+                  </Link>
+                </td>
+                <td>{item.manufacturer}</td>
+                <td>
+                  <div className="d-flex align-items-center gap-2">
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      value={editQuantities[item.partNumber] ?? item.quantity}
+                      onChange={(e) => handleQuantityChange(item.partNumber, e.target.value)}
+                      size="sm"
+                      style={{ maxWidth: '100px' }}
+                    />
+                    <Button
+                      variant={isChanged(item.partNumber) ? 'success' : 'outline-secondary'}
+                      size="sm"
+                      disabled={!isChanged(item.partNumber)}
+                      onClick={() => applyQuantity(item.partNumber)}
+                      title="Apply quantity"
+                    >
+                      <FontAwesomeIcon icon={faCheck} />
+                    </Button>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      disabled={!isChanged(item.partNumber)}
+                      onClick={() => discardQuantity(item.partNumber)}
+                      title="Discard change"
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </Button>
+                  </div>
+                </td>
+                <td className="text-end">
+                  {previewUnit != null ? formatCurrency(previewUnit) : <span className="text-muted">—</span>}
+                </td>
+                <td className="text-end">
+                  {previewSubtotal != null ? formatCurrency(previewSubtotal) : <span className="text-muted">—</span>}
+                </td>
+                <td className="text-center">
                   <Button
-                    variant={isChanged(item.partNumber) ? 'success' : 'outline-secondary'}
+                    variant="outline-danger"
                     size="sm"
-                    disabled={!isChanged(item.partNumber)}
-                    onClick={() => applyQuantity(item.partNumber)}
-                    title="Apply quantity"
+                    onClick={() => removeFromCart(item.partNumber)}
+                    title="Remove from cart"
                   >
-                    <FontAwesomeIcon icon={faCheck} />
+                    <FontAwesomeIcon icon={faTrash} />
                   </Button>
-                  <Button
-                    variant="outline-secondary"
-                    size="sm"
-                    disabled={!isChanged(item.partNumber)}
-                    onClick={() => discardQuantity(item.partNumber)}
-                    title="Discard change"
-                  >
-                    <FontAwesomeIcon icon={faTimes} />
-                  </Button>
-                </div>
-              </td>
-              <td className="text-center">
-                <Button
-                  variant="outline-danger"
-                  size="sm"
-                  onClick={() => removeFromCart(item.partNumber)}
-                  title="Remove from cart"
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              </td>
-            </tr>
-          ))}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
+        {hasAnyPricing && (
+          <tfoot>
+            <tr>
+              <td colSpan={4} className="text-end fw-bold">Total</td>
+              <td className="text-end fw-bold">{formatCurrency(grandTotal)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        )}
       </Table>
 
       <div className="d-flex justify-content-between align-items-center mt-4">

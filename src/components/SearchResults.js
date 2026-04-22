@@ -500,9 +500,9 @@ const SearchResults = () => {
                           <Link to={`/part/${encodeURIComponent(part.part_number)}`} className="text-decoration-none text-dark">
                             <div className="product-image-container">
                               {imageUrls[part.part_number] ? (
-                                <img src={imageUrls[part.part_number]} alt="Product Image" />
+                                <img src={imageUrls[part.part_number]} alt="Product Image" loading="lazy" />
                               ) : (
-                                <img src="/generic-part.png" alt="Product Image" />
+                                <img src="/generic-part.png" alt="Product Image" loading="lazy" />
                               )}
                             </div>
                             <Card.Body>

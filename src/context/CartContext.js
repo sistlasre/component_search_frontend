@@ -23,19 +23,66 @@ const saveCart = (items) => {
   }
 };
 
+// Normalise a price break list to the { min_qty, price } shape used by the
+// cart/order backends. Returns an empty array for invalid input.
+const normalizePriceBreaks = (raw) =>
+  (Array.isArray(raw) ? raw : [])
+    .map((pb) => {
+      const minQty = Number(pb?.min_qty ?? pb?.break_qty);
+      const price = Number(pb?.price);
+      if (!Number.isFinite(minQty) || minQty < 1) return null;
+      if (!Number.isFinite(price) || price <= 0) return null;
+      return { min_qty: minQty, price };
+    })
+    .filter(Boolean);
+
+// Given price breaks and a quantity, return the unit price for the highest
+// min_qty that is <= qty. Returns null when no break qualifies.
+export const computeUnitPriceForQty = (priceBreaks, qty) => {
+  const n = Number(qty);
+  if (!Number.isFinite(n) || n < 1) return null;
+  const breaks = normalizePriceBreaks(priceBreaks);
+  if (breaks.length === 0) return null;
+  const eligible = breaks
+    .filter((pb) => pb.min_qty <= n)
+    .sort((a, b) => b.min_qty - a.min_qty);
+  return eligible.length > 0 ? eligible[0].price : null;
+};
+
 // The backend uses snake_case (part_number). The frontend historically uses
 // camelCase (partNumber). These helpers keep the two worlds in sync.
-const fromServerItem = (it) => ({
-  partNumber: it.part_number || it.partNumber,
-  manufacturer: it.manufacturer || '',
-  quantity: Number(it.quantity) || 1,
-});
+const fromServerItem = (it) => {
+  const out = {
+    partNumber: it.part_number || it.partNumber,
+    manufacturer: it.manufacturer || '',
+    quantity: Number(it.quantity) || 1,
+  };
+  const unitPrice = it.unit_price != null ? Number(it.unit_price) : null;
+  if (unitPrice != null && Number.isFinite(unitPrice)) {
+    out.unit_price = unitPrice;
+  }
+  const priceBreaks = normalizePriceBreaks(it.price_breaks);
+  if (priceBreaks.length > 0) {
+    out.price_breaks = priceBreaks;
+  }
+  return out;
+};
 
-const toServerItem = (it) => ({
-  part_number: it.partNumber,
-  manufacturer: it.manufacturer || '',
-  quantity: Number(it.quantity) || 1,
-});
+const toServerItem = (it) => {
+  const out = {
+    part_number: it.partNumber,
+    manufacturer: it.manufacturer || '',
+    quantity: Number(it.quantity) || 1,
+  };
+  if (it.unit_price != null && Number.isFinite(Number(it.unit_price))) {
+    out.unit_price = Number(it.unit_price);
+  }
+  const priceBreaks = normalizePriceBreaks(it.price_breaks);
+  if (priceBreaks.length > 0) {
+    out.price_breaks = priceBreaks;
+  }
+  return out;
+};
 
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
@@ -84,20 +131,50 @@ export const CartProvider = ({ children }) => {
   const addToCart = useCallback(async (item) => {
     const current = loadCart();
     const existing = current.find((i) => i.partNumber === item.partNumber);
+    const incomingPriceBreaks = normalizePriceBreaks(item.price_breaks);
+    const mergedItem = existing
+      ? (() => {
+          const newQty = existing.quantity + item.quantity;
+          // Prefer the freshly-provided price_breaks (the caller just fetched
+          // them from the part detail page); fall back to what we had.
+          const breaks = incomingPriceBreaks.length > 0
+            ? incomingPriceBreaks
+            : (existing.price_breaks || []);
+          const recomputed = computeUnitPriceForQty(breaks, newQty);
+          const next = { ...existing, quantity: newQty };
+          // If we can compute an updated price, prefer it; otherwise keep
+          // whatever unit_price was on the incoming or existing item.
+          const nextUnitPrice = recomputed != null
+            ? recomputed
+            : (item.unit_price != null ? Number(item.unit_price) : existing.unit_price);
+          if (nextUnitPrice != null && Number.isFinite(Number(nextUnitPrice))) {
+            next.unit_price = Number(nextUnitPrice);
+          }
+          if (breaks.length > 0) {
+            next.price_breaks = breaks;
+          }
+          return next;
+        })()
+      : (() => {
+          const next = {
+            partNumber: item.partNumber,
+            manufacturer: item.manufacturer,
+            quantity: item.quantity,
+          };
+          if (item.unit_price != null && Number.isFinite(Number(item.unit_price))) {
+            next.unit_price = Number(item.unit_price);
+          }
+          if (incomingPriceBreaks.length > 0) {
+            next.price_breaks = incomingPriceBreaks;
+          }
+          return next;
+        })();
     const updated = existing
-      ? current.map((i) =>
-          i.partNumber === item.partNumber
-            ? { ...i, quantity: i.quantity + item.quantity }
-            : i,
-        )
-      : [...current, {
-          partNumber: item.partNumber,
-          manufacturer: item.manufacturer,
-          quantity: item.quantity,
-        }];
+      ? current.map((i) => (i.partNumber === item.partNumber ? mergedItem : i))
+      : [...current, mergedItem];
     persist(updated);
     try {
-      await apiService.addCartItem(toServerItem(item));
+      await apiService.addCartItem(toServerItem(mergedItem));
     } catch (err) {
       console.warn('addCartItem sync failed:', err?.message || err);
     }
@@ -115,12 +192,26 @@ export const CartProvider = ({ children }) => {
 
   const updateQuantity = useCallback(async (partNumber, quantity) => {
     if (quantity < 1) return;
-    const updated = loadCart().map((i) =>
-      i.partNumber === partNumber ? { ...i, quantity } : i,
-    );
+    // When we have price_breaks stored alongside the item, recompute the
+    // unit price for the new quantity so subtotals in the cart stay accurate.
+    const updated = loadCart().map((i) => {
+      if (i.partNumber !== partNumber) return i;
+      const next = { ...i, quantity };
+      if (i.price_breaks && i.price_breaks.length > 0) {
+        const recomputed = computeUnitPriceForQty(i.price_breaks, quantity);
+        if (recomputed != null) next.unit_price = recomputed;
+      }
+      return next;
+    });
     persist(updated);
     try {
-      await apiService.updateCartItem(partNumber, quantity);
+      // Send the full item so unit_price/price_breaks stay in sync server-side.
+      const updatedItem = updated.find((i) => i.partNumber === partNumber);
+      if (updatedItem) {
+        await apiService.putCart(updated.map(toServerItem));
+      } else {
+        await apiService.updateCartItem(partNumber, quantity);
+      }
     } catch (err) {
       console.warn('updateCartItem sync failed:', err?.message || err);
     }

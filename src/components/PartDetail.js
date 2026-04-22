@@ -92,6 +92,28 @@ const ProductSpecsCard = ({ part, selectedSpecs, onToggleSpec, onSearch }) => {
   );
 };
 
+// Given a list of price breaks and a quantity, return the price associated
+// with the highest break_qty that is still <= qty. Returns null when no
+// break qualifies (e.g. the lowest break_qty is greater than qty, or the
+// price break list is empty/invalid).
+export const findUnitPriceForQty = (priceBreaks, qty) => {
+  if (!Array.isArray(priceBreaks) || priceBreaks.length === 0) return null;
+  const numericQty = Number(qty);
+  if (!Number.isFinite(numericQty) || numericQty < 1) return null;
+  const eligible = priceBreaks
+    .filter((pb) => pb && Number(pb.price) > 0 && Number(pb.break_qty) <= numericQty)
+    .sort((a, b) => Number(b.break_qty) - Number(a.break_qty));
+  if (eligible.length === 0) return null;
+  return Number(eligible[0].price);
+};
+
+// Normalise the part's price_breaks (which use `break_qty`) to the shape the
+// cart/order backends expect (`min_qty`). Drops rows without a positive price.
+const toCartPriceBreaks = (priceBreaks) =>
+  (priceBreaks || [])
+    .filter((pb) => pb && Number(pb.price) > 0 && Number(pb.break_qty) >= 1)
+    .map((pb) => ({ min_qty: Number(pb.break_qty), price: Number(pb.price) }));
+
 const PartDetail = () => {
   const { partNumber } = useParams();
   const navigate = useNavigate();
@@ -103,9 +125,41 @@ const PartDetail = () => {
   const [selectedSpecs, setSelectedSpecs] = useState({});
   const { addToCart } = useCart();
 
+  // Clamp a requested quantity to [1, totalQuantity]. When totalQuantity is
+  // unknown/zero we still enforce a floor of 1 but don't cap.
+  const clampQuantity = (raw) => {
+    const parsed = parseInt(raw, 10);
+    const n = Number.isFinite(parsed) ? parsed : 1;
+    const floored = Math.max(1, n);
+    const max = Number(part?.totalQuantity) || 0;
+    if (max > 0) return Math.min(floored, max);
+    return floored;
+  };
+
+  const handleQuantityChange = (value) => {
+    setQuantity(clampQuantity(value));
+  };
+
+  const unitPrice = part ? findUnitPriceForQty(part.priceBreaks, quantity) : null;
+  const subtotal = unitPrice != null ? unitPrice * quantity : null;
+
   const handleAddToCart = () => {
     if (!part) return;
-    addToCart({ partNumber: part.partNumber, manufacturer: part.manufacturer, quantity });
+    const cartItem = {
+      partNumber: part.partNumber,
+      manufacturer: part.manufacturer,
+      quantity,
+    };
+    // Only attach pricing metadata when we actually have a matching break;
+    // downstream code treats missing unit_price as "pricing TBD by admin".
+    if (unitPrice != null) {
+      cartItem.unit_price = unitPrice;
+    }
+    const priceBreaks = toCartPriceBreaks(part.priceBreaks);
+    if (priceBreaks.length > 0) {
+      cartItem.price_breaks = priceBreaks;
+    }
+    addToCart(cartItem);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
   };
@@ -167,6 +221,9 @@ const PartDetail = () => {
   if (!part) return <Container className="py-5"><Alert variant="warning">Part Not Found</Alert></Container>;
 
   const formatQuantity = (qty) => Number(qty).toLocaleString();
+  const formatCurrency = (amount) =>
+    `$${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+  const maxQuantity = Number(part.totalQuantity) || 0;
 
   return (
     <>
@@ -288,12 +345,33 @@ const PartDetail = () => {
                       <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
                       <Form.Control
                         type="number"
+                        min={1}
+                        max={maxQuantity > 0 ? maxQuantity : undefined}
                         value={quantity}
-                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={(e) => handleQuantityChange(e.target.value)}
                       />
                     </InputGroup>
+                    {maxQuantity > 0 && quantity >= maxQuantity && (
+                      <Form.Text className="text-muted">
+                        Maximum available: {formatQuantity(maxQuantity)}
+                      </Form.Text>
+                    )}
                   </Form.Group>
-                  <Button variant="primary" size="md" className="w-100 fw-bold shadow-sm" onClick={handleAddToCart}>
+                  {subtotal != null && (
+                    <div className="d-flex justify-content-between align-items-baseline mb-2 small">
+                      <span className="text-muted">
+                        Subtotal <span className="text-muted">({formatCurrency(unitPrice)} ea.)</span>
+                      </span>
+                      <span className="fw-bold">{formatCurrency(subtotal)}</span>
+                    </div>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="w-100 fw-bold shadow-sm"
+                    onClick={handleAddToCart}
+                    disabled={maxQuantity === 0}
+                  >
                     Add to Cart
                   </Button>
                   {addedToCart && (

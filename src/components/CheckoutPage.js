@@ -1,9 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Table, Form, Button, Alert, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
-import { useCart } from '../context/CartContext';
+import { useCart, computeUnitPriceForQty } from '../context/CartContext';
 import { apiService } from '../services/userManagementService';
 import { useAuth } from '../context/AuthContext';
+
+const formatCurrency = (amount) =>
+  `$${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+
+// Pick the best available unit price for the given quantity: prefer a live
+// recomputation from price_breaks, then fall back to the stored unit_price.
+const effectiveUnitPrice = (item, qty) => {
+  const recomputed = computeUnitPriceForQty(item.price_breaks, qty);
+  if (recomputed != null) return recomputed;
+  if (item.unit_price != null && Number.isFinite(Number(item.unit_price))) {
+    return Number(item.unit_price);
+  }
+  return null;
+};
 
 const initialForm = {
   fullName: '',
@@ -32,6 +46,17 @@ const CheckoutPage = () => {
   // Purchase order PDF (required for orders, optional for requests).
   const [purchaseOrderFile, setPurchaseOrderFile] = useState(null);
   const [purchaseOrderError, setPurchaseOrderError] = useState('');
+
+  // Order summary totals derived from the current cart. Items without
+  // pricing info contribute 0 to the grand total.
+  const grandTotal = useMemo(() => {
+    return cartItems.reduce((sum, item) => {
+      const price = effectiveUnitPrice(item, item.quantity);
+      if (price == null) return sum;
+      return sum + price * Number(item.quantity || 0);
+    }, 0);
+  }, [cartItems]);
+  const hasAnyPricing = cartItems.some((i) => effectiveUnitPrice(i, i.quantity) != null);
 
   const fillFormFromUserInfo = async () => {
     if (user) {
@@ -102,11 +127,24 @@ const CheckoutPage = () => {
       recordType,
       contact,
       notes,
-      items: cartItems.map((item) => ({
-        part_number: item.partNumber,
-        manufacturer: item.manufacturer,
-        quantity: item.quantity,
-      })),
+      items: cartItems.map((item) => {
+        const unitPrice = effectiveUnitPrice(item, item.quantity);
+        const lineItem = {
+          part_number: item.partNumber,
+          manufacturer: item.manufacturer,
+          quantity: item.quantity,
+        };
+        if (unitPrice != null) {
+          lineItem.unit_price = unitPrice;
+        }
+        if (Array.isArray(item.price_breaks) && item.price_breaks.length > 0) {
+          lineItem.price_breaks = item.price_breaks.map((pb) => ({
+            min_qty: Number(pb.min_qty),
+            price: Number(pb.price),
+          }));
+        }
+        return lineItem;
+      }),
     };
 
     setSubmitting(true);
@@ -194,25 +232,48 @@ const CheckoutPage = () => {
                     <th className="py-2">Part Number</th>
                     <th className="py-2">Manufacturer</th>
                     <th className="py-2 text-center">Qty</th>
+                    <th className="py-2 text-end">Unit Price</th>
+                    <th className="py-2 text-end">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {cartItems.map((item) => (
-                    <tr key={item.partNumber}>
-                      <td className="py-2">
-                        <Link className="part-number" to={`/part/${encodeURIComponent(item.partNumber)}`} target="_blank" rel="noopener noreferrer">
-                          {item.partNumber}
-                        </Link>
-                      </td>
-                      <td className="py-2">{item.manufacturer}</td>
-                      <td className="py-2 text-center">{item.quantity.toLocaleString()}</td>
-                    </tr>
-                  ))}
+                  {cartItems.map((item) => {
+                    const unit = effectiveUnitPrice(item, item.quantity);
+                    const subtotal = unit != null ? unit * Number(item.quantity || 0) : null;
+                    return (
+                      <tr key={item.partNumber}>
+                        <td className="py-2">
+                          <Link className="part-number" to={`/part/${encodeURIComponent(item.partNumber)}`} target="_blank" rel="noopener noreferrer">
+                            {item.partNumber}
+                          </Link>
+                        </td>
+                        <td className="py-2">{item.manufacturer}</td>
+                        <td className="py-2 text-center">{item.quantity.toLocaleString()}</td>
+                        <td className="py-2 text-end">
+                          {unit != null ? formatCurrency(unit) : <span className="text-muted">—</span>}
+                        </td>
+                        <td className="py-2 text-end">
+                          {subtotal != null ? formatCurrency(subtotal) : <span className="text-muted">—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
+                {hasAnyPricing && (
+                  <tfoot>
+                    <tr>
+                      <td colSpan={4} className="py-2 text-end fw-bold">Total</td>
+                      <td className="py-2 text-end fw-bold">{formatCurrency(grandTotal)}</td>
+                    </tr>
+                  </tfoot>
+                )}
               </Table>
             </Card.Body>
             <Card.Footer className="bg-white text-muted small">
               {cartItems.length} item{cartItems.length !== 1 ? 's' : ''} in order
+              {hasAnyPricing && recordType === 'request' && (
+                <span className="ms-2">(pricing indicative — final pricing confirmed during quote)</span>
+              )}
             </Card.Footer>
           </Card>
 

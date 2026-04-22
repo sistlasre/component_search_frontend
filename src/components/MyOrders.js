@@ -207,6 +207,7 @@ const MyOrders = () => {
                                 <th>Manufacturer</th>
                                 <th className="text-end">Qty</th>
                                 <th className="text-end">Unit Price</th>
+                                <th className="text-end">Subtotal</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -217,7 +218,13 @@ const MyOrders = () => {
                                   </td>
                                   <td>{it.manufacturer}</td>
                                   <td className="text-end">{Number(it.quantity).toLocaleString()}</td>
-                                  <td className="text-end">{it.unit_price != null ? `$${Number(it.unit_price).toFixed(2)}` : '—'}</td>
+                                  <td className="text-end">{it.unit_price != null ? `$${Number(it.unit_price).toFixed(4)}` : '—'}</td>
+                                  <td className="text-end">
+                                    {it.unit_price != null
+                                      ? `$${(Number(it.quantity) * Number(it.unit_price)).toFixed(4)}`
+                                      : '—'
+                                    }
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
