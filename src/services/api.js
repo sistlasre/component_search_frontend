@@ -27,7 +27,7 @@ export const fetchCategories = async () => {
 export const fetchSubcategories = async (category) => {
   try {
     const encodedCategory = encodeURIComponent(category);
-    const response = await fetch(`${API_BASE_URL}/category/${encodedCategory}/subcategories`);
+    const response = await fetch(`${API_BASE_URL}/category/${encodedCategory}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch subcategories: ${response.status}`);
     }
