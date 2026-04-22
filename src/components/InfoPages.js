@@ -38,7 +38,7 @@ const InfoPages = () => {
 
             {/* Minimalist Sidebar */}
             <Col lg={3}>
-              <div className="sticky-top" style={{ top: '2rem' }}>
+              <div className="sticky-pricing-card">
                 <h6 className="text-uppercase tracking-widest text-muted small fw-bold mb-4 px-2">
                   Resource Navigation
                 </h6>
