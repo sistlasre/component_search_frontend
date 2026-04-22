@@ -28,6 +28,7 @@ import AccountManagement from './components/AccountManagement';
 import MyOrders from './components/MyOrders';
 import PublicRoute from './components/PublicRoute';
 import ScrollToTop from './components/ScrollToTop';
+import InfoPages from './components/InfoPages'
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/account" element={<AccountManagement />} />
               <Route path="/orders" element={<MyOrders />} />
+              <Route path="/resource-center" element={<InfoPages />} />
               <Route path="/login" element={
                 <PublicRoute>
                   <Login />
