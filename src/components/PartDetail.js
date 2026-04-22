@@ -206,7 +206,7 @@ const PartDetail = () => {
       setSelectedSpecs({});
       try {
         const apiData = await fetchPartDetails(partNumber);
-        const transformedData = transformPartData(apiData);
+        const transformedData = transformPartData(apiData, partNumber);
         setPart(transformedData);
       } catch (error) {
         console.error('Error fetching part details:', error);
@@ -287,7 +287,9 @@ const PartDetail = () => {
                   <Col md={7}>
                     <div className="ps-md-3">
                       <h2 className="h4 mb-1" style={{ fontWeight: 500 }}>{part.manufacturer}</h2>
-                      <p className="text-muted pb-3 mb-3 border-bottom">{part.description}</p>
+                      {part.description && (
+                        <p className="text-muted pb-3 mb-3 border-bottom">{part.description}</p>
+                      )}
 
                       <Table bordered size="sm" className="mb-0">
                         <tbody>

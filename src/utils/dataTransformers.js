@@ -109,7 +109,7 @@ export const categorizeSpecifications = (partData) => {
  * @param {Object} apiResponse - The full API response object
  * @returns {Object} Transformed part data
  */
-export const transformPartData = (apiResponse) => {
+export const transformPartData = (apiResponse, partNumberFallback = '') => {
   const rawData = apiResponse.part_data || apiResponse;
   const pricingInfoList = apiResponse.part_pricing_info || [];
   const pricingType = apiResponse.part_pricing_type || null;
@@ -120,13 +120,25 @@ export const transformPartData = (apiResponse) => {
 
   // Sum quantities across all entries
   const totalQuantity = pricingInfoList.reduce((sum, entry) => sum + (entry.qty || 0), 0);
+  let description = '';
+  if (rawData.category2) {
+    description = rawData.category2;
+  }
+  if (rawData.series) {
+    if (rawData.category2) {
+      description += ` - ${rawData.series} Series`;
+    } else {
+      description = `${rawData.series} Series`;
+    }
+
+  }
 
   return {
-    partNumber: rawData.part_number,
-    manufacturer: rawData.manufacturer || 'Unknown',
-    description: `${rawData.category2 || ''} - ${rawData.series || ''} Series`.trim(),
-    category: rawData.category1 || 'Electronic Components',
-    subcategory: rawData.category2 || '',
+    partNumber: rawData.part_number || partNumberFallback,
+    manufacturer: rawData.manufacturer,
+    description: description,
+    category: rawData.category1,
+    subcategory: rawData.category2,
     image: imageUrl,
     specifications: categorizeSpecifications(rawData),
     // Pricing info
@@ -138,6 +150,7 @@ export const transformPartData = (apiResponse) => {
     documents: [],
     relatedParts: [],
     // Store raw data for reference
-    rawData: rawData
+    rawData: rawData,
+    doesPartExist: apiResponse.part_data && Object.keys(apiResponse.part_data).length > 0
   };
 };
