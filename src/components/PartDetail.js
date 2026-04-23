@@ -512,89 +512,85 @@ const PartDetail = () => {
                     <img src="/discover.webp" alt="Discover" className="img-fluid" style={{ maxHeight: '40px' }} />
                   </div>
                 </div>
-              </Card.Body>
-            </Card>
 
-            {/* Request Discounted Pricing card: submits a `request` record
-                directly to /orders without touching the cart. */}
-            <Card className="shadow-sm mt-3 mb-4">
-              <Card.Header className="bg-white py-2 border-bottom">
-                <h6 className="mb-0 fw-bold">
-                  <FontAwesomeIcon icon={faTag} className="me-2 text-primary" />
-                  Request Discounted Pricing
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                <p className="text-muted small mb-3">
-                  Buying in volume? Submit a quick request and our team will get back to you with a custom quote.
-                </p>
-                {discountRequestError && (
-                  <Alert variant="danger" className="py-2 small">
-                    {discountRequestError}
-                  </Alert>
-                )}
-                {discountRequestRecordId && (
-                  <Alert variant="success" className="py-2 small">
-                    Request submitted! Reference ID: <code>{discountRequestRecordId}</code>
-                  </Alert>
-                )}
-                <Form.Group className="mb-2" controlId="discount-qty">
-                  <Form.Label className="small fw-bold mb-1">
-                    Quantity <span className="text-danger">*</span>
-                  </Form.Label>
-                  <InputGroup size="sm">
-                    <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
+                {/* Request Discounted Pricing section: submits a `request`
+                    record directly to /orders without touching the cart. */}
+                <div className="px-3 py-3 border-top">
+                  <div className="d-flex align-items-center mb-2">
+                    <FontAwesomeIcon icon={faTag} className="me-2 text-primary" />
+                    <h6 className="mb-0 fw-bold">Request Discounted Pricing</h6>
+                  </div>
+                  <p className="text-muted small mb-3">
+                    Buying in volume? Submit a quick request and our team will get back to you with a custom quote.
+                  </p>
+                  {discountRequestError && (
+                    <Alert variant="danger" className="py-2 small">
+                      {discountRequestError}
+                    </Alert>
+                  )}
+                  {discountRequestRecordId && (
+                    <Alert variant="success" className="py-2 small">
+                      Request submitted! Reference ID: <code>{discountRequestRecordId}</code>
+                    </Alert>
+                  )}
+                  <Form.Group className="mb-2" controlId="discount-qty">
+                    <Form.Label className="small fw-bold mb-1">
+                      Quantity <span className="text-danger">*</span>
+                    </Form.Label>
+                    <InputGroup size="sm">
+                      <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        min={1}
+                        value={discountQty}
+                        onChange={(e) => handleDiscountQtyChange(e.target.value)}
+                      />
+                    </InputGroup>
+                  </Form.Group>
+                  <Form.Group className="mb-2" controlId="discount-full-name">
+                    <Form.Label className="small fw-bold mb-1">
+                      Full Name <span className="text-danger">*</span>
+                    </Form.Label>
                     <Form.Control
-                      type="number"
-                      min={1}
-                      value={discountQty}
-                      onChange={(e) => handleDiscountQtyChange(e.target.value)}
+                      size="sm"
+                      type="text"
+                      value={discountFullName}
+                      onChange={(e) => setDiscountFullName(e.target.value)}
+                      placeholder="John Doe"
                     />
-                  </InputGroup>
-                </Form.Group>
-                <Form.Group className="mb-2" controlId="discount-full-name">
-                  <Form.Label className="small fw-bold mb-1">
-                    Full Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
+                  </Form.Group>
+                  <Form.Group className="mb-2" controlId="discount-email">
+                    <Form.Label className="small fw-bold mb-1">
+                      Email <span className="text-danger">*</span>
+                    </Form.Label>
+                    <Form.Control
+                      size="sm"
+                      type="email"
+                      value={discountEmail}
+                      onChange={(e) => setDiscountEmail(e.target.value)}
+                      placeholder="john@example.com"
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3" controlId="discount-notes">
+                    <Form.Label className="small fw-bold mb-1">Notes (optional)</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      value={discountNotes}
+                      onChange={(e) => setDiscountNotes(e.target.value)}
+                      placeholder="Target price, timing, or other details..."
+                    />
+                  </Form.Group>
+                  <Button
+                    variant="outline-primary"
                     size="sm"
-                    type="text"
-                    value={discountFullName}
-                    onChange={(e) => setDiscountFullName(e.target.value)}
-                    placeholder="John Doe"
-                  />
-                </Form.Group>
-                <Form.Group className="mb-2" controlId="discount-email">
-                  <Form.Label className="small fw-bold mb-1">
-                    Email <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    size="sm"
-                    type="email"
-                    value={discountEmail}
-                    onChange={(e) => setDiscountEmail(e.target.value)}
-                    placeholder="john@example.com"
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="discount-notes">
-                  <Form.Label className="small fw-bold mb-1">Notes (optional)</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={2}
-                    value={discountNotes}
-                    onChange={(e) => setDiscountNotes(e.target.value)}
-                    placeholder="Target price, timing, or other details..."
-                  />
-                </Form.Group>
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  className="w-100 fw-bold"
-                  onClick={handleRequestDiscountedPricing}
-                  disabled={submittingDiscountRequest}
-                >
-                  {submittingDiscountRequest ? 'Submitting…' : 'Request Discounted Pricing'}
-                </Button>
+                    className="w-100 fw-bold"
+                    onClick={handleRequestDiscountedPricing}
+                    disabled={submittingDiscountRequest}
+                  >
+                    {submittingDiscountRequest ? 'Submitting…' : 'Request Discounted Pricing'}
+                  </Button>
+                </div>
               </Card.Body>
             </Card>
           </Col>
