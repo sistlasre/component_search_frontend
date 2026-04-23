@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert, Form, Button, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert, Form, Button, InputGroup, Collapse } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faTag } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTag, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import { fetchPartDetails } from '../services/api';
 import { transformPartData } from '../utils/dataTransformers';
@@ -140,6 +140,9 @@ const PartDetail = () => {
   const [submittingDiscountRequest, setSubmittingDiscountRequest] = useState(false);
   const [discountRequestError, setDiscountRequestError] = useState('');
   const [discountRequestRecordId, setDiscountRequestRecordId] = useState(null);
+  // Form is collapsed by default to keep the pricing card compact; users
+  // expand it only when they want to submit a discount request.
+  const [discountExpanded, setDiscountExpanded] = useState(false);
 
   // Clamp a requested quantity to [1, totalQuantity]. When totalQuantity is
   // unknown/zero we still enforce a floor of 1 but don't cap.
@@ -514,82 +517,104 @@ const PartDetail = () => {
                 </div>
 
                 {/* Request Discounted Pricing section: submits a `request`
-                    record directly to /orders without touching the cart. */}
-                <div className="px-3 py-3 border-top">
-                  <div className="d-flex align-items-center mb-2">
-                    <FontAwesomeIcon icon={faTag} className="me-2 text-primary" />
-                    <h6 className="mb-0 fw-bold">Request Discounted Pricing</h6>
-                  </div>
-                  <p className="text-muted small mb-3">
-                    Buying in volume? Submit a quick request and our team will get back to you with a custom quote.
-                  </p>
-                  {discountRequestError && (
-                    <Alert variant="danger" className="py-2 small">
-                      {discountRequestError}
-                    </Alert>
-                  )}
-                  {discountRequestRecordId && (
-                    <Alert variant="success" className="py-2 small">
-                      Request submitted! Reference ID: <code>{discountRequestRecordId}</code>
-                    </Alert>
-                  )}
-                  <Form.Group className="mb-2" controlId="discount-qty">
-                    <Form.Label className="small fw-bold mb-1">
-                      Quantity <span className="text-danger">*</span>
-                    </Form.Label>
-                    <InputGroup size="sm">
-                      <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
-                      <Form.Control
-                        type="number"
-                        min={1}
-                        value={discountQty}
-                        onChange={(e) => handleDiscountQtyChange(e.target.value)}
-                      />
-                    </InputGroup>
-                  </Form.Group>
-                  <Form.Group className="mb-2" controlId="discount-full-name">
-                    <Form.Label className="small fw-bold mb-1">
-                      Full Name <span className="text-danger">*</span>
-                    </Form.Label>
-                    <Form.Control
-                      size="sm"
-                      type="text"
-                      value={discountFullName}
-                      onChange={(e) => setDiscountFullName(e.target.value)}
-                      placeholder="John Doe"
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-2" controlId="discount-email">
-                    <Form.Label className="small fw-bold mb-1">
-                      Email <span className="text-danger">*</span>
-                    </Form.Label>
-                    <Form.Control
-                      size="sm"
-                      type="email"
-                      value={discountEmail}
-                      onChange={(e) => setDiscountEmail(e.target.value)}
-                      placeholder="john@example.com"
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3" controlId="discount-notes">
-                    <Form.Label className="small fw-bold mb-1">Notes (optional)</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={2}
-                      value={discountNotes}
-                      onChange={(e) => setDiscountNotes(e.target.value)}
-                      placeholder="Target price, timing, or other details..."
-                    />
-                  </Form.Group>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    className="w-100 fw-bold"
-                    onClick={handleRequestDiscountedPricing}
-                    disabled={submittingDiscountRequest}
+                    record directly to /orders without touching the cart.
+                    The form itself is collapsed by default; the title +
+                    description act as a clickable toggle. */}
+                <div className="border-top">
+                  <button
+                    type="button"
+                    className="btn btn-link w-100 text-start text-decoration-none text-dark px-3 py-3"
+                    onClick={() => setDiscountExpanded((v) => !v)}
+                    aria-expanded={discountExpanded}
+                    aria-controls="discount-request-form"
                   >
-                    {submittingDiscountRequest ? 'Submitting…' : 'Request Discounted Pricing'}
-                  </Button>
+                    <div className="d-flex align-items-center justify-content-between mb-2">
+                      <div className="d-flex align-items-center">
+                        <FontAwesomeIcon icon={faTag} className="me-2 text-primary" />
+                        <h6 className="mb-0 fw-bold">Request Discounted Pricing</h6>
+                      </div>
+                      <FontAwesomeIcon
+                        icon={discountExpanded ? faChevronUp : faChevronDown}
+                        className="text-muted small"
+                      />
+                    </div>
+                    <p className="text-muted small mb-0">
+                      Buying in volume? Submit a quick request and our team will get back to you with a custom quote.
+                    </p>
+                  </button>
+                  <Collapse in={discountExpanded}>
+                    <div id="discount-request-form">
+                      <div className="px-3 pb-3">
+                        {discountRequestError && (
+                          <Alert variant="danger" className="py-2 small">
+                            {discountRequestError}
+                          </Alert>
+                        )}
+                        {discountRequestRecordId && (
+                          <Alert variant="success" className="py-2 small">
+                            Request submitted! Reference ID: <code>{discountRequestRecordId}</code>
+                          </Alert>
+                        )}
+                        <Form.Group className="mb-2" controlId="discount-qty">
+                          <Form.Label className="small fw-bold mb-1">
+                            Quantity <span className="text-danger">*</span>
+                          </Form.Label>
+                          <InputGroup size="sm">
+                            <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
+                            <Form.Control
+                              type="number"
+                              min={1}
+                              value={discountQty}
+                              onChange={(e) => handleDiscountQtyChange(e.target.value)}
+                            />
+                          </InputGroup>
+                        </Form.Group>
+                        <Form.Group className="mb-2" controlId="discount-full-name">
+                          <Form.Label className="small fw-bold mb-1">
+                            Full Name <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            size="sm"
+                            type="text"
+                            value={discountFullName}
+                            onChange={(e) => setDiscountFullName(e.target.value)}
+                            placeholder="John Doe"
+                          />
+                        </Form.Group>
+                        <Form.Group className="mb-2" controlId="discount-email">
+                          <Form.Label className="small fw-bold mb-1">
+                            Email <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            size="sm"
+                            type="email"
+                            value={discountEmail}
+                            onChange={(e) => setDiscountEmail(e.target.value)}
+                            placeholder="john@example.com"
+                          />
+                        </Form.Group>
+                        <Form.Group className="mb-3" controlId="discount-notes">
+                          <Form.Label className="small fw-bold mb-1">Notes (optional)</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={2}
+                            value={discountNotes}
+                            onChange={(e) => setDiscountNotes(e.target.value)}
+                            placeholder="Target price, timing, or other details..."
+                          />
+                        </Form.Group>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="w-100 fw-bold"
+                          onClick={handleRequestDiscountedPricing}
+                          disabled={submittingDiscountRequest}
+                        >
+                          {submittingDiscountRequest ? 'Submitting…' : 'Request Discounted Pricing'}
+                        </Button>
+                      </div>
+                    </div>
+                  </Collapse>
                 </div>
               </Card.Body>
             </Card>
