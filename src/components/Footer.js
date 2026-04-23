@@ -15,13 +15,13 @@ const Footer = () => {
               Our mission at Component Search is to make finding components easier, faster, and tailored to support your unique needs.
             </p>
             <div className="d-flex gap-3 mt-3" style={{color: "#9CA3AF"}}>
-              <a href="#facebook">
+              <a href="https://www.facebook.com/ComponentSearch" target="_blank">
                 <FontAwesomeIcon icon={faFacebook} size="lg" />
               </a>
-              <a href="#twitter">
+              <a href="https://x.com/componentsearch" target="_blank">
                 <FontAwesomeIcon icon={faTwitter} size="lg" />
               </a>
-              <a href="#linkedin">
+              <a href="https://www.linkedin.com/company/component-search/" target="_blank">
                 <FontAwesomeIcon icon={faLinkedin} size="lg" />
               </a>
             </div>
