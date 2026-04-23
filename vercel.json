@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/cs/:path*",
+      "destination": "https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/prod/cs/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://e1hygwwcle.execute-api.us-west-2.amazonaws.com/dev/:path*"
     }
