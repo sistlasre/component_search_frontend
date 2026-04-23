@@ -142,7 +142,7 @@ const PartDetail = () => {
   const [discountRequestRecordId, setDiscountRequestRecordId] = useState(null);
   // Form is collapsed by default to keep the pricing card compact; users
   // expand it only when they want to submit a discount request.
-  const [discountExpanded, setDiscountExpanded] = useState(false);
+  const [discountExpanded, setDiscountExpanded] = useState(true);
 
   // Clamp a requested quantity to [1, totalQuantity]. When totalQuantity is
   // unknown/zero we still enforce a floor of 1 but don't cap.
