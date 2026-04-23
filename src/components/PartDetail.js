@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert, Form, Button, InputGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faTag } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import { fetchPartDetails } from '../services/api';
 import { transformPartData } from '../utils/dataTransformers';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/userManagementService';
 
 // Fields that shouldn't be user-selectable as a spec search filter because they
 // wouldn't yield useful "similar parts" results (e.g. the exact part number).
@@ -124,6 +126,20 @@ const PartDetail = () => {
   // Map of original spec key -> array of selected values (supports list specs)
   const [selectedSpecs, setSelectedSpecs] = useState({});
   const { addToCart } = useCart();
+  const { user } = useAuth();
+
+  // State for the "Request Discounted Pricing" card. This flow bypasses the
+  // cart/checkout and submits directly as a `request` record to /orders.
+  // fullName + email are required by the backend for any record submission;
+  // we prefill them from the signed-in user's profile when available, but
+  // anonymous users can fill them in manually.
+  const [discountQty, setDiscountQty] = useState(1);
+  const [discountNotes, setDiscountNotes] = useState('');
+  const [discountFullName, setDiscountFullName] = useState('');
+  const [discountEmail, setDiscountEmail] = useState('');
+  const [submittingDiscountRequest, setSubmittingDiscountRequest] = useState(false);
+  const [discountRequestError, setDiscountRequestError] = useState('');
+  const [discountRequestRecordId, setDiscountRequestRecordId] = useState(null);
 
   // Clamp a requested quantity to [1, totalQuantity]. When totalQuantity is
   // unknown/zero we still enforce a floor of 1 but don't cap.
@@ -162,6 +178,67 @@ const PartDetail = () => {
     addToCart(cartItem);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 3000);
+  };
+
+  // Clamp the discount-request qty the same way as the add-to-cart qty, but
+  // don't cap by totalQuantity: discount requests are a pre-purchase inquiry
+  // and the requested qty can legitimately exceed on-hand stock.
+  const handleDiscountQtyChange = (value) => {
+    const parsed = parseInt(value, 10);
+    const n = Number.isFinite(parsed) ? parsed : 1;
+    setDiscountQty(Math.max(1, n));
+  };
+
+  // Submit a discount-pricing inquiry directly to /orders as a `request`
+  // record. Bypasses the cart entirely.
+  const handleRequestDiscountedPricing = async () => {
+    if (!part) return;
+    const qty = parseInt(discountQty, 10);
+    if (!Number.isFinite(qty) || qty < 1) {
+      setDiscountRequestError('Please enter a valid quantity.');
+      return;
+    }
+    const trimmedName = discountFullName.trim();
+    const trimmedEmail = discountEmail.trim();
+    if (!trimmedName || !trimmedEmail) {
+      setDiscountRequestError('Full name and email are required.');
+      return;
+    }
+
+    setSubmittingDiscountRequest(true);
+    setDiscountRequestError('');
+    setDiscountRequestRecordId(null);
+    try {
+      const lineItem = {
+        part_number: part.partNumber,
+        manufacturer: part.manufacturer,
+        quantity: qty,
+      };
+      const priceBreaks = toCartPriceBreaks(part.priceBreaks);
+      if (priceBreaks.length > 0) {
+        lineItem.price_breaks = priceBreaks;
+      }
+
+      const resp = await apiService.createOrder({
+        recordType: 'request',
+        contact: { fullName: trimmedName, email: trimmedEmail },
+        items: [lineItem],
+        notes: discountNotes
+          ? `[Discounted pricing request] ${discountNotes}`
+          : '[Discounted pricing request]',
+      });
+      const recordId = resp.data?.record?.record_id || null;
+      setDiscountRequestRecordId(recordId);
+      // Reset the free-form fields but keep prefilled contact info for
+      // potential subsequent requests on this page.
+      setDiscountNotes('');
+      setDiscountQty(1);
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Failed to submit request. Please try again.';
+      setDiscountRequestError(msg);
+    } finally {
+      setSubmittingDiscountRequest(false);
+    }
   };
 
   // Toggle a single spec value on or off.
@@ -216,6 +293,28 @@ const PartDetail = () => {
     };
     loadPartDetails();
   }, [partNumber]);
+
+  // Prefill the discount-request contact fields from the signed-in user's
+  // profile. Anonymous visitors simply see blank fields they can fill in.
+  useEffect(() => {
+    let cancelled = false;
+    const prefill = async () => {
+      if (!user) return;
+      try {
+        const response = await apiService.getUser();
+        if (cancelled) return;
+        const userData = response.data?.requesting_user || {};
+        const fullName = [userData.first_name, userData.last_name].filter(Boolean).join(' ').trim();
+        if (fullName) setDiscountFullName((prev) => prev || fullName);
+        if (userData.email) setDiscountEmail((prev) => prev || userData.email);
+      } catch (err) {
+        // Non-fatal: user can still type their info manually.
+        console.warn('Failed to prefill discount request contact info:', err);
+      }
+    };
+    prefill();
+    return () => { cancelled = true; };
+  }, [user]);
 
   if (loading) return <Container className="py-5 text-center"><div className="spinner-border text-primary" /></Container>;
   if (!part) return <Container className="py-5"><Alert variant="warning">Part Not Found</Alert></Container>;
@@ -413,6 +512,89 @@ const PartDetail = () => {
                     <img src="/discover.webp" alt="Discover" className="img-fluid" style={{ maxHeight: '40px' }} />
                   </div>
                 </div>
+              </Card.Body>
+            </Card>
+
+            {/* Request Discounted Pricing card: submits a `request` record
+                directly to /orders without touching the cart. */}
+            <Card className="shadow-sm mt-3 mb-4">
+              <Card.Header className="bg-white py-2 border-bottom">
+                <h6 className="mb-0 fw-bold">
+                  <FontAwesomeIcon icon={faTag} className="me-2 text-primary" />
+                  Request Discounted Pricing
+                </h6>
+              </Card.Header>
+              <Card.Body>
+                <p className="text-muted small mb-3">
+                  Buying in volume? Submit a quick request and our team will get back to you with a custom quote.
+                </p>
+                {discountRequestError && (
+                  <Alert variant="danger" className="py-2 small">
+                    {discountRequestError}
+                  </Alert>
+                )}
+                {discountRequestRecordId && (
+                  <Alert variant="success" className="py-2 small">
+                    Request submitted! Reference ID: <code>{discountRequestRecordId}</code>
+                  </Alert>
+                )}
+                <Form.Group className="mb-2" controlId="discount-qty">
+                  <Form.Label className="small fw-bold mb-1">
+                    Quantity <span className="text-danger">*</span>
+                  </Form.Label>
+                  <InputGroup size="sm">
+                    <InputGroup.Text className="bg-white text-muted small fw-bold">QTY</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      min={1}
+                      value={discountQty}
+                      onChange={(e) => handleDiscountQtyChange(e.target.value)}
+                    />
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-2" controlId="discount-full-name">
+                  <Form.Label className="small fw-bold mb-1">
+                    Full Name <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    size="sm"
+                    type="text"
+                    value={discountFullName}
+                    onChange={(e) => setDiscountFullName(e.target.value)}
+                    placeholder="John Doe"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2" controlId="discount-email">
+                  <Form.Label className="small fw-bold mb-1">
+                    Email <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    size="sm"
+                    type="email"
+                    value={discountEmail}
+                    onChange={(e) => setDiscountEmail(e.target.value)}
+                    placeholder="john@example.com"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3" controlId="discount-notes">
+                  <Form.Label className="small fw-bold mb-1">Notes (optional)</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={2}
+                    value={discountNotes}
+                    onChange={(e) => setDiscountNotes(e.target.value)}
+                    placeholder="Target price, timing, or other details..."
+                  />
+                </Form.Group>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  className="w-100 fw-bold"
+                  onClick={handleRequestDiscountedPricing}
+                  disabled={submittingDiscountRequest}
+                >
+                  {submittingDiscountRequest ? 'Submitting…' : 'Request Discounted Pricing'}
+                </Button>
               </Card.Body>
             </Card>
           </Col>
