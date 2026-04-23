@@ -39,9 +39,9 @@ export const fetchSubcategories = async (category) => {
   }
 };
 
-export const fetchManufacturers = async () => {
+export const fetchManufacturers = async (numMfrsToFetch = null) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/manufacturers`);
+    const response = await fetch(numMfrsToFetch ? `/api/cs/manufacturers?numMfrsToFetch=${numMfrsToFetch}`: '/api/cs/manufacturers');
     if (!response.ok) {
       throw new Error(`Failed to fetch manufacturers: ${response.status}`);
     }
