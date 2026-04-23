@@ -29,6 +29,7 @@ import MyOrders from './components/MyOrders';
 import PublicRoute from './components/PublicRoute';
 import ScrollToTop from './components/ScrollToTop';
 import InfoPages from './components/InfoPages'
+import ManufacturersPage from './components/ManufacturersPage';
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
               <Route path="/category/:categoryName" element={<SubcategoryPage />} />
               <Route path="/part/:partNumber" element={<PartDetail />} />
               <Route path="/search" element={<SearchResults />} />
+              <Route path="/manufacturers" element={<ManufacturersPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />

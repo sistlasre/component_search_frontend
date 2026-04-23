@@ -162,10 +162,9 @@ const LandingPage = () => {
                 <div className="text-center mt-2">
                   <Button
                     variant="outline-primary"
-                    onClick={() => setShowAllManufacturers(!showAllManufacturers)}
+                    href="/manufacturers"
                   >
-                    {showAllManufacturers ? 'See Less ' : 'See More '}
-                    <FontAwesomeIcon icon={showAllManufacturers ? faChevronUp : faChevronDown} className="ms-2" />
+                    See All Manufacturers
                   </Button>
                 </div>
               )}
