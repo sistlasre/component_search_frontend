@@ -32,7 +32,7 @@ export const getOrCreateSessionId = () => {
 class ApiService {
   constructor() {
     this.api = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: '/api',
       headers: {
         'Content-Type': 'application/json',
       },
