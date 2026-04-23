@@ -490,8 +490,8 @@ const PartDetail = () => {
                     </Alert>
                   )}
                 </div>
-
-                <Table bordered hover size="sm" className="small mb-0">
+                {part.totalQuantity > 0 && (
+                 <Table bordered hover size="sm" className="small mb-0">
                   <thead className="bg-light">
                     <tr>
                       <th className="text-primary py-1 px-2">QTY.</th>
@@ -506,7 +506,8 @@ const PartDetail = () => {
                       </tr>
                     ))}
                   </tbody>
-                </Table>
+                 </Table>
+                )}
                 <div className="px-3 py-2 text-center">
                   <div className="d-flex justify-content-center gap-3">
                     <img src="/visa.webp" alt="Visa" className="img-fluid" style={{ maxHeight: '40px' }} />
@@ -520,7 +521,8 @@ const PartDetail = () => {
                     record directly to /orders without touching the cart.
                     The form itself is collapsed by default; the title +
                     description act as a clickable toggle. */}
-                <div className="border-top">
+                {part.totalQuantity > 0 && (
+                 <div className="border-top">
                   <button
                     type="button"
                     className="btn btn-link w-100 text-start text-decoration-none text-dark px-3 py-3"
@@ -615,7 +617,8 @@ const PartDetail = () => {
                       </div>
                     </div>
                   </Collapse>
-                </div>
+                 </div>
+                )}
               </Card.Body>
             </Card>
           </Col>
