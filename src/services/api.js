@@ -7,7 +7,7 @@ const API_BASE_URL = 'https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/pro
  */
 export const fetchCategories = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/categories`);
+    const response = await fetch('/api/cs/categories');
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`);
     }
@@ -27,7 +27,7 @@ export const fetchCategories = async () => {
 export const fetchSubcategories = async (category) => {
   try {
     const encodedCategory = encodeURIComponent(category);
-    const response = await fetch(`${API_BASE_URL}/category/${encodedCategory}`);
+    const response = await fetch(`/api/cs/category/${encodedCategory}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch subcategories: ${response.status}`);
     }
@@ -85,7 +85,7 @@ export const fetchPartDetails = async (partNumber) => {
   try {
     // Encode the partNumber to handle special characters safely
     const encodedPartNumber = encodeURIComponent(partNumber);
-    const response = await fetch(`${API_BASE_URL}/part/${encodedPartNumber}`);
+    const response = await fetch(`/api/cs/part/${encodedPartNumber}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch part details: ${response.status}`);
     }
