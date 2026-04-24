@@ -1,10 +1,54 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Tab, Nav, Card, Accordion, Button } from 'react-bootstrap';
 import { PAGE_DATA } from './InfoPagesData';
+import ContactUsModal from './ContactUsModal';
+
+// Normalise a CTA definition to a consistent shape. Supports legacy string
+// values as well as the richer object form documented in InfoPagesData.js.
+const normalizeCta = (cta) => {
+  if (!cta) return null;
+  if (typeof cta === 'string') {
+    return { label: cta, opensContactModal: false };
+  }
+  if (typeof cta === 'object' && cta.label) {
+    return {
+      label: cta.label,
+      opensContactModal: Boolean(cta.opensContactModal),
+      subject: cta.subject || '',
+      href: cta.href || '',
+    };
+  }
+  return null;
+};
 
 const InfoPages = () => {
   // Logic for Deep Linking via URL Hash (#about, #excess, etc.)
   const [activeKey, setActiveKey] = useState('about-us');
+
+  // Contact Us modal state — shared across all pages.
+  const [contactModal, setContactModal] = useState({ show: false, subject: '', source: '' });
+
+  const openContactModal = ({ subject = '', source = '' } = {}) => {
+    setContactModal({ show: true, subject, source });
+  };
+
+  const closeContactModal = () => {
+    setContactModal((prev) => ({ ...prev, show: false }));
+  };
+
+  const handleCtaClick = (cta, pageKey, pageTitle) => {
+    if (!cta) return;
+    if (cta.opensContactModal) {
+      openContactModal({
+        subject: cta.subject || `Inquiry from ${pageTitle}`,
+        source: pageTitle || pageKey,
+      });
+      return;
+    }
+    if (cta.href) {
+      window.location.href = cta.href;
+    }
+  };
 
   useEffect(() => {
     // Check hash on initial load
@@ -85,16 +129,30 @@ const InfoPages = () => {
                         </div>
                       )}
                       <div className="d-flex gap-3">
-                        {page.primaryCta && (
-                          <Button variant="primary" className="rounded-pill px-4 py-2 fw-bold">
-                            {page.primaryCta}
-                          </Button>
-                        )}
-                        {page.secondaryCta && (
-                          <Button variant="outline-dark" className="rounded-pill px-4 py-2 fw-bold">
-                            {page.secondaryCta}
-                          </Button>
-                        )}
+                        {(() => {
+                          const primary = normalizeCta(page.primaryCta);
+                          return primary && (
+                            <Button
+                              variant="primary"
+                              className="rounded-pill px-4 py-2 fw-bold"
+                              onClick={() => handleCtaClick(primary, key, page.title)}
+                            >
+                              {primary.label}
+                            </Button>
+                          );
+                        })()}
+                        {(() => {
+                          const secondary = normalizeCta(page.secondaryCta);
+                          return secondary && (
+                            <Button
+                              variant="outline-dark"
+                              className="rounded-pill px-4 py-2 fw-bold"
+                              onClick={() => handleCtaClick(secondary, key, page.title)}
+                            >
+                              {secondary.label}
+                            </Button>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -166,6 +224,13 @@ const InfoPages = () => {
           </Row>
         </Tab.Container>
       </Container>
+
+      <ContactUsModal
+        show={contactModal.show}
+        onHide={closeContactModal}
+        defaultSubject={contactModal.subject}
+        source={contactModal.source}
+      />
 
       {/* Basic CSS overrides to refine the look */}
       <style>{`

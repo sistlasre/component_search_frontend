@@ -3,6 +3,21 @@ import {
   Search, Recycle, Factory, Phone, Mail, MapPin
 } from "lucide-react";
 
+// ---------------------------------------------------------------------------
+// CTA configuration
+// ---------------------------------------------------------------------------
+// Each page's `primaryCta` / `secondaryCta` may be either:
+//   * a string — the button label, with no action (legacy behaviour)
+//   * an object of shape:
+//       {
+//         label: string,                // required — button text
+//         opensContactModal?: boolean,  // if true, clicking opens the Contact Us modal
+//         subject?: string,             // optional subject to pre-fill in the contact form
+//         href?: string,                // optional link (used when opensContactModal is falsy)
+//       }
+// InfoPages.js reads the object form and wires the Contact Us modal accordingly.
+// ---------------------------------------------------------------------------
+
 export const PAGE_DATA = {
   "about-us": {
     label: "About Us",
@@ -33,7 +48,11 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Looking for a more capable inventory and sourcing partner?",
     ctaText: "Component Search helps customers source components, recover value from inventory, and build more practical supply chain strategies.",
-    primaryCta: "Contact Us"
+    primaryCta: {
+      label: "Contact Us",
+      opensContactModal: true,
+      subject: "General inquiry — About Us"
+    }
   },
   "excess": {
     label: "Excess",
@@ -64,7 +83,11 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Ready to turn excess inventory into working capital?",
     ctaText: "Component Search helps recover value from marketable surplus inventory through a structured and transparent excess program.",
-    primaryCta: "Talk to Our Team"
+    primaryCta: {
+      label: "Talk to Our Team",
+      opensContactModal: true,
+      subject: "Excess Inventory Program inquiry"
+    }
   },
   "consignment": {
     label: "Consignment",
@@ -95,7 +118,11 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Want stronger returns without giving up control?",
     ctaText: "Component Search can help you build a consignment strategy that is structured, transparent, and aligned with your inventory goals.",
-    primaryCta: "Discuss Consignment"
+    primaryCta: {
+      label: "Discuss Consignment",
+      opensContactModal: true,
+      subject: "Consignment Program inquiry"
+    }
   },
   "scrap": {
     label: "E-Waste / Scrap",
@@ -126,7 +153,11 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Need a practical recovery path for obsolete inventory?",
     ctaText: "Component Search can help you evaluate the best path to recovery for obsolete, damaged, and non-performing electronic material.",
-    primaryCta: "Talk to Our Team"
+    primaryCta: {
+      label: "Talk to Our Team",
+      opensContactModal: true,
+      subject: "E-Waste / Scrap Program inquiry"
+    }
   },
   "scheduled-orders": {
     label: "Scheduled Orders",
@@ -157,7 +188,11 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Need a more stable and predictable supply strategy?",
     ctaText: "Component Search can help build a scheduled order program aligned with your operational goals and recurring demand requirements.",
-    primaryCta: "Discuss Scheduled Orders"
+    primaryCta: {
+      label: "Discuss Scheduled Orders",
+      opensContactModal: true,
+      subject: "Scheduled Orders Program inquiry"
+    }
   },
   "quality-policy": {
     label: "Quality Policy",
