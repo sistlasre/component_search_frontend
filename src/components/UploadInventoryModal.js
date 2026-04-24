@@ -245,14 +245,13 @@ const UploadInventoryModal = ({ show, onHide, source = '' }) => {
               </Alert>
             )}
 
-            <p className="text-muted mb-4">
+            <p className="text-muted mb-3">
               Submit a CSV or Excel file containing your inventory. You&apos;ll map
-              the <strong>Part Number</strong> (required), <strong>Manufacturer</strong>,
+              the <strong>Part Number</strong>, <strong>Manufacturer</strong>,
               and <strong>Quantity</strong> columns below so we know what to look at.
-              Fields marked with <span className="text-danger">*</span> are required.
             </p>
 
-            <Row className="g-3 mb-3">
+            <Row className="g-3 mb-2">
               <Col md={6}>
                 <Form.Group controlId="inventoryEmail">
                   <Form.Label>Email<span className="text-danger"> *</span></Form.Label>
@@ -275,14 +274,11 @@ const UploadInventoryModal = ({ show, onHide, source = '' }) => {
                     disabled={uploading}
                     required
                   />
-                  <Form.Text className="text-muted">
-                    Used to name the file we store (lowercased, spaces become underscores).
-                  </Form.Text>
                 </Form.Group>
               </Col>
             </Row>
 
-            <Form.Group className="mb-3" controlId="inventoryFile">
+            <Form.Group className="mb-2" controlId="inventoryFile">
               <Form.Label>Inventory File<span className="text-danger"> *</span></Form.Label>
               <Form.Control
                 type="file"
