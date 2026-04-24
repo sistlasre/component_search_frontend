@@ -162,6 +162,17 @@ class ApiService {
     return this.api.post('/inventory/quantities', { part_numbers: partNumbers });
   }
 
+  // -------------------- User Inventory Upload --------------------
+  // Ask the backend for a presigned PUT URL so the browser can push the
+  // user's inventory file (CSV/XLSX) directly to S3. The backend bakes the
+  // column mappings, email, and company name into the object's metadata so
+  // the admin console can display them later.
+  // payload: { email_address, company_name, mpn_field, mfr_field?,
+  //            quantity_field?, file_extension, content_type }
+  async getUserInventoryUploadUrl(payload) {
+    return this.api.post('/user-inventory/upload-url', payload);
+  }
+
   // -------------------- Session --------------------
   async ensureSession() {
     const session_id = getOrCreateSessionId();

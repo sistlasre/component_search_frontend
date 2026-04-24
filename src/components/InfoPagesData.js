@@ -12,10 +12,12 @@ import {
 //       {
 //         label: string,                // required — button text
 //         opensContactModal?: boolean,  // if true, clicking opens the Contact Us modal
+//         opensUploadModal?: boolean,   // if true, clicking opens the Upload Inventory modal
 //         subject?: string,             // optional subject to pre-fill in the contact form
-//         href?: string,                // optional link (used when opensContactModal is falsy)
+//         href?: string,                // optional link (used when neither modal flag is set)
 //       }
-// InfoPages.js reads the object form and wires the Contact Us modal accordingly.
+// Precedence: opensUploadModal > opensContactModal > href. InfoPages.js
+// reads the object form and wires the modals accordingly.
 // ---------------------------------------------------------------------------
 
 export const PAGE_DATA = {
@@ -84,6 +86,10 @@ export const PAGE_DATA = {
     ctaTitle: "Ready to turn excess inventory into working capital?",
     ctaText: "Component Search helps recover value from marketable surplus inventory through a structured and transparent excess program.",
     primaryCta: {
+      label: "Submit Inventory",
+      opensUploadModal: true
+    },
+    secondaryCta: {
       label: "Talk to Our Team",
       opensContactModal: true,
       subject: "Excess Inventory Program inquiry"
@@ -118,10 +124,14 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Want stronger returns without giving up control?",
     ctaText: "Component Search can help you build a consignment strategy that is structured, transparent, and aligned with your inventory goals.",
-    primaryCta: {
+    secondaryCta: {
       label: "Discuss Consignment",
       opensContactModal: true,
       subject: "Consignment Program inquiry"
+    },
+    primaryCta: {
+      label: "Submit Inventory",
+      opensUploadModal: true
     }
   },
   "scrap": {
@@ -153,10 +163,14 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Need a practical recovery path for obsolete inventory?",
     ctaText: "Component Search can help you evaluate the best path to recovery for obsolete, damaged, and non-performing electronic material.",
-    primaryCta: {
+    secondaryCta: {
       label: "Talk to Our Team",
       opensContactModal: true,
       subject: "E-Waste / Scrap Program inquiry"
+    },
+    primaryCta: {
+      label: "Submit Inventory",
+      opensUploadModal: true
     }
   },
   "scheduled-orders": {

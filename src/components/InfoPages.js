@@ -2,18 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Tab, Nav, Card, Accordion, Button } from 'react-bootstrap';
 import { PAGE_DATA } from './InfoPagesData';
 import ContactUsModal from './ContactUsModal';
+import UploadInventoryModal from './UploadInventoryModal';
 
 // Normalise a CTA definition to a consistent shape. Supports legacy string
 // values as well as the richer object form documented in InfoPagesData.js.
 const normalizeCta = (cta) => {
   if (!cta) return null;
   if (typeof cta === 'string') {
-    return { label: cta, opensContactModal: false };
+    return { label: cta, opensContactModal: false, opensUploadModal: false };
   }
   if (typeof cta === 'object' && cta.label) {
     return {
       label: cta.label,
       opensContactModal: Boolean(cta.opensContactModal),
+      opensUploadModal: Boolean(cta.opensUploadModal),
       subject: cta.subject || '',
       href: cta.href || '',
     };
@@ -28,6 +30,9 @@ const InfoPages = () => {
   // Contact Us modal state — shared across all pages.
   const [contactModal, setContactModal] = useState({ show: false, subject: '', source: '' });
 
+  // Upload Inventory modal state — also shared across pages.
+  const [uploadModal, setUploadModal] = useState({ show: false, source: '' });
+
   const openContactModal = ({ subject = '', source = '' } = {}) => {
     setContactModal({ show: true, subject, source });
   };
@@ -36,8 +41,20 @@ const InfoPages = () => {
     setContactModal((prev) => ({ ...prev, show: false }));
   };
 
+  const openUploadModal = ({ source = '' } = {}) => {
+    setUploadModal({ show: true, source });
+  };
+
+  const closeUploadModal = () => {
+    setUploadModal((prev) => ({ ...prev, show: false }));
+  };
+
   const handleCtaClick = (cta, pageKey, pageTitle) => {
     if (!cta) return;
+    if (cta.opensUploadModal) {
+      openUploadModal({ source: pageTitle || pageKey });
+      return;
+    }
     if (cta.opensContactModal) {
       openContactModal({
         subject: cta.subject || `Inquiry from ${pageTitle}`,
@@ -230,6 +247,12 @@ const InfoPages = () => {
         onHide={closeContactModal}
         defaultSubject={contactModal.subject}
         source={contactModal.source}
+      />
+
+      <UploadInventoryModal
+        show={uploadModal.show}
+        onHide={closeUploadModal}
+        source={uploadModal.source}
       />
 
       {/* Basic CSS overrides to refine the look */}
