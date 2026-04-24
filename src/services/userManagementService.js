@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 // Base API URL - update this with your actual API Gateway URL
-//const API_BASE_URL = 'https://e1hygwwcle.execute-api.us-west-2.amazonaws.com/dev';
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_NEW_CS_API_URL || '/api';
 
 // Session id lives in localStorage so it survives reloads. Generated lazily
 // on first access. Kept stable across logins/logouts (we rotate only on
@@ -153,6 +152,14 @@ class ApiService {
   async submitContactForm(payload) {
     // payload: { name, email, message, company?, phone?, subject?, source? }
     return this.api.post('/contact', payload);
+  }
+
+  // -------------------- Inventory Quantities --------------------
+  // Fetch per-part quantity + status strings (e.g. "125 can ship today") for
+  // a batch of part numbers. Returns { quantities: { part_number: string } };
+  // part numbers with no stock are simply omitted.
+  async getPartQuantities(partNumbers) {
+    return this.api.post('/inventory/quantities', { part_numbers: partNumbers });
   }
 
   // -------------------- Session --------------------

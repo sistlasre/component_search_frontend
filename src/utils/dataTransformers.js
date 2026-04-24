@@ -30,9 +30,9 @@ export const categorizeSpecifications = (partData) => {
       'category3',
       'category4',
       'category5',
-      'series',
-      'packaging',
-      'supplier_device_package'
+      'series'
+      // packaging and supplier_device_package are intentionally omitted: we
+      // hide them from the PartDetail specs and from search result cards.
     ],
     'Electrical Characteristics': [
       'resistance',

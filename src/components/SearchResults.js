@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faSort, faTimes, faChevronLeft, faChevronRight, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import SEO from './SEO';
 import SearchBar from './SearchBar';
+import { apiService } from '../services/userManagementService';
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,6 +26,10 @@ const SearchResults = () => {
   const [imageUrls, setImageUrls] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Map of part_number -> quantity/status string (e.g. "125 can ship today").
+  // Populated asynchronously after results load; parts without stock are
+  // simply omitted from the map.
+  const [quantityMap, setQuantityMap] = useState({});
 
   // Parse filters from URL (these are the applied filters)
   const selectedFilters = {};
@@ -115,12 +120,16 @@ const SearchResults = () => {
         setFacets(data.facets || {});
         setTotal(data.total || 0);
         setImageUrls(data.imageUrls || {});
+        // Reset any stale quantity data from a prior search; the effect below
+        // will refetch against the new results list.
+        setQuantityMap({});
 
       } catch (err) {
         setError(err.message);
         setResults([]);
         setFacets({});
         setTotal(0);
+        setQuantityMap({});
       } finally {
         setLoading(false);
       }
@@ -128,6 +137,41 @@ const SearchResults = () => {
 
     fetchData();
   }, [buildApiUrl]); // Refetch when buildApiUrl changes (which depends on filters)
+
+  // Once we have a fresh set of results, ask the backend for the
+  // quantity + status string to show on each card. Done as a separate
+  // request so the main grid can render without waiting for inventory.
+  useEffect(() => {
+    if (!results || results.length === 0) {
+      return undefined;
+    }
+    const partNumbers = Array.from(
+      new Set(
+        results
+          .map((p) => p.part_number || p.partNumber)
+          .filter(Boolean)
+      )
+    );
+    if (partNumbers.length === 0) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await apiService.getPartQuantities(partNumbers);
+        if (cancelled) return;
+        setQuantityMap(response.data?.quantities || {});
+      } catch (err) {
+        // Non-fatal: cards just won't show the stock string.
+        console.warn('Failed to load inventory quantities:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [results]);
 
   // Update URL when filters change (without page refresh)
   const updateUrlParams = useCallback((newFilters, resetPage = true) => {
@@ -479,18 +523,27 @@ const SearchResults = () => {
 
                     // Explicitly pull these fields for display
                     const manufacturer = part.manufacturer || 'Unknown';
-                    const packaging = (part.packaging || []).join(', ');
                     const type = part.type || '';
+                    const partNumber = part.part_number || part.partNumber;
+                    const quantityStatus = partNumber ? quantityMap[partNumber] : null;
 
                     // Get category types that ARE NOT currently active filters
-                    // AND are not already handled explicitly (manufacturer, packaging, type)
-                    // AND are not pricing/stock related
+                    // AND are not already handled explicitly (manufacturer, type)
+                    // AND are not pricing/stock/packaging related (packaging and
+                    // supplier_device_package are intentionally hidden everywhere).
                     const activeFilterKeys = Object.keys(selectedFilters);
                     const dynamicSpecs = Object.entries(specs).filter(([key, value]) => {
                       const cleanKey = key.replace('.value', '');
                       const isFilter = activeFilterKeys.includes(cleanKey);
-                      const isExplicitField = ['manufacturer', 'packaging', 'type'].includes(cleanKey);
-                      const isRemovedField = ['price', 'stock_status', 'stock', 'inventory'].includes(cleanKey);
+                      const isExplicitField = ['manufacturer', 'type'].includes(cleanKey);
+                      const isRemovedField = [
+                        'price',
+                        'stock_status',
+                        'stock',
+                        'inventory',
+                        'packaging',
+                        'supplier_device_package',
+                      ].includes(cleanKey);
                       return value && !isFilter && !isExplicitField && !isRemovedField && key.endsWith('.value');
                     });
 
@@ -508,19 +561,19 @@ const SearchResults = () => {
                             <Card.Body>
                               <h6 className="text-primary-tint mb-1 part-number">{part.part_number || part.partNumber}</h6>
 
+                              {/* Inventory quantity + status (e.g. "125 can ship today") */}
+                              {quantityStatus && (
+                                <div className="small mb-1 text-success fw-bold">
+                                  {quantityStatus}
+                                </div>
+                              )}
+
                               {/* 1. Manufacturer */}
                               <div className="small mb-0">
                                 <strong>Manufacturer:</strong> {manufacturer}
                               </div>
 
-                              {/* 2. Packaging */}
-                              {packaging && (
-                                <div className="small mb-0">
-                                  <strong>Packaging:</strong> {packaging}
-                                </div>
-                              )}
-
-                              {/* 3. Type */}
+                              {/* 2. Type */}
                               {type && (
                                 <div className="small mb-0">
                                   <strong>Type:</strong> {type}

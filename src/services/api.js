@@ -1,5 +1,5 @@
 // API Service for Component Search
-const API_BASE_URL = 'https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/prod/cs';
+const API_BASE_URL = process.env.REACT_APP_OLD_CS_API_URL || '/api/cs';
 
 /**
  * Fetch all categories with their counts
@@ -7,7 +7,7 @@ const API_BASE_URL = 'https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/pro
  */
 export const fetchCategories = async () => {
   try {
-    const response = await fetch('/api/cs/categories');
+    const response = await fetch(`${API_BASE_URL}/categories`);
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`);
     }
@@ -27,7 +27,7 @@ export const fetchCategories = async () => {
 export const fetchSubcategories = async (category) => {
   try {
     const encodedCategory = encodeURIComponent(category);
-    const response = await fetch(`/api/cs/category/${encodedCategory}`);
+    const response = await fetch(`${API_BASE_URL}/category/${encodedCategory}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch subcategories: ${response.status}`);
     }
@@ -41,7 +41,7 @@ export const fetchSubcategories = async (category) => {
 
 export const fetchManufacturers = async (numMfrsToFetch = null) => {
   try {
-    const response = await fetch(numMfrsToFetch ? `/api/cs/manufacturers?numMfrsToFetch=${numMfrsToFetch}`: '/api/cs/manufacturers');
+    const response = await fetch(numMfrsToFetch ? `${API_BASE_URL}/manufacturers?numMfrsToFetch=${numMfrsToFetch}`: `${API_BASE_URL}/manufacturers`);
     if (!response.ok) {
       throw new Error(`Failed to fetch manufacturers: ${response.status}`);
     }
@@ -85,7 +85,7 @@ export const fetchPartDetails = async (partNumber) => {
   try {
     // Encode the partNumber to handle special characters safely
     const encodedPartNumber = encodeURIComponent(partNumber);
-    const response = await fetch(`/api/cs/part/${encodedPartNumber}`);
+    const response = await fetch(`${API_BASE_URL}/part/${encodedPartNumber}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch part details: ${response.status}`);
     }
