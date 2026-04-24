@@ -33,8 +33,7 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Looking for a more capable inventory and sourcing partner?",
     ctaText: "Component Search helps customers source components, recover value from inventory, and build more practical supply chain strategies.",
-    primaryCta: "Contact Us",
-    secondaryCta: "Explore Our Services"
+    primaryCta: "Contact Us"
   },
   "excess": {
     label: "Excess",
@@ -65,8 +64,7 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Ready to turn excess inventory into working capital?",
     ctaText: "Component Search helps recover value from marketable surplus inventory through a structured and transparent excess program.",
-    primaryCta: "Submit Inventory",
-    secondaryCta: "Talk to Our Team"
+    primaryCta: "Talk to Our Team"
   },
   "consignment": {
     label: "Consignment",
@@ -97,8 +95,7 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Want stronger returns without giving up control?",
     ctaText: "Component Search can help you build a consignment strategy that is structured, transparent, and aligned with your inventory goals.",
-    primaryCta: "Discuss Consignment",
-    secondaryCta: "Submit Inventory"
+    primaryCta: "Discuss Consignment"
   },
   "scrap": {
     label: "E-Waste / Scrap",
@@ -129,8 +126,7 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Need a practical recovery path for obsolete inventory?",
     ctaText: "Component Search can help you evaluate the best path to recovery for obsolete, damaged, and non-performing electronic material.",
-    primaryCta: "Request an Evaluation",
-    secondaryCta: "Talk to Our Team"
+    primaryCta: "Talk to Our Team"
   },
   "scheduled-orders": {
     label: "Scheduled Orders",
@@ -161,8 +157,7 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Need a more stable and predictable supply strategy?",
     ctaText: "Component Search can help build a scheduled order program aligned with your operational goals and recurring demand requirements.",
-    primaryCta: "Discuss Scheduled Orders",
-    secondaryCta: "Contact Sales"
+    primaryCta: "Discuss Scheduled Orders"
   },
   "quality-policy": {
     label: "Quality Policy",
@@ -193,8 +188,7 @@ export const PAGE_DATA = {
     ],
     ctaTitle: "Questions about our quality approach?",
     ctaText: "Component Search is committed to disciplined processes, accountability, and continuous improvement in support of customer requirements.",
-    primaryCta: "Contact Us",
-    secondaryCta: "View Support Information"
+    showCerts: true
   },
   "terms-of-service": {
     label: "Terms of Service",
@@ -224,9 +218,7 @@ export const PAGE_DATA = {
       { q: "Who should I contact with questions about these terms?", a: "Questions can be directed to sales@componentsearch.com or (800) 974-9947." }
     ],
     ctaTitle: "Questions regarding our terms?",
-    ctaText: "For questions regarding these Terms of Service, contact Component Search directly.",
-    primaryCta: "Contact Us",
-    secondaryCta: "Email Us"
+    ctaText: "For questions regarding these Terms of Service, contact Component Search directly."
   },
   "privacy-policy": {
     label: "Privacy Policy",
@@ -256,9 +248,7 @@ export const PAGE_DATA = {
       { q: "How can I ask a privacy-related question?", a: "Privacy-related questions can be directed to sales@componentsearch.com or (800) 974-9947." }
     ],
     ctaTitle: "Questions about privacy practices?",
-    ctaText: "Contact Component Search with questions regarding privacy, information handling, or related requests.",
-    primaryCta: "Contact Us",
-    secondaryCta: "Email Us"
+    ctaText: "Contact Component Search with questions regarding privacy, information handling, or related requests."
   },
   "cookies-and-gdpr": {
     label: "Cookies / GDPR Policy",
@@ -288,8 +278,6 @@ export const PAGE_DATA = {
       { q: "Who should I contact with questions about cookies or privacy?", a: "Questions can be directed to sales@componentsearch.com or (800) 974-9947." }
     ],
     ctaTitle: "Questions about cookies or privacy-related practices?",
-    ctaText: "Contact Component Search with questions regarding cookies, privacy practices, or related policy topics.",
-    primaryCta: "Contact Us",
-    secondaryCta: "Email Us"
+    ctaText: "Contact Component Search with questions regarding cookies, privacy practices, or related policy topics."
   }
 };

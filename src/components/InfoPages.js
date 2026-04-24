@@ -69,13 +69,32 @@ const InfoPages = () => {
                       <p className="fs-5 text-muted mb-4" style={{ lineHeight: '1.6' }}>
                         {page.intro}
                       </p>
+                      {page.showCerts && (
+                        <div className="d-flex gap-3 justify-content-center">
+                            <a target="_blank" rel="noopener noreferrer" href="/certs/component_search_as9120_iso9001.pdf">
+                              <img src="/certs/nqa-as9120.jpg" alt="AS 9120 Certification" height="50" className="d-inline-block align-top me-2" />
+                            </a>
+                            <a target="_blank" rel="noopener noreferrer" href="/certs/component_search_as9120_iso9001.pdf">
+                              <img src="/certs/nqa-iso9001.jpg" alt="ISO 9001 Certification" height="50" className="d-inline-block align-top me-2" />
+                            </a>
+                            <a target="_blank" rel="noopener noreferrer" href="/certs/component_search_as6081.pdf">
+                              <img src="/certs/nqa-as6081.jpg" alt="AS 6081 Certification" height="50" className="d-inline-block align-top me-2" />
+                            </a>
+                            <img src="/certs/itar.png" alt="ITAR Certification" height="50" className="d-inline-block align-top me-2" />
+                            <img src="/certs/gidep.png" alt="GIDEP Certification" height="50" className="d-inline-block align-top me-2" />
+                        </div>
+                      )}
                       <div className="d-flex gap-3">
-                        <Button variant="primary" className="rounded-pill px-4 py-2 fw-bold">
-                          {page.primaryCta}
-                        </Button>
-                        <Button variant="outline-dark" className="rounded-pill px-4 py-2 fw-bold">
-                          {page.secondaryCta}
-                        </Button>
+                        {page.primaryCta && (
+                          <Button variant="primary" className="rounded-pill px-4 py-2 fw-bold">
+                            {page.primaryCta}
+                          </Button>
+                        )}
+                        {page.secondaryCta && (
+                          <Button variant="outline-dark" className="rounded-pill px-4 py-2 fw-bold">
+                            {page.secondaryCta}
+                          </Button>
+                        )}
                       </div>
                     </div>
 
