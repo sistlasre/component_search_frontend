@@ -117,7 +117,7 @@ const toCartPriceBreaks = (priceBreaks) =>
     .map((pb) => ({ min_qty: Number(pb.break_qty), price: Number(pb.price) }));
 
 const PartDetail = () => {
-  const { partNumber } = useParams();
+  const { partId } = useParams();
   const navigate = useNavigate();
   const [part, setPart] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -285,8 +285,8 @@ const PartDetail = () => {
       // Reset any selected specs when navigating to a new part.
       setSelectedSpecs({});
       try {
-        const apiData = await fetchPartDetails(partNumber);
-        const transformedData = transformPartData(apiData, partNumber);
+        const apiData = await fetchPartDetails(partId);
+        const transformedData = transformPartData(apiData, partId.split("__")[0]);
         setPart(transformedData);
       } catch (error) {
         console.error('Error fetching part details:', error);
@@ -295,7 +295,7 @@ const PartDetail = () => {
       }
     };
     loadPartDetails();
-  }, [partNumber]);
+  }, [partId]);
 
   // Prefill the discount-request contact fields from the signed-in user's
   // profile. Anonymous visitors simply see blank fields they can fill in.

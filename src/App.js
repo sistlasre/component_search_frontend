@@ -44,7 +44,7 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/category/:categoryName" element={<SubcategoryPage />} />
-              <Route path="/part/:partNumber" element={<PartDetail />} />
+              <Route path="/part/:partId" element={<PartDetail />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/manufacturers" element={<ManufacturersPage />} />
               <Route path="/cart" element={<CartPage />} />
