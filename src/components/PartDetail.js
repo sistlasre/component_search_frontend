@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert, Form, Button, InputGroup, Collapse } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faTag, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { Helmet } from 'react-helmet-async';
 import SEO from './SEO';
 import { fetchPartDetails } from '../services/api';
 import { transformPartData } from '../utils/dataTransformers';
@@ -319,6 +320,87 @@ const PartDetail = () => {
     return () => { cancelled = true; };
   }, [user]);
 
+  const BASE_URL = 'https://www.componentsearch.com';
+  const pageUrl = `${BASE_URL}/part/${partId}`;
+
+  // Build JSON-LD structured data for Google rich results.
+  // Must be above early returns so hook call order is stable.
+  const jsonLd = useMemo(() => {
+    if (!part) return [];
+    const validBreaks = (part.priceBreaks || []).filter((pb) => pb && Number(pb.price) > 0);
+    const prices = validBreaks.map((pb) => Number(pb.price));
+
+    // --- Product schema ---
+    const product = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: part.partNumber,
+      sku: part.partNumber,
+      mpn: part.partNumber,
+      description: part.description || `${part.partNumber} by ${part.manufacturer}`,
+      image: part.image ? `${BASE_URL}${part.image}` : undefined,
+      url: pageUrl,
+      brand: part.manufacturer
+        ? { '@type': 'Brand', name: part.manufacturer }
+        : undefined,
+      category: [part.category, part.subcategory].filter(Boolean).join(' > ') || undefined,
+    };
+
+    // Offers — use AggregateOffer when there are multiple price breaks.
+    if (prices.length > 1) {
+      product.offers = {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'USD',
+        lowPrice: Math.min(...prices).toFixed(4),
+        highPrice: Math.max(...prices).toFixed(4),
+        offerCount: validBreaks.length,
+        availability:
+          part.totalQuantity > 0
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+        seller: { '@type': 'Organization', name: 'Component Search' },
+      };
+    } else if (prices.length === 1) {
+      product.offers = {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        price: prices[0].toFixed(4),
+        availability:
+          part.totalQuantity > 0
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+        seller: { '@type': 'Organization', name: 'Component Search' },
+      };
+    }
+
+    // --- BreadcrumbList schema ---
+    const breadcrumbItems = [
+      { name: 'Home', url: `${BASE_URL}/` },
+      { name: 'Search', url: `${BASE_URL}/search` },
+      { name: part.category, url: `${BASE_URL}/search?category=${encodeURIComponent(part.category)}` },
+    ];
+    if (part.subcategory) {
+      breadcrumbItems.push({
+        name: part.subcategory,
+        url: `${BASE_URL}/search?category=${encodeURIComponent(part.category)}&subcategory=${encodeURIComponent(part.subcategory)}`,
+      });
+    }
+    breadcrumbItems.push({ name: part.partNumber, url: pageUrl });
+
+    const breadcrumbList = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbItems.map((item, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        name: item.name,
+        item: item.url,
+      })),
+    };
+
+    return [product, breadcrumbList];
+  }, [part, partId, pageUrl]);
+
   if (loading) return <Container className="py-5 text-center"><div className="spinner-border text-primary" /></Container>;
   if (!part) return <Container className="py-5"><Alert variant="warning">Part Not Found</Alert></Container>;
 
@@ -332,9 +414,44 @@ const PartDetail = () => {
     seoTitle += ` - ${part.manufacturer}`;
   }
 
+  const seoDescription = part.description
+    ? `${part.partNumber} by ${part.manufacturer} — ${part.description}. Check pricing, availability & specs.`
+    : `${part.partNumber} by ${part.manufacturer}. Check pricing, availability & specs on Component Search.`;
+
+  const seoKeywords = [
+    part.partNumber,
+    part.manufacturer,
+    part.category,
+    part.subcategory,
+    'electronic components',
+    'buy',
+    'datasheet',
+    'price',
+    'in stock',
+  ].filter(Boolean).join(', ');
+
+  const seoImage = part.image
+    ? (part.image.startsWith('http') ? part.image : `${BASE_URL}${part.image}`)
+    : undefined;
+
   return (
     <>
-      <SEO title={seoTitle} description={part.description} />
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        keywords={seoKeywords}
+        image={seoImage}
+        url={pageUrl}
+        type="product"
+        author={part.manufacturer}
+      />
+      <Helmet>
+        {jsonLd.map((schema, i) => (
+          <script key={i} type="application/ld+json">
+            {JSON.stringify(schema)}
+          </script>
+        ))}
+      </Helmet>
 
       <Container className="py-4">
         <Breadcrumb className="small mb-2">

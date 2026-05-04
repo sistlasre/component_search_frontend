@@ -1,5 +1,14 @@
 {
+  "functions": {
+    "api/part-prerender.js": {
+      "includeFiles": "build/index.html"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/part/:partId",
+      "destination": "/api/part-prerender?partId=:partId"
+    },
     {
       "source": "/api/cs/:path*",
       "destination": "https://obkg1pw61g.execute-api.us-west-2.amazonaws.com/prod/cs/:path*"
