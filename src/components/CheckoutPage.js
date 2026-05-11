@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Table, Form, Button, Alert, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Form, Button, Alert, Badge, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import { useCart, computeUnitPriceForQty } from '../context/CartContext';
 import { apiService } from '../services/userManagementService';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,16 @@ const CheckoutPage = () => {
   }, [cartItems]);
   const hasAnyPricing = cartItems.some((i) => effectiveUnitPrice(i, i.quantity) != null);
 
+  // True when any line item's requested qty exceeds available stock (or stock is 0).
+  // When true, the submission is automatically treated as a request instead of an order.
+  const hasExceedsStock = useMemo(() => {
+    return cartItems.some((item) => {
+      const avail = item.availableQuantity;
+      if (avail == null) return false;
+      return avail === 0 || item.quantity > avail;
+    });
+  }, [cartItems]);
+
   const fillFormFromUserInfo = async () => {
     if (user) {
       const response = await apiService.getUser();
@@ -87,6 +97,13 @@ const CheckoutPage = () => {
   useEffect(() => {
     fillFormFromUserInfo();
   }, [user]);
+
+  // Force record type to 'request' when any item exceeds available stock.
+  useEffect(() => {
+    if (hasExceedsStock) {
+      setRecordType('request');
+    }
+  }, [hasExceedsStock]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -248,7 +265,12 @@ const CheckoutPage = () => {
                           </Link>
                         </td>
                         <td className="py-2">{item.manufacturer}</td>
-                        <td className="py-2 text-center">{item.quantity.toLocaleString()}</td>
+                        <td className="py-2 text-center">
+                          {item.quantity.toLocaleString()}
+                          {item.availableQuantity != null && (item.availableQuantity === 0 || item.quantity > item.availableQuantity) && (
+                            <Badge bg="warning" text="dark" className="ms-1" title={item.availableQuantity === 0 ? 'Out of stock' : `Only ${item.availableQuantity.toLocaleString()} available`}>!</Badge>
+                          )}
+                        </td>
                         <td className="py-2 text-end">
                           {unit != null ? formatCurrency(unit) : <span className="text-muted">—</span>}
                         </td>
@@ -299,7 +321,7 @@ const CheckoutPage = () => {
                   value={recordType}
                   onChange={setRecordType}
                 >
-                  <ToggleButton id="rt-order" value="order" variant={recordType === 'order' ? 'primary' : 'outline-primary'}>
+                  <ToggleButton id="rt-order" value="order" variant={recordType === 'order' ? 'primary' : 'outline-primary'} disabled={hasExceedsStock}>
                     Order
                   </ToggleButton>
                   <ToggleButton id="rt-request" value="request" variant={recordType === 'request' ? 'primary' : 'outline-primary'}>
@@ -311,6 +333,11 @@ const CheckoutPage = () => {
                     ? 'Firm purchase — we\u2019ll follow up to finalize shipping and pricing.'
                     : 'Inquiry only — use the notes field below to describe what you need. Pricing may be provided back to you.'}
                 </div>
+                {hasExceedsStock && (
+                  <Alert variant="warning" className="mt-2 mb-0 py-2 small">
+                    One or more items in your cart exceed available stock or are out of stock. This submission will be processed as a request.
+                  </Alert>
+                )}
               </div>
 
               <Form noValidate validated={validated} onSubmit={handleSubmit}>

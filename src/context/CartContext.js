@@ -65,6 +65,9 @@ const fromServerItem = (it) => {
   if (priceBreaks.length > 0) {
     out.price_breaks = priceBreaks;
   }
+  if (it.available_quantity != null) {
+    out.availableQuantity = Number(it.available_quantity);
+  }
   return out;
 };
 
@@ -80,6 +83,9 @@ const toServerItem = (it) => {
   const priceBreaks = normalizePriceBreaks(it.price_breaks);
   if (priceBreaks.length > 0) {
     out.price_breaks = priceBreaks;
+  }
+  if (it.availableQuantity != null) {
+    out.available_quantity = Number(it.availableQuantity);
   }
   return out;
 };
@@ -153,6 +159,9 @@ export const CartProvider = ({ children }) => {
           if (breaks.length > 0) {
             next.price_breaks = breaks;
           }
+          if (item.availableQuantity != null) {
+            next.availableQuantity = item.availableQuantity;
+          }
           return next;
         })()
       : (() => {
@@ -166,6 +175,9 @@ export const CartProvider = ({ children }) => {
           }
           if (incomingPriceBreaks.length > 0) {
             next.price_breaks = incomingPriceBreaks;
+          }
+          if (item.availableQuantity != null) {
+            next.availableQuantity = item.availableQuantity;
           }
           return next;
         })();

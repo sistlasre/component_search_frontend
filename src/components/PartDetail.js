@@ -150,10 +150,7 @@ const PartDetail = () => {
   const clampQuantity = (raw) => {
     const parsed = parseInt(raw, 10);
     const n = Number.isFinite(parsed) ? parsed : 1;
-    const floored = Math.max(1, n);
-    const max = Number(part?.totalQuantity) || 0;
-    if (max > 0) return Math.min(floored, max);
-    return floored;
+    return Math.max(1, n);
   };
 
   const handleQuantityChange = (value) => {
@@ -169,6 +166,7 @@ const PartDetail = () => {
       partNumber: part.partNumber,
       manufacturer: part.manufacturer,
       quantity,
+      availableQuantity: maxQuantity,
     };
     // Only attach pricing metadata when we actually have a matching break;
     // downstream code treats missing unit_price as "pricing TBD by admin".
@@ -573,15 +571,19 @@ const PartDetail = () => {
                       <Form.Control
                         type="number"
                         min={1}
-                        max={maxQuantity > 0 ? maxQuantity : undefined}
                         value={quantity}
                         onChange={(e) => handleQuantityChange(e.target.value)}
                       />
                     </InputGroup>
-                    {maxQuantity > 0 && quantity >= maxQuantity && (
-                      <Form.Text className="text-muted">
-                        Maximum available: {formatQuantity(maxQuantity)}
-                      </Form.Text>
+                    {maxQuantity === 0 && (
+                      <Alert variant="warning" className="mt-2 mb-0 py-1 small">
+                        This item is currently out of stock. Adding to cart will submit it as a request at checkout.
+                      </Alert>
+                    )}
+                    {maxQuantity > 0 && quantity > maxQuantity && (
+                      <Alert variant="warning" className="mt-2 mb-0 py-1 small">
+                        Quantity exceeds available stock ({formatQuantity(maxQuantity)} available). This will be submitted as a request at checkout.
+                      </Alert>
                     )}
                   </Form.Group>
                   {subtotal != null && (
@@ -597,7 +599,6 @@ const PartDetail = () => {
                     size="md"
                     className="w-100 fw-bold shadow-sm"
                     onClick={handleAddToCart}
-                    disabled={maxQuantity === 0}
                   >
                     Add to Cart
                   </Button>
