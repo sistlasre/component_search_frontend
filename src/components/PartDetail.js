@@ -594,6 +594,11 @@ const PartDetail = () => {
                       <span className="fw-bold">{formatCurrency(subtotal)}</span>
                     </div>
                   )}
+                  {subtotal != null && subtotal < 100 && (
+                    <Alert variant="warning" className="mb-2 py-1 small">
+                      Line item total ({formatCurrency(subtotal)}) is below the $100 minimum. This will be submitted as a request at checkout.
+                    </Alert>
+                  )}
                   <Button
                     variant="primary"
                     size="md"

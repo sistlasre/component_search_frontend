@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Table, Button, Form } from 'react-bootstrap';
+import { Container, Table, Button, Form, Alert } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faShoppingCart, faArrowRight, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useCart, computeUnitPriceForQty } from '../context/CartContext';
@@ -66,6 +66,11 @@ const CartPage = () => {
 
   const hasAnyPricing = cartItems.some((i) => effectiveUnitPrice(i, i.quantity) != null);
 
+  const hasBelowMinimum = cartItems.some((item) => {
+    const price = effectiveUnitPrice(item, item.quantity);
+    return price != null && price * item.quantity < 100;
+  });
+
   if (cartItems.length === 0) {
     return (
       <Container className="py-5 text-center">
@@ -82,6 +87,12 @@ const CartPage = () => {
   return (
     <Container className="py-4">
       <h2 className="mb-4" style={{ fontWeight: 400 }}>Shopping Cart</h2>
+
+      {hasBelowMinimum && (
+        <Alert variant="warning" className="small py-2">
+          One or more line items are below the $100 minimum and will be submitted as a request instead of an order at checkout.
+        </Alert>
+      )}
 
       <Table responsive bordered hover className="cart-table align-middle">
         <thead className="bg-light">
@@ -144,6 +155,9 @@ const CartPage = () => {
                 </td>
                 <td className="text-end">
                   {previewSubtotal != null ? formatCurrency(previewSubtotal) : <span className="text-muted">—</span>}
+                  {previewSubtotal != null && previewSubtotal < 100 && (
+                    <div className="text-warning small">Below $100 min</div>
+                  )}
                 </td>
                 <td className="text-center">
                   <Button

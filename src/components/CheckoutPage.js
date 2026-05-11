@@ -68,6 +68,17 @@ const CheckoutPage = () => {
     });
   }, [cartItems]);
 
+  // True when any line item subtotal is below the $100 minimum.
+  const hasBelowMinimum = useMemo(() => {
+    return cartItems.some((item) => {
+      const price = effectiveUnitPrice(item, item.quantity);
+      if (price == null) return false;
+      return price * item.quantity < 100;
+    });
+  }, [cartItems]);
+
+  const forceRequest = hasExceedsStock || hasBelowMinimum;
+
   const fillFormFromUserInfo = async () => {
     if (user) {
       const response = await apiService.getUser();
@@ -98,12 +109,12 @@ const CheckoutPage = () => {
     fillFormFromUserInfo();
   }, [user]);
 
-  // Force record type to 'request' when any item exceeds available stock.
+  // Force record type to 'request' when any item exceeds stock or is below $100 minimum.
   useEffect(() => {
-    if (hasExceedsStock) {
+    if (forceRequest) {
       setRecordType('request');
     }
-  }, [hasExceedsStock]);
+  }, [forceRequest]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -276,6 +287,9 @@ const CheckoutPage = () => {
                         </td>
                         <td className="py-2 text-end">
                           {subtotal != null ? formatCurrency(subtotal) : <span className="text-muted">—</span>}
+                          {subtotal != null && subtotal < 100 && (
+                            <Badge bg="warning" text="dark" className="ms-1" title="Below $100 minimum">!</Badge>
+                          )}
                         </td>
                       </tr>
                     );
@@ -321,7 +335,7 @@ const CheckoutPage = () => {
                   value={recordType}
                   onChange={setRecordType}
                 >
-                  <ToggleButton id="rt-order" value="order" variant={recordType === 'order' ? 'primary' : 'outline-primary'} disabled={hasExceedsStock}>
+                  <ToggleButton id="rt-order" value="order" variant={recordType === 'order' ? 'primary' : 'outline-primary'} disabled={forceRequest}>
                     Order
                   </ToggleButton>
                   <ToggleButton id="rt-request" value="request" variant={recordType === 'request' ? 'primary' : 'outline-primary'}>
@@ -333,9 +347,11 @@ const CheckoutPage = () => {
                     ? 'Firm purchase — we\u2019ll follow up to finalize shipping and pricing.'
                     : 'Inquiry only — use the notes field below to describe what you need. Pricing may be provided back to you.'}
                 </div>
-                {hasExceedsStock && (
+                {forceRequest && (
                   <Alert variant="warning" className="mt-2 mb-0 py-2 small">
-                    One or more items in your cart exceed available stock or are out of stock. This submission will be processed as a request.
+                    {hasExceedsStock && <>One or more items exceed available stock or are out of stock. </>}
+                    {hasBelowMinimum && <>One or more line items are below the $100 minimum. </>}
+                    This submission will be processed as a request.
                   </Alert>
                 )}
               </div>
