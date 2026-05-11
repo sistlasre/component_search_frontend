@@ -71,8 +71,8 @@ const LandingPage = () => {
   return (
     <>
       <SEO
-        title="Electronic Components & Parts Search"
-        description="Find millions of electronic components from trusted suppliers."
+        title="Electronic Component Distributor | AS9120 and AS6081 certified"
+        description="Component Search is a US headquartered distributor of electronic components focused on quality and efficiency. AS9120, AS6081, and ESD S20.20 certified."
         keywords="electronic components, semiconductors, IC chips, passive components, connectors"
       />
 
