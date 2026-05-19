@@ -30,6 +30,7 @@ import PublicRoute from './components/PublicRoute';
 import ScrollToTop from './components/ScrollToTop';
 import InfoPages from './components/InfoPages'
 import ManufacturersPage from './components/ManufacturersPage';
+import ExcessPage from './components/ExcessPage'
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
               <Route path="/account" element={<AccountManagement />} />
               <Route path="/orders" element={<MyOrders />} />
               <Route path="/resource-center" element={<InfoPages />} />
+              <Route path="/excess" element={<ExcessPage />} />
               <Route path="/login" element={
                 <PublicRoute>
                   <Login />
