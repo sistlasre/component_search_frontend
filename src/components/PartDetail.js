@@ -163,6 +163,7 @@ const PartDetail = () => {
   const handleAddToCart = () => {
     if (!part) return;
     const cartItem = {
+      partId,
       partNumber: part.partNumber,
       manufacturer: part.manufacturer,
       quantity,

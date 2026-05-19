@@ -271,7 +271,7 @@ const CheckoutPage = () => {
                     return (
                       <tr key={item.partNumber}>
                         <td className="py-2">
-                          <Link className="part-number" to={`/part/${encodeURIComponent(item.partNumber)}`} target="_blank" rel="noopener noreferrer">
+                          <Link className="part-number" to={`/part/${encodeURIComponent(item.partId || item.partNumber)}?pi=${btoa(item.partId || item.partNumber)}`} target="_blank" rel="noopener noreferrer">
                             {item.partNumber}
                           </Link>
                         </td>

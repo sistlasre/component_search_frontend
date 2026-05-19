@@ -115,7 +115,7 @@ const CartPage = () => {
             return (
               <tr key={item.partNumber}>
                 <td>
-                  <Link to={`/part/${encodeURIComponent(item.partNumber)}`} className="fw-semibold part-number">
+                  <Link to={`/part/${encodeURIComponent(item.partId || item.partNumber)}?pi=${btoa(item.partId || item.partNumber)}`} className="fw-semibold part-number">
                     {item.partNumber}
                   </Link>
                 </td>

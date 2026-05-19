@@ -53,6 +53,7 @@ export const computeUnitPriceForQty = (priceBreaks, qty) => {
 // camelCase (partNumber). These helpers keep the two worlds in sync.
 const fromServerItem = (it) => {
   const out = {
+    partId: it.part_id || it.partId || '',
     partNumber: it.part_number || it.partNumber,
     manufacturer: it.manufacturer || '',
     quantity: Number(it.quantity) || 1,
@@ -73,6 +74,7 @@ const fromServerItem = (it) => {
 
 const toServerItem = (it) => {
   const out = {
+    part_id: it.partId || '',
     part_number: it.partNumber,
     manufacturer: it.manufacturer || '',
     quantity: Number(it.quantity) || 1,
@@ -166,6 +168,7 @@ export const CartProvider = ({ children }) => {
         })()
       : (() => {
           const next = {
+            partId: item.partId || '',
             partNumber: item.partNumber,
             manufacturer: item.manufacturer,
             quantity: item.quantity,

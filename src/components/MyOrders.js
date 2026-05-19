@@ -214,7 +214,7 @@ const MyOrders = () => {
                               {(r.items || []).map((it, idx) => (
                                 <tr key={idx}>
                                   <td>
-                                    <Link to={`/part/${encodeURIComponent(it.part_number)}`}>{it.part_number}</Link>
+                                    <Link to={`/part/${encodeURIComponent(it.part_id || it.part_number)}?pi=${btoa(it.part_id || it.part_number)}`}>{it.part_number}</Link>
                                   </td>
                                   <td>{it.manufacturer}</td>
                                   <td className="text-end">{Number(it.quantity).toLocaleString()}</td>

@@ -550,7 +550,7 @@ const SearchResults = () => {
                     return (
                       <Col key={part.id} xs={12} sm={6} md={4} className="mb-4">
                         <Card className="product-card h-100">
-                          <Link to={`/part/${encodeURIComponent(part.id || part.part_number)}`} className="text-decoration-none text-dark">
+                          <Link to={`/part/${encodeURIComponent(part.id || part.part_number)}?pi=${btoa(part.id || part.part_number)}`} className="text-decoration-none text-dark">
                             <div className="product-image-container">
                               {imageUrls[part.part_number] ? (
                                 <img src={imageUrls[part.part_number]} alt="Product Image" loading="lazy" />
