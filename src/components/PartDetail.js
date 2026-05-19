@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Table, Badge, Breadcrumb, Alert, Form, Button, InputGroup, Collapse } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faTag, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
@@ -119,6 +119,8 @@ const toCartPriceBreaks = (priceBreaks) =>
 
 const PartDetail = () => {
   const { partId } = useParams();
+  const [searchParams] = useSearchParams();
+  const pi = searchParams.get('pi');
   const navigate = useNavigate();
   const [part, setPart] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -285,7 +287,7 @@ const PartDetail = () => {
       // Reset any selected specs when navigating to a new part.
       setSelectedSpecs({});
       try {
-        const apiData = await fetchPartDetails(partId);
+        const apiData = await fetchPartDetails(partId, pi);
         const transformedData = transformPartData(apiData, partId.split("__")[0]);
         setPart(transformedData);
       } catch (error) {
@@ -295,7 +297,7 @@ const PartDetail = () => {
       }
     };
     loadPartDetails();
-  }, [partId]);
+  }, [partId, pi]);
 
   // Prefill the discount-request contact fields from the signed-in user's
   // profile. Anonymous visitors simply see blank fields they can fill in.

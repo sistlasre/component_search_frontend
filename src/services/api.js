@@ -81,11 +81,14 @@ export const getCategoryIcon = (categoryName) => {
  * @param {string} partId - The part id to fetch details for
  * @returns {Promise<Object>} Part details object
  */
-export const fetchPartDetails = async (partId) => {
+export const fetchPartDetails = async (partId, pi = null) => {
   try {
     // Encode the partId to handle special characters safely
     const encodedPartId = encodeURIComponent(partId);
-    const response = await fetch(`${API_BASE_URL}/part/${encodedPartId}`);
+    const url = pi
+      ? `${API_BASE_URL}/part/${encodedPartId}?pi=${encodeURIComponent(pi)}`
+      : `${API_BASE_URL}/part/${encodedPartId}`;
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch part details: ${response.status}`);
     }
