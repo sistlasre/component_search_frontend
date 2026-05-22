@@ -179,7 +179,7 @@ function QuoteForm() {
             <Input label="Email" placeholder="name@company.com" type="email" id="email" />
           </Col>
           <Col sm={6}>
-            <Input label="Phone" placeholder="714-332-1337" type="tel" id="phone" />
+            <Input label="Phone" placeholder="800-974-9947" type="tel" id="phone" />
           </Col>
         </Row>
 
@@ -359,7 +359,7 @@ function FinalCTA() {
               Schedule a Call <CalendarDays size={18} />
             </Button>
             <Button
-              href="tel:7143321337"
+              href="tel:8009749947"
               variant="outline-light"
               className="d-inline-flex align-items-center justify-content-center gap-2 fw-bold px-4 py-3"
               style={{ borderColor: "rgba(255,255,255,0.15)" }}
@@ -368,23 +368,6 @@ function FinalCTA() {
             </Button>
           </div>
         </div>
-
-        {/* Global Footer Sub-Block */}
-        <footer className="mt-5 pt-5 border-top d-flex flex-column flex-md-row justify-content-between gap-4 text-muted small" style={{ borderColor: "rgba(255, 255, 255, 0.1) !important" }}>
-          <div>
-            <img
-              src="https://www.componentsearch.com/logo_white_small.webp"
-              alt="Component Search"
-              style={{ height: "32px", width: "auto" }}
-              className="mb-3"
-            />
-            <p className="mb-0 text-white-50">componentsearch.com</p>
-          </div>
-          <div className="text-md-end text-white-50">
-            <p className="mb-1 fw-semibold text-light">brandon@componentsearch.com</p>
-            <p className="mb-0">714-332-1337</p>
-          </div>
-        </footer>
       </Container>
     </section>
   );
