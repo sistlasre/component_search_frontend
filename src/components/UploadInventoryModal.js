@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
   Form,
@@ -97,8 +97,9 @@ const parseFilePreview = (file) => new Promise((resolve, reject) => {
  *    from (kept for parity with ContactUsModal; not currently sent to the
  *    backend but handy for future analytics)
  */
-const UploadInventoryModal = ({ show, onHide, source = '', prefill = null }) => {
+const UploadInventoryModal = ({ show, onHide, source = '', prefill = null, autoOpenFilePicker = false }) => {
   const [state, setState] = useState(INITIAL_STATE);
+  const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -121,6 +122,14 @@ const UploadInventoryModal = ({ show, onHide, source = '', prefill = null }) => 
       setUploading(false);
     }
   }, [show, prefill]);
+
+  // Auto-open the native file picker when requested (e.g. "Upload inventory list" zone).
+  useEffect(() => {
+    if (show && autoOpenFilePicker) {
+      const timer = setTimeout(() => fileInputRef.current?.click(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [show, autoOpenFilePicker]);
 
   const handleChange = (field) => (e) => {
     setState((prev) => ({ ...prev, [field]: e.target.value }));
@@ -334,6 +343,7 @@ const UploadInventoryModal = ({ show, onHide, source = '', prefill = null }) => 
             <Form.Group className="mb-2" controlId="inventoryFile">
               <Form.Label>Inventory File<span className="text-danger"> *</span></Form.Label>
               <Form.Control
+                ref={fileInputRef}
                 type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileSelect}

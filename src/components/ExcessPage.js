@@ -33,8 +33,8 @@ export default function ExcessPage() {
   const [contactModal, setContactModal] = useState({ show: false, subject: "", source: "" });
   const [uploadModal, setUploadModal] = useState({ show: false, source: "", prefill: null });
 
-  const openUploadModal = (source = "Excess Page", prefill = null) => {
-    setUploadModal({ show: true, source, prefill });
+  const openUploadModal = (source = "Excess Page", prefill = null, autoOpenFilePicker = false) => {
+    setUploadModal({ show: true, source, prefill, autoOpenFilePicker });
   };
 
   const openContactModal = (subject = "Schedule a Call", source = "Excess Page") => {
@@ -46,7 +46,7 @@ export default function ExcessPage() {
       <Hero
         onUpload={() => openUploadModal()}
         onScheduleCall={() => openContactModal()}
-        onOpenModalWithPrefill={(prefill) => openUploadModal("Excess Page \u2013 Hero Form", prefill)}
+        onOpenModalWithPrefill={(prefill, autoOpenFilePicker) => openUploadModal("Excess Page \u2013 Hero Form", prefill, autoOpenFilePicker)}
       />
       <Partnership />
       <Consignment />
@@ -64,6 +64,7 @@ export default function ExcessPage() {
         onHide={() => setUploadModal((prev) => ({ ...prev, show: false }))}
         source={uploadModal.source}
         prefill={uploadModal.prefill}
+        autoOpenFilePicker={uploadModal.autoOpenFilePicker}
       />
     </div>
   );
@@ -201,14 +202,14 @@ function QuoteForm({ onOpenModal }) {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (autoOpenFilePicker = false) => {
     onOpenModal({
       firstName: form.firstName,
       lastName: form.lastName,
       email: form.email,
       companyName: form.company,
       phone: form.phone,
-    });
+    }, autoOpenFilePicker);
   };
 
   return (
@@ -242,10 +243,10 @@ function QuoteForm({ onOpenModal }) {
         <div
           className="rounded-3 border border-2 border-dashed bg-light p-4 text-center my-2"
           style={{ borderColor: "#dee2e6", cursor: "pointer" }}
-          onClick={handleOpenModal}
+          onClick={() => handleOpenModal(true)}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpenModal(); }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpenModal(true); }}
         >
           <FileSpreadsheet className="text-muted mb-2" size={32} />
           <p className="fw-bold mb-1 text-secondary">Upload inventory list</p>
