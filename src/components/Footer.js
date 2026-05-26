@@ -31,9 +31,9 @@ const Footer = () => {
             <h6 className="text-white mb-3">Quick Links</h6>
             <ul className="list-unstyled small">
               <li className="mb-2"><a href="/resource-center#about-us">About Us</a></li>
-              <li className="mb-2"><a href="/resource-center#excess">Excess</a></li>
-              <li className="mb-2"><a href="/resource-center#scrap">E-waste/scrap</a></li>
-              <li className="mb-2"><a href="/resource-center#consignment">Consignment</a></li>
+              <li className="mb-2"><a href="/excess">Excess</a></li>
+              <li className="mb-2"><a href="/excess">E-waste/scrap</a></li>
+              <li className="mb-2"><a href="/excess">Consignment</a></li>
               <li className="mb-2"><a href="/resource-center#scheduled-orders">Scheduled Orders</a></li>
             </ul>
           </Col>
