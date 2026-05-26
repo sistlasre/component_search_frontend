@@ -26,8 +26,11 @@ const MAPPING_OPTIONS = [
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const INITIAL_STATE = {
+  firstName: '',
+  lastName: '',
   email: '',
   companyName: '',
+  phone: '',
   file: null,
   preview: null, // { headers: string[], rows: object[] }
   mappings: {}, // columnHeader -> 'mpn' | 'mfr' | 'quantity'
@@ -94,22 +97,30 @@ const parseFilePreview = (file) => new Promise((resolve, reject) => {
  *    from (kept for parity with ContactUsModal; not currently sent to the
  *    backend but handy for future analytics)
  */
-const UploadInventoryModal = ({ show, onHide, source = '' }) => {
+const UploadInventoryModal = ({ show, onHide, source = '', prefill = null }) => {
   const [state, setState] = useState(INITIAL_STATE);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Reset whenever the modal opens so stale selections from a previous
-  // invocation don't bleed into the new one.
+  // Reset whenever the modal opens; seed from prefill when provided.
   useEffect(() => {
     if (show) {
-      setState(INITIAL_STATE);
+      setState({
+        ...INITIAL_STATE,
+        ...(prefill ? {
+          firstName: prefill.firstName || '',
+          lastName: prefill.lastName || '',
+          email: prefill.email || '',
+          companyName: prefill.companyName || '',
+          phone: prefill.phone || '',
+        } : {}),
+      });
       setError('');
       setSuccess(false);
       setUploading(false);
     }
-  }, [show]);
+  }, [show, prefill]);
 
   const handleChange = (field) => (e) => {
     setState((prev) => ({ ...prev, [field]: e.target.value }));
@@ -190,6 +201,9 @@ const UploadInventoryModal = ({ show, onHide, source = '' }) => {
       const { data } = await apiService.getUserInventoryUploadUrl({
         email_address: state.email.trim(),
         company_name: state.companyName.trim(),
+        first_name: state.firstName.trim(),
+        last_name: state.lastName.trim(),
+        phone: state.phone.trim(),
         mpn_field: mpnField,
         mfr_field: mfrField,
         quantity_field: quantityField,
@@ -253,6 +267,46 @@ const UploadInventoryModal = ({ show, onHide, source = '' }) => {
 
             <Row className="g-3 mb-2">
               <Col md={6}>
+                <Form.Group controlId="inventoryFirstName">
+                  <Form.Label>First Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={state.firstName}
+                    onChange={handleChange('firstName')}
+                    disabled={uploading}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="inventoryLastName">
+                  <Form.Label>Last Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={state.lastName}
+                    onChange={handleChange('lastName')}
+                    disabled={uploading}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="g-3 mb-2">
+              <Col>
+                <Form.Group controlId="inventoryCompany">
+                  <Form.Label>Company Name<span className="text-danger"> *</span></Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={state.companyName}
+                    onChange={handleChange('companyName')}
+                    disabled={uploading}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="g-3 mb-2">
+              <Col md={6}>
                 <Form.Group controlId="inventoryEmail">
                   <Form.Label>Email<span className="text-danger"> *</span></Form.Label>
                   <Form.Control
@@ -265,14 +319,13 @@ const UploadInventoryModal = ({ show, onHide, source = '' }) => {
                 </Form.Group>
               </Col>
               <Col md={6}>
-                <Form.Group controlId="inventoryCompany">
-                  <Form.Label>Company Name<span className="text-danger"> *</span></Form.Label>
+                <Form.Group controlId="inventoryPhone">
+                  <Form.Label>Phone</Form.Label>
                   <Form.Control
-                    type="text"
-                    value={state.companyName}
-                    onChange={handleChange('companyName')}
+                    type="tel"
+                    value={state.phone}
+                    onChange={handleChange('phone')}
                     disabled={uploading}
-                    required
                   />
                 </Form.Group>
               </Col>

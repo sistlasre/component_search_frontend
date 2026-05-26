@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Container, Row, Col, Form, Button, Nav, Navbar } from "react-bootstrap";
 import {
   Upload,
@@ -17,20 +17,54 @@ import {
   PackageCheck,
   RotateCcw,
 } from "lucide-react";
+import ContactUsModal from "./ContactUsModal";
+import UploadInventoryModal from "./UploadInventoryModal";
 
 // Brand Color Palette
 const BLUE = "#0074D9";
 const DARK = "#07111f";
 const GREEN = "#27c14a";
 
+// Subtle PCB circuit-board trace pattern (tiling SVG)
+const PCB_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><line x1='0' y1='20' x2='30' y2='20' stroke='rgba(0,116,217,0.1)' stroke-width='1.5'/><line x1='40' y1='20' x2='100' y2='20' stroke='rgba(0,116,217,0.1)' stroke-width='1.5'/><line x1='0' y1='60' x2='70' y2='60' stroke='rgba(0,116,217,0.07)' stroke-width='1'/><line x1='80' y1='60' x2='100' y2='60' stroke='rgba(0,116,217,0.07)' stroke-width='1'/><line x1='30' y1='0' x2='30' y2='20' stroke='rgba(0,116,217,0.08)' stroke-width='1.5'/><line x1='40' y1='20' x2='40' y2='50' stroke='rgba(0,116,217,0.06)' stroke-width='1'/><line x1='70' y1='50' x2='70' y2='100' stroke='rgba(0,116,217,0.08)' stroke-width='1.5'/><line x1='80' y1='40' x2='80' y2='60' stroke='rgba(0,116,217,0.06)' stroke-width='1'/><line x1='40' y1='50' x2='70' y2='50' stroke='rgba(0,116,217,0.06)' stroke-width='1'/><circle cx='30' cy='20' r='3' fill='rgba(0,116,217,0.12)'/><circle cx='40' cy='20' r='3' fill='rgba(0,116,217,0.12)'/><circle cx='70' cy='60' r='2.5' fill='rgba(0,116,217,0.1)'/><circle cx='80' cy='60' r='2.5' fill='rgba(0,116,217,0.1)'/><circle cx='40' cy='50' r='3' fill='rgba(0,116,217,0.12)'/><circle cx='70' cy='50' r='3' fill='rgba(0,116,217,0.12)'/></svg>`;
+const PCB_BG = `url("data:image/svg+xml,${encodeURIComponent(PCB_SVG)}")`;
+
 export default function ExcessPage() {
+  const [contactModal, setContactModal] = useState({ show: false, subject: "", source: "" });
+  const [uploadModal, setUploadModal] = useState({ show: false, source: "", prefill: null });
+
+  const openUploadModal = (source = "Excess Page", prefill = null) => {
+    setUploadModal({ show: true, source, prefill });
+  };
+
+  const openContactModal = (subject = "Schedule a Call", source = "Excess Page") => {
+    setContactModal({ show: true, subject, source });
+  };
+
   return (
     <div className="bg-white text-dark min-vh-screen">
-      <Hero />
+      <Hero
+        onUpload={() => openUploadModal()}
+        onScheduleCall={() => openContactModal()}
+        onOpenModalWithPrefill={(prefill) => openUploadModal("Excess Page \u2013 Hero Form", prefill)}
+      />
       <Partnership />
       <Consignment />
       <EWasteScrap />
-      <FinalCTA />
+      <FinalCTA onUpload={() => openUploadModal("Excess Page – CTA")} onScheduleCall={() => openContactModal("Schedule a Call", "Excess Page – CTA")} />
+
+      <ContactUsModal
+        show={contactModal.show}
+        onHide={() => setContactModal((prev) => ({ ...prev, show: false }))}
+        defaultSubject={contactModal.subject}
+        source={contactModal.source}
+      />
+      <UploadInventoryModal
+        show={uploadModal.show}
+        onHide={() => setUploadModal((prev) => ({ ...prev, show: false }))}
+        source={uploadModal.source}
+        prefill={uploadModal.prefill}
+      />
     </div>
   );
 }
@@ -72,29 +106,31 @@ function Header() {
   );
 }
 
-function Hero() {
+function Hero({ onUpload, onScheduleCall, onOpenModalWithPrefill }) {
   return (
     <section
       className="text-white position-relative overflow-hidden py-5 py-lg-5"
       style={{
         backgroundColor: DARK,
         backgroundImage: `
+          ${PCB_BG},
           radial-gradient(circle at 10% 10%, rgba(0, 116, 217, 0.25) 0, transparent 40%),
           radial-gradient(circle at 80% 20%, rgba(0, 116, 217, 0.2) 0, transparent 35%)
-        `
+        `,
+        backgroundSize: "100px 100px, auto, auto",
       }}
     >
       <Container className="position-relative py-4">
         <Row className="align-items-start gy-5">
           {/* Main Hero Context */}
-          <Col lg={7} xl={8} className="text-center text-lg-start">
+          <Col lg={7} xl={8} className="text-center">
             <p className="text-uppercase fw-bold tracking-wider text-info mb-3" style={{ letterSpacing: "2px", fontSize: "0.85rem" }}>
               Excess Inventory Solutions
             </p>
 
             <h1 className="fw-black text-uppercase lh-1 mb-4 display-4 font-weight-black" style={{ fontWeight: 900 }}>
               Get More For Your
-              <div className="d-block mt-3 fs-2 fs-md-1 fw-bold text-capitalize" style={{ letterSpacing: "normal" }}>
+              <div className="d-block mt-3 fs-1 fs-md-1 fw-bold text-capitalize" style={{ letterSpacing: "normal" }}>
                 <span className="text-white">Excess</span>
                 <span className="mx-2 text-white-50">|</span>
                 <span style={{ color: GREEN }}>E-Waste</span>
@@ -106,20 +142,20 @@ function Hero() {
             <p className="fs-4 fw-bold text-uppercase text-light mt-4 mb-2">
               Get an instant quote now
             </p>
-            <p className="text-white-700 fs-5 mb-4 max-w-2xl mx-auto mx-lg-0">
+            <p className="text-white-700 fs-5 mb-4 max-w-2xl mx-auto">
               Submit your list and let Component Search return the offer
             </p>
 
-            <div className="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3 mt-4">
+            <div className="d-flex flex-column flex-sm-row justify-content-center gap-3 mt-4">
               <Button
-                href="#quote"
+                onClick={onUpload}
                 className="d-inline-flex align-items-center justify-content-center gap-2 fw-bold border-0 px-4 py-3 shadow-sm"
                 style={{ backgroundColor: BLUE }}
               >
                 Get Your Cash Offer <ArrowRight size={20} />
               </Button>
               <Button
-                href="/contact"
+                onClick={onScheduleCall}
                 variant="outline-light"
                 className="d-inline-flex align-items-center justify-content-center gap-2 fw-bold px-4 py-3"
                 style={{ borderColor: "rgba(255,255,255,0.25)" }}
@@ -131,7 +167,7 @@ function Hero() {
             {/* Bottom Hero Matrix points */}
             <Row className="mt-5 pt-4 border-top border-secondary gy-4 text-start">
               <Col sm={4}>
-                <HeroPoint icon={<CheckCircle2 />} title="Transparent Process" text="Clear visibility from list review to offer." />
+                <HeroPoint icon={<CheckCircle2 />} title="Transparent Process" text="Clear visibility from list review to offer." noBorder />
               </Col>
               <Col sm={4}>
                 <HeroPoint icon={<DollarSign />} title="Competitive Offers" text="We intend to pay more." />
@@ -144,7 +180,7 @@ function Hero() {
 
           {/* Form Content Side */}
           <Col lg={5} xl={4}>
-            <QuoteForm />
+            <QuoteForm onOpenModal={onOpenModalWithPrefill} />
           </Col>
         </Row>
       </Container>
@@ -152,34 +188,53 @@ function Hero() {
   );
 }
 
-function QuoteForm() {
+function QuoteForm({ onOpenModal }) {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    company: "",
+    email: "",
+    phone: "",
+  });
+
+  const handleChange = (field) => (e) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleOpenModal = () => {
+    onOpenModal({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      companyName: form.company,
+      phone: form.phone,
+    });
+  };
+
   return (
-    <aside
-      id="quote"
-      className="bg-white text-dark rounded-3 p-4 p-md-4 shadow-lg border border-light"
-    >
+    <aside id="quote" className="bg-white text-dark rounded-3 p-4 p-md-4 shadow-lg border border-light">
       <h2 className="fs-4 fw-black text-uppercase tracking-tight mb-4" style={{ fontWeight: 900 }}>
         Submit Your Inventory
       </h2>
 
-      <Form onSubmit={(e) => e.preventDefault()} className="d-flex flex-column gap-3">
+      <Form onSubmit={(e) => { e.preventDefault(); handleOpenModal(); }} className="d-flex flex-column gap-3">
         <Row className="g-3">
           <Col sm={6}>
-            <Input label="First Name" placeholder="First name" id="firstName" />
+            <Input label="First Name" placeholder="First name" id="firstName" value={form.firstName} onChange={handleChange("firstName")} />
           </Col>
           <Col sm={6}>
-            <Input label="Last Name" placeholder="Last name" id="lastName" />
+            <Input label="Last Name" placeholder="Last name" id="lastName" value={form.lastName} onChange={handleChange("lastName")} />
           </Col>
         </Row>
 
-        <Input label="Company" placeholder="Your company" id="company" />
+        <Input label="Company" placeholder="Your company" id="company" value={form.company} onChange={handleChange("company")} />
 
         <Row className="g-3">
           <Col sm={6}>
-            <Input label="Email" placeholder="name@company.com" type="email" id="email" />
+            <Input label="Email" placeholder="name@company.com" type="email" id="email" value={form.email} onChange={handleChange("email")} />
           </Col>
           <Col sm={6}>
-            <Input label="Phone" placeholder="800-974-9947" type="tel" id="phone" />
+            <Input label="Phone" placeholder="800-974-9947" type="tel" id="phone" value={form.phone} onChange={handleChange("phone")} />
           </Col>
         </Row>
 
@@ -187,15 +242,19 @@ function QuoteForm() {
         <div
           className="rounded-3 border border-2 border-dashed bg-light p-4 text-center my-2"
           style={{ borderColor: "#dee2e6", cursor: "pointer" }}
+          onClick={handleOpenModal}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpenModal(); }}
         >
           <FileSpreadsheet className="text-muted mb-2" size={32} />
           <p className="fw-bold mb-1 text-secondary">Upload inventory list</p>
-          <p className="text-muted small mb-0">Excel, CSV, or PDF</p>
+          <p className="text-muted small mb-0">Excel or CSV</p>
         </div>
 
         <Button
           type="submit"
-          className="w-full d-flex align-items-center justify-content-center gap-2 fw-bold border-0 py-3 mt-2"
+          className="w-100 d-flex align-items-center justify-content-center gap-2 fw-bold border-0 py-3 mt-2"
           style={{ backgroundColor: BLUE }}
         >
           Get Your Cash Offer <ArrowRight size={18} />
@@ -330,7 +389,7 @@ function EWasteScrap() {
   );
 }
 
-function FinalCTA() {
+function FinalCTA({ onUpload, onScheduleCall }) {
   return (
     <section className="text-white py-5" style={{ backgroundColor: DARK }}>
       <Container className="py-4">
@@ -344,14 +403,14 @@ function FinalCTA() {
           </div>
           <div className="d-flex flex-column flex-sm-row gap-2" style={{ flexShrink: 0 }}>
             <Button
-              href="#quote"
+              onClick={onUpload}
               className="d-inline-flex align-items-center justify-content-center gap-2 fw-bold border-0 px-4 py-3"
               style={{ backgroundColor: BLUE }}
             >
               Upload List <Upload size={18} />
             </Button>
             <Button
-              href="/contact"
+              onClick={onScheduleCall}
               variant="outline-light"
               className="d-inline-flex align-items-center justify-content-center gap-2 fw-bold px-4 py-3"
               style={{ borderColor: "rgba(255,255,255,0.15)" }}
@@ -374,13 +433,16 @@ function FinalCTA() {
 }
 
 /* Helper Presentational Subcomponents mapping cleanly to Bootstrap HTML utility standards */
-function Input({ label, placeholder, type = "text", id }) {
+function Input({ label, placeholder, type = "text", id, value, onChange, disabled }) {
   return (
     <Form.Group controlId={id} className="text-start">
       <Form.Label className="small fw-bold text-secondary mb-1">{label}</Form.Label>
       <Form.Control
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
         className="py-2"
         style={{ fontSize: "0.9rem" }}
       />
@@ -388,9 +450,9 @@ function Input({ label, placeholder, type = "text", id }) {
   );
 }
 
-function HeroPoint({ icon, title, text }) {
+function HeroPoint({ icon, title, text, noBorder }) {
   return (
-    <div className="ps-3 border-start border-secondary h-100">
+    <div className={`${noBorder ? "" : "ps-3 border-start border-secondary"} h-100`}>
       <div className="d-flex align-items-center gap-2 mb-2">
         <span style={{ color: BLUE, display: "inline-flex" }}>
           {React.cloneElement(icon, { size: 18 })}
