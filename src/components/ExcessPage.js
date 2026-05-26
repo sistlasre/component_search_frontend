@@ -452,14 +452,14 @@ function Input({ label, placeholder, type = "text", id, value, onChange, disable
 
 function HeroPoint({ icon, title, text, noBorder }) {
   return (
-    <div className={`${noBorder ? "" : "ps-3 border-start border-secondary"} h-100`}>
-      <div className="d-flex align-items-center gap-2 mb-2">
-        <span style={{ color: BLUE, display: "inline-flex" }}>
-          {React.cloneElement(icon, { size: 18 })}
-        </span>
-        <h3 className="text-uppercase small fw-bold tracking-wide mb-0 text-light">{title}</h3>
+    <div className={`${noBorder ? "" : "ps-3 border-start border-secondary"} h-100 d-flex align-items-center gap-2`}>
+      <span style={{ color: BLUE, display: "inline-flex", flexShrink: 0 }}>
+        {React.cloneElement(icon, { size: 18 })}
+      </span>
+      <div>
+        <h3 className="text-uppercase small fw-bold tracking-wide mb-1 text-light">{title}</h3>
+        <p className="small text-white-50 mb-0 leading-normal" style={{ fontSize: "0.825rem" }}>{text}</p>
       </div>
-      <p className="small text-white-50 mb-0 leading-normal" style={{ fontSize: "0.825rem" }}>{text}</p>
     </div>
   );
 }
