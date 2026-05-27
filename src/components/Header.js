@@ -2,7 +2,7 @@ import React from 'react';
 import { Navbar, Nav, Container, Form, FormControl, Button, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faMicrochip, faShoppingCart, faUser, faSignOutAlt, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faMicrochip, faShoppingCart, faUser, faSignOutAlt, faFileInvoice, faPhone } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -70,6 +70,15 @@ const Header = () => {
               <FontAwesomeIcon icon={faSearch} />
             </Button>
           </Form>
+
+          {/* Company Phone Number */}
+          <div className="d-flex align-items-center my-2 my-lg-0 ms-lg-3 text-dark">
+            <a href="tel:8009749947" className="text-dark text-decoration-none d-flex align-items-center">
+              <FontAwesomeIcon icon={faPhone} className="me-2 text-primary" />
+              <span>(800) 974-9947</span>
+            </a>
+          </div>
+
           {/* Cart Icon */}
           <Nav className="ms-auto">
             {user ? (
