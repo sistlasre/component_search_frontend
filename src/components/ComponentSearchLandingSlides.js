@@ -18,7 +18,7 @@ const ComponentSearchLandingSlides = () => {
       title: 'Maximize Returns Without Giving Up Control',
       description: 'Our consignment program gives you visibility, flexibility, and operational support to help maximize returns while maintaining full control of your inventory.',
       button: 'Explore Our Consignment Program',
-      href: '/resource-center#consignment',
+      href: '/excess',
       // Updated: High-end logistics/tech inventory background
       image: `${vignette}, url(https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1400&q=80)`,
       features: [
@@ -33,7 +33,7 @@ const ComponentSearchLandingSlides = () => {
       title: 'Turn Excess Inventory into Working Capital',
       description: 'Market-driven analysis, transparent reporting, and active demand generation to help convert surplus electronic components into cash.',
       button: 'Explore Our Excess Program',
-      href: '/resource-center#excess',
+      href: '/excess',
       image: `${vignette}, url(https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=80)`,
       features: [
         { icon: <FiMonitor />, title: "Full Transparency, Full Control", desc: "Access our ERP system to view all quotes and maintain full control over pricing decisions." },
@@ -47,7 +47,7 @@ const ComponentSearchLandingSlides = () => {
       title: 'Unlock Value From Obsolete and Scrap Inventory',
       description: 'Recover more value from obsolete material through higher-than-scrap pricing, on-site component recovery, and flexible deal structures.',
       button: 'Learn About Our Scrap Program',
-      href: '/resource-center#scrap',
+      href: '/excess',
       image: `${vignette}, url(https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=1400&q=80)`,
       features: [
         { icon: <FiDollarSign />, title: "Top Dollar for Scrap", desc: "We pay above traditional scrap value to maximize recovery from your material." },

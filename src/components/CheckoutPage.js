@@ -344,7 +344,7 @@ const CheckoutPage = () => {
                 </ToggleButtonGroup>
                 <div className="text-muted small mt-1">
                   {recordType === 'order'
-                    ? 'Firm purchase — we\u2019ll follow up to finalize shipping and pricing.'
+                    ? "Firm purchase — we'll follow up to finalize shipping and pricing."
                     : 'Inquiry only — use the notes field below to describe what you need. Pricing may be provided back to you.'}
                 </div>
                 {forceRequest && (
@@ -495,7 +495,7 @@ const CheckoutPage = () => {
                   <Form.Text className="text-muted">
                     {recordType === 'order'
                       ? 'Attach your PO as a PDF. It will be stored with your order.'
-                      : 'Optional for requests \u2014 attach a PO PDF if you have one.'}
+                      : 'Optional for requests - attach a PO PDF if you have one.'}
                   </Form.Text>
                   {purchaseOrderError && (
                     <Form.Control.Feedback type="invalid">{purchaseOrderError}</Form.Control.Feedback>

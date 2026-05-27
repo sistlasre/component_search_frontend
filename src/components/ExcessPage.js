@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Container, Row, Col, Form, Button, Nav, Navbar } from "react-bootstrap";
+import React, { useState, useRef } from "react";
+import { Container, Row, Col, Form, Button, Nav, Navbar, Alert, Spinner, Table } from "react-bootstrap";
 import {
   Upload,
   ArrowRight,
@@ -17,8 +17,12 @@ import {
   PackageCheck,
   RotateCcw,
 } from "lucide-react";
+import axios from "axios";
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import ContactUsModal from "./ContactUsModal";
 import UploadInventoryModal from "./UploadInventoryModal";
+import { apiService } from "../services/userManagementService";
 
 // Brand Color Palette
 const BLUE = "#0074D9";
@@ -28,6 +32,64 @@ const GREEN = "#27c14a";
 // Subtle PCB circuit-board trace pattern (tiling SVG)
 const PCB_SVG = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><line x1='0' y1='20' x2='30' y2='20' stroke='rgba(0,116,217,0.1)' stroke-width='1.5'/><line x1='40' y1='20' x2='100' y2='20' stroke='rgba(0,116,217,0.1)' stroke-width='1.5'/><line x1='0' y1='60' x2='70' y2='60' stroke='rgba(0,116,217,0.07)' stroke-width='1'/><line x1='80' y1='60' x2='100' y2='60' stroke='rgba(0,116,217,0.07)' stroke-width='1'/><line x1='30' y1='0' x2='30' y2='20' stroke='rgba(0,116,217,0.08)' stroke-width='1.5'/><line x1='40' y1='20' x2='40' y2='50' stroke='rgba(0,116,217,0.06)' stroke-width='1'/><line x1='70' y1='50' x2='70' y2='100' stroke='rgba(0,116,217,0.08)' stroke-width='1.5'/><line x1='80' y1='40' x2='80' y2='60' stroke='rgba(0,116,217,0.06)' stroke-width='1'/><line x1='40' y1='50' x2='70' y2='50' stroke='rgba(0,116,217,0.06)' stroke-width='1'/><circle cx='30' cy='20' r='3' fill='rgba(0,116,217,0.12)'/><circle cx='40' cy='20' r='3' fill='rgba(0,116,217,0.12)'/><circle cx='70' cy='60' r='2.5' fill='rgba(0,116,217,0.1)'/><circle cx='80' cy='60' r='2.5' fill='rgba(0,116,217,0.1)'/><circle cx='40' cy='50' r='3' fill='rgba(0,116,217,0.12)'/><circle cx='70' cy='50' r='3' fill='rgba(0,116,217,0.12)'/></svg>`;
 const PCB_BG = `url("data:image/svg+xml,${encodeURIComponent(PCB_SVG)}")`;
+
+const MAPPING_OPTIONS = [
+  { value: 'mpn', label: 'Part Number (MPN)' },
+  { value: 'mfr', label: 'Manufacturer' },
+  { value: 'quantity', label: 'Quantity' },
+];
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const parseFilePreview = (file) => new Promise((resolve, reject) => {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.csv')) {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (!results.data || results.data.length === 0) {
+          reject(new Error('The file appears to be empty.'));
+          return;
+        }
+        const headers = Object.keys(results.data[0]);
+        resolve({ headers, rows: results.data.slice(0, 5) });
+      },
+      error: (err) => reject(new Error(`Error parsing CSV: ${err.message}`)),
+    });
+    return;
+  }
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        if (!json.length) {
+          reject(new Error('The file appears to be empty.'));
+          return;
+        }
+        const headers = json[0].map((h) => String(h));
+        const rows = json.slice(1, 6).map((row) => {
+          const obj = {};
+          headers.forEach((h, i) => {
+            obj[h] = row[i] ?? '';
+          });
+          return obj;
+        });
+        resolve({ headers, rows });
+      } catch (err) {
+        reject(new Error(`Error parsing Excel file: ${err.message}`));
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read the selected file.'));
+    reader.readAsArrayBuffer(file);
+    return;
+  }
+  reject(new Error('Please select a CSV (.csv) or Excel (.xlsx) file.'));
+});
 
 export default function ExcessPage() {
   const [contactModal, setContactModal] = useState({ show: false, subject: "", source: "" });
@@ -46,7 +108,6 @@ export default function ExcessPage() {
       <Hero
         onUpload={() => openUploadModal()}
         onScheduleCall={() => openContactModal()}
-        onOpenModalWithPrefill={(prefill, autoOpenFilePicker) => openUploadModal("Excess Page \u2013 Hero Form", prefill, autoOpenFilePicker)}
       />
       <Partnership />
       <Consignment />
@@ -107,7 +168,7 @@ function Header() {
   );
 }
 
-function Hero({ onUpload, onScheduleCall, onOpenModalWithPrefill }) {
+function Hero({ onUpload, onScheduleCall }) {
   return (
     <section
       className="text-white position-relative overflow-hidden py-5 py-lg-5"
@@ -181,7 +242,7 @@ function Hero({ onUpload, onScheduleCall, onOpenModalWithPrefill }) {
 
           {/* Form Content Side */}
           <Col lg={5} xl={4}>
-            <QuoteForm onOpenModal={onOpenModalWithPrefill} />
+            <QuoteForm />
           </Col>
         </Row>
       </Container>
@@ -189,7 +250,7 @@ function Hero({ onUpload, onScheduleCall, onOpenModalWithPrefill }) {
   );
 }
 
-function QuoteForm({ onOpenModal }) {
+function QuoteForm() {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -197,20 +258,125 @@ function QuoteForm({ onOpenModal }) {
     email: "",
     phone: "",
   });
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [mappings, setMappings] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleOpenModal = (autoOpenFilePicker = false) => {
-    onOpenModal({
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
-      companyName: form.company,
-      phone: form.phone,
-    }, autoOpenFilePicker);
+  const handleFileSelect = async (e) => {
+    const selectedFile = e.target.files && e.target.files[0];
+    if (!selectedFile) return;
+    const fname = selectedFile.name.toLowerCase();
+    if (!fname.endsWith('.csv') && !fname.endsWith('.xlsx') && !fname.endsWith('.xls')) {
+      setError('Please select a CSV (.csv) or Excel (.xlsx) file.');
+      setFile(null);
+      setPreview(null);
+      setMappings({});
+      return;
+    }
+    setError('');
+    setFile(selectedFile);
+    setPreview(null);
+    setMappings({});
+    try {
+      const parsed = await parseFilePreview(selectedFile);
+      setPreview(parsed);
+    } catch (err) {
+      setError(err.message);
+      setPreview(null);
+    }
   };
+
+  const handleMappingChange = (columnName, mappingType) => {
+    setMappings((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((key) => {
+        if (next[key] === mappingType) delete next[key];
+      });
+      if (mappingType && mappingType !== 'none') {
+        next[columnName] = mappingType;
+      } else {
+        delete next[columnName];
+      }
+      return next;
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!form.company.trim()) { setError('Company is required.'); return; }
+    if (!form.email.trim()) { setError('Email is required.'); return; }
+    if (!EMAIL_REGEX.test(form.email.trim())) { setError('Please enter a valid email address.'); return; }
+    if (!file) { setError('Please select a file to upload.'); return; }
+    if (!preview) { setError('Waiting for file preview - please reselect the file.'); return; }
+    if (!Object.values(mappings).includes('mpn')) { setError('Part Number (MPN) column mapping is required.'); return; }
+
+    setUploading(true);
+    setError('');
+    try {
+      const mpnField = Object.entries(mappings).find(([, v]) => v === 'mpn')?.[0] || '';
+      const mfrField = Object.entries(mappings).find(([, v]) => v === 'mfr')?.[0] || '';
+      const quantityField = Object.entries(mappings).find(([, v]) => v === 'quantity')?.[0] || '';
+
+      const fname = file.name.toLowerCase();
+      const fileExtension = fname.endsWith('.xlsx') || fname.endsWith('.xls') ? 'xlsx' : 'csv';
+      const contentType = fileExtension === 'xlsx'
+        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        : 'text/csv';
+
+      const { data } = await apiService.getUserInventoryUploadUrl({
+        email_address: form.email.trim(),
+        company_name: form.company.trim(),
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        phone: form.phone.trim(),
+        mpn_field: mpnField,
+        mfr_field: mfrField,
+        quantity_field: quantityField,
+        file_extension: fileExtension,
+        content_type: contentType,
+        source: 'Excess Page - Hero Form',
+      });
+
+      if (!data?.presigned_url) throw new Error('Backend did not return a presigned URL');
+
+      await axios.put(data.presigned_url, file, {
+        headers: { 'Content-Type': contentType },
+      });
+
+      setSuccess(true);
+    } catch (err) {
+      console.error('Inventory upload error:', err);
+      setError(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Something went wrong uploading your inventory. Please try again.'
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <aside id="quote" className="bg-white text-dark rounded-3 p-4 p-md-4 shadow-lg border border-light">
+        <Alert variant="success" className="mb-0">
+          <h5 className="fw-bold">Thanks - your inventory is uploaded.</h5>
+          <p className="mb-0">
+            We&apos;ll reach out to <strong>{form.email || 'the email you provided'}</strong> once our team has reviewed the file.
+          </p>
+        </Alert>
+      </aside>
+    );
+  }
 
   return (
     <aside id="quote" className="bg-white text-dark rounded-3 p-4 p-md-4 shadow-lg border border-light">
@@ -218,47 +384,123 @@ function QuoteForm({ onOpenModal }) {
         Submit Your Inventory
       </h2>
 
-      <Form onSubmit={(e) => { e.preventDefault(); handleOpenModal(); }} className="d-flex flex-column gap-3">
-        <Row className="g-3">
-          <Col sm={6}>
-            <Input label="First Name" placeholder="First name" id="firstName" value={form.firstName} onChange={handleChange("firstName")} />
-          </Col>
-          <Col sm={6}>
-            <Input label="Last Name" placeholder="Last name" id="lastName" value={form.lastName} onChange={handleChange("lastName")} />
-          </Col>
-        </Row>
-
-        <Input label="Company" placeholder="Your company" id="company" value={form.company} onChange={handleChange("company")} />
+      <Form onSubmit={handleSubmit} noValidate className="d-flex flex-column gap-3">
+        {error && <Alert variant="danger" className="mb-0 small">{error}</Alert>}
 
         <Row className="g-3">
           <Col sm={6}>
-            <Input label="Email" placeholder="name@company.com" type="email" id="email" value={form.email} onChange={handleChange("email")} />
+            <Input label="First Name" placeholder="First name" id="qfFirstName" value={form.firstName} onChange={handleChange("firstName")} disabled={uploading} />
           </Col>
           <Col sm={6}>
-            <Input label="Phone" placeholder="800-974-9947" type="tel" id="phone" value={form.phone} onChange={handleChange("phone")} />
+            <Input label="Last Name" placeholder="Last name" id="qfLastName" value={form.lastName} onChange={handleChange("lastName")} disabled={uploading} />
           </Col>
         </Row>
 
-        {/* Upload Container Zone */}
-        <div
-          className="rounded-3 border border-2 border-dashed bg-light p-4 text-center my-2"
-          style={{ borderColor: "#dee2e6", cursor: "pointer" }}
-          onClick={() => handleOpenModal(true)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpenModal(true); }}
-        >
-          <FileSpreadsheet className="text-muted mb-2" size={32} />
-          <p className="fw-bold mb-1 text-secondary">Upload inventory list</p>
-          <p className="text-muted small mb-0">Excel or CSV</p>
+        <Input label="Company" placeholder="Your company" id="qfCompany" value={form.company} onChange={handleChange("company")} required disabled={uploading} />
+
+        <Row className="g-3">
+          <Col sm={6}>
+            <Input label="Email" placeholder="name@company.com" type="email" id="qfEmail" value={form.email} onChange={handleChange("email")} required disabled={uploading} />
+          </Col>
+          <Col sm={6}>
+            <Input label="Phone" placeholder="800-974-9947" type="tel" id="qfPhone" value={form.phone} onChange={handleChange("phone")} disabled={uploading} />
+          </Col>
+        </Row>
+
+        {/* File Upload Zone */}
+        <div>
+          <Form.Label className="small fw-bold text-secondary mb-1">
+            Inventory File<span className="text-danger"> *</span>
+          </Form.Label>
+          <div
+            className="rounded-3 border border-2 border-dashed bg-light p-4 text-center"
+            style={{ borderColor: file ? BLUE : "#dee2e6", cursor: uploading ? "default" : "pointer" }}
+            onClick={() => !uploading && fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (!uploading && (e.key === "Enter" || e.key === " ")) fileInputRef.current?.click(); }}
+          >
+            <FileSpreadsheet className="text-muted mb-2" size={32} />
+            <p className="fw-bold mb-1 text-secondary">
+              {file ? file.name : "Upload inventory list"}
+            </p>
+            <p className="text-muted small mb-0">
+              {file ? `${(file.size / 1024).toFixed(1)} KB` : "Excel or CSV"}
+            </p>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={handleFileSelect}
+            disabled={uploading}
+            style={{ display: "none" }}
+          />
         </div>
+
+        {/* Preview & Column Mapping */}
+        {preview && (
+          <div>
+            <h6 className="fw-semibold mb-2 small">Column Mapping</h6>
+            <p className="text-muted small mb-2">
+              Map your columns below. Part Number is required.
+            </p>
+            <div className="table-responsive border rounded" style={{ maxHeight: "240px", overflowY: "auto" }}>
+              <Table striped hover size="sm" className="mb-0" style={{ fontSize: "0.78rem" }}>
+                <thead>
+                  <tr>
+                    {preview.headers.map((header) => (
+                      <th key={header} className="align-top" style={{ minWidth: "120px" }}>
+                        <Form.Select
+                          size="sm"
+                          className="mb-1"
+                          value={mappings[header] || "none"}
+                          onChange={(e) => handleMappingChange(header, e.target.value)}
+                          disabled={uploading}
+                          style={{ fontSize: "0.75rem" }}
+                        >
+                          <option value="none">-- Skip --</option>
+                          {MAPPING_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </Form.Select>
+                        <div className="fw-normal text-muted small">{header}</div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.rows.map((row, idx) => (
+                    <tr key={idx}>
+                      {preview.headers.map((header) => (
+                        <td key={header}>
+                          {row[header] === undefined || row[header] === ''
+                            ? <span className="text-muted">-</span>
+                            : String(row[header])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          </div>
+        )}
 
         <Button
           type="submit"
           className="w-100 d-flex align-items-center justify-content-center gap-2 fw-bold border-0 py-3 mt-2"
           style={{ backgroundColor: BLUE }}
+          disabled={uploading}
         >
-          Get Your Cash Offer <ArrowRight size={18} />
+          {uploading ? (
+            <>
+              <Spinner as="span" animation="border" size="sm" className="me-2" />
+              Uploading...
+            </>
+          ) : (
+            <>Get Your Cash Offer <ArrowRight size={18} /></>
+          )}
         </Button>
       </Form>
     </aside>
@@ -434,16 +676,19 @@ function FinalCTA({ onUpload, onScheduleCall }) {
 }
 
 /* Helper Presentational Subcomponents mapping cleanly to Bootstrap HTML utility standards */
-function Input({ label, placeholder, type = "text", id, value, onChange, disabled }) {
+function Input({ label, placeholder, type = "text", id, value, onChange, disabled, required }) {
   return (
     <Form.Group controlId={id} className="text-start">
-      <Form.Label className="small fw-bold text-secondary mb-1">{label}</Form.Label>
+      <Form.Label className="small fw-bold text-secondary mb-1">
+        {label}{required && <span className="text-danger"> *</span>}
+      </Form.Label>
       <Form.Control
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
         disabled={disabled}
+        required={required}
         className="py-2"
         style={{ fontSize: "0.9rem" }}
       />

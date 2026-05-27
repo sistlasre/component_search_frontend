@@ -3,7 +3,8 @@ import { Modal, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { apiService } from '../services/userManagementService';
 
 const EMPTY_FORM = {
-  name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   company: '',
   phone: '',
@@ -45,15 +46,25 @@ const ContactUsModal = ({ show, onHide, defaultSubject = '', source = '' }) => {
     e.preventDefault();
     setError('');
 
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      setError('Please fill out your name, email, and message.');
+    if (!form.company.trim()) {
+      setError('Company is required.');
+      return;
+    }
+    if (!form.email.trim()) {
+      setError('Email is required.');
+      return;
+    }
+    if (!form.message.trim()) {
+      setError('Please include a message.');
       return;
     }
 
     setSubmitting(true);
     try {
       await apiService.submitContactForm({
-        name: form.name.trim(),
+        name: [form.firstName.trim(), form.lastName.trim()].filter(Boolean).join(' '),
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
         email: form.email.trim(),
         company: form.company.trim(),
         phone: form.phone.trim(),
@@ -101,19 +112,47 @@ const ContactUsModal = ({ show, onHide, defaultSubject = '', source = '' }) => {
               Fields marked with <span className="text-danger">*</span> are required.
             </p>
 
-            <Row className="g-3">
+            <Row className="g-3 mb-2">
               <Col md={6}>
-                <Form.Group controlId="contactName">
-                  <Form.Label>Name<span className="text-danger"> *</span></Form.Label>
+                <Form.Group controlId="contactFirstName">
+                  <Form.Label>First Name</Form.Label>
                   <Form.Control
                     type="text"
-                    value={form.name}
-                    onChange={handleChange('name')}
+                    value={form.firstName}
+                    onChange={handleChange('firstName')}
+                    disabled={submitting}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group controlId="contactLastName">
+                  <Form.Label>Last Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={form.lastName}
+                    onChange={handleChange('lastName')}
+                    disabled={submitting}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="g-3 mb-2">
+              <Col>
+                <Form.Group controlId="contactCompany">
+                  <Form.Label>Company<span className="text-danger"> *</span></Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={form.company}
+                    onChange={handleChange('company')}
                     disabled={submitting}
                     required
                   />
                 </Form.Group>
               </Col>
+            </Row>
+
+            <Row className="g-3 mb-2">
               <Col md={6}>
                 <Form.Group controlId="contactEmail">
                   <Form.Label>Email<span className="text-danger"> *</span></Form.Label>
@@ -123,17 +162,6 @@ const ContactUsModal = ({ show, onHide, defaultSubject = '', source = '' }) => {
                     onChange={handleChange('email')}
                     disabled={submitting}
                     required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group controlId="contactCompany">
-                  <Form.Label>Company</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={form.company}
-                    onChange={handleChange('company')}
-                    disabled={submitting}
                   />
                 </Form.Group>
               </Col>
@@ -148,6 +176,9 @@ const ContactUsModal = ({ show, onHide, defaultSubject = '', source = '' }) => {
                   />
                 </Form.Group>
               </Col>
+            </Row>
+
+            <Row className="g-3 mb-2">
               <Col xs={12}>
                 <Form.Group controlId="contactSubject">
                   <Form.Label>Subject</Form.Label>
@@ -159,6 +190,9 @@ const ContactUsModal = ({ show, onHide, defaultSubject = '', source = '' }) => {
                   />
                 </Form.Group>
               </Col>
+            </Row>
+
+            <Row className="g-3">
               <Col xs={12}>
                 <Form.Group controlId="contactMessage">
                   <Form.Label>Message<span className="text-danger"> *</span></Form.Label>
