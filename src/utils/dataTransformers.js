@@ -1,9 +1,20 @@
+
+const COMPLIANCE_FIELDS = {
+  "htsus": "HTSUS",
+  "eccn": "ECCN",
+  "rohs_status": "RoHS Status",
+  "reach_status": "REACH Status",
+  "moisture_sensitivity_level_msl": "Moisture Sensitivity Level (MSL)"
+};
 /**
  * Convert snake_case to Title Case
  * @param {string} str - The snake_case string
  * @returns {string} Title Case string
  */
 export const snakeToTitleCase = (str) => {
+  if (str in COMPLIANCE_FIELDS) {
+    return COMPLIANCE_FIELDS[str];
+  }
   return str
     // Split where a letter is followed by a digit,
     // a digit is followed by a letter, or at an underscore
@@ -11,7 +22,8 @@ export const snakeToTitleCase = (str) => {
     // Filter out empty strings that might result from double separators (e.g., _1)
     .filter(Boolean)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .join(' ')
+    .replace("I O", "I/O")
 };
 
 /**
@@ -30,66 +42,37 @@ export const categorizeSpecifications = (partData) => {
       'category3',
       'category4',
       'category5',
-      'series'
-      // packaging and supplier_device_package are intentionally omitted: we
-      // hide them from the PartDetail specs and from search result cards.
-    ],
-    'Electrical Characteristics': [
-      'resistance',
-      'power_watts',
-      'tolerance',
-      'temperature_coefficient',
-      'voltage_rating',
-      'current_rating',
-      'capacitance',
-      'inductance'
-    ],
-    'Physical Characteristics': [
-      'size_dimension',
-      'package_case',
-      'height_seated_max',
-      'number_of_terminations',
-      'mounting_type',
-      'lead_spacing',
-      'weight',
-      'color'
+      'series',
+      'base_product_number',
+      'operating_temperature'
     ],
     'Environmental & Compliance': [
-      'operating_temperature',
-      'storage_temperature',
-      'moisture_sensitivity',
-      'ratings',
-      'failure_rate',
+      'htsus',
+      'eccn',
       'rohs_status',
       'reach_status',
-      'lead_free'
-    ],
-    'Features': [
-      'features',
-      'composition',
-      'technology',
-      'interface',
-      'applications'
+      'moisture_sensitivity_level_msl'
     ]
   };
 
   // Fields to exclude from specifications display
-  const excludeFields = ['url', 'created_at', 'updated_at', 'id'];
+  const excludeFields = ['url', 'created_at', 'updated_at', 'id', 'category1', 'category2'];
+
+  // 1. Gather all explicitly mapped keys across both categories
+  const mappedKeys = Object.values(categoryMappings).flat();
+  // Helper function to validate values
+  const isValidValue = (value) => value !== null && value !== undefined && value !== '' && value !== '-';
+  // 2. Process the defined categories first to maintain exact specified order
   Object.entries(categoryMappings).forEach(([category, fields]) => {
     fields.forEach(fieldKey => {
       const value = partData[fieldKey];
 
-      // Original validation logic
-      if (value === null || value === undefined || value === '' || value === '-') {
-        return;
-      }
+      if (!isValidValue(value)) return;
 
       if (!specifications[category]) {
         specifications[category] = [];
       }
 
-      // Store as an array of spec objects so we can preserve the original
-      // snake_case key (for building search URLs) alongside a display label.
       specifications[category].push({
         key: fieldKey,
         label: snakeToTitleCase(fieldKey),
@@ -97,9 +80,30 @@ export const categorizeSpecifications = (partData) => {
       });
     });
   });
+  // 3. Find any remaining keys in partData that aren't mapped, excluded, or invalid
+  const generalCategorySpec = specifications['General'] || [];
 
-  // Handle "Other Specifications" and Uncategorized fields
-  const categorizedKeys = Object.values(categoryMappings).flat();
+  Object.keys(partData).forEach(fieldKey => {
+    // If it's already mapped, excluded, or invalid, skip it
+    if (mappedKeys.includes(fieldKey) || excludeFields.includes(fieldKey)) {
+      return;
+    }
+
+    const value = partData[fieldKey];
+    if (!isValidValue(value)) return;
+
+    // Initialize General category array if it didn't exist (e.g., if all defined general fields were empty)
+    if (!specifications['General']) {
+      specifications['General'] = [];
+    }
+
+    // Append to the end of the General category
+    specifications['General'].push({
+      key: fieldKey,
+      label: snakeToTitleCase(fieldKey),
+      value: value,
+    });
+  });
 
   return specifications;
 };
