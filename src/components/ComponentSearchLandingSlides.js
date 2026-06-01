@@ -13,21 +13,6 @@ const ComponentSearchLandingSlides = () => {
 
   const slides = [
     {
-      id: 'consignment',
-      eyebrow: 'CONSIGNMENT PROGRAM',
-      title: 'Maximize Returns Without Giving Up Control',
-      description: 'Our consignment program gives you visibility, flexibility, and operational support to help maximize returns while maintaining full control of your inventory.',
-      button: 'Explore Our Consignment Program',
-      href: '/excess',
-      // Updated: High-end logistics/tech inventory background
-      image: `${vignette}, url(https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1400&q=80)`,
-      features: [
-        { icon: <FiClipboard />, title: "Serialized Receiving With Full Documentation", desc: "We use InventoryCapture to document the condition of your inventory as it is received." },
-        { icon: <FiTruck />, title: "All Logistics Costs Covered", desc: "We cover the logistics costs, so there is no out-of-pocket expense to the customer." },
-        { icon: <FiRefreshCw />, title: "Liquidate or Recall at Any Time", desc: "Maintain full control of your inventory with the flexibility to liquidate or recall it at any time." }
-      ]
-    },
-    {
       id: 'excess',
       eyebrow: 'EXCESS PROGRAM',
       title: 'Turn Excess Inventory into Working Capital',
@@ -53,6 +38,21 @@ const ComponentSearchLandingSlides = () => {
         { icon: <FiDollarSign />, title: "Top Dollar for Scrap", desc: "We pay above traditional scrap value to maximize recovery from your material." },
         { icon: <FiZap />, title: "On-Site Component Recovery", desc: "Our in-house team can remove and refurbish components on-site to recover additional value." },
         { icon: <FiTarget />, title: "Outright Buy or Revenue Split", desc: "Choose an immediate purchase or a revenue-split model based on your goals." }
+      ]
+    },
+    {
+      id: 'consignment',
+      eyebrow: 'CONSIGNMENT PROGRAM',
+      title: 'Maximize Returns Without Giving Up Control',
+      description: 'Our consignment program gives you visibility, flexibility, and operational support to help maximize returns while maintaining full control of your inventory.',
+      button: 'Explore Our Consignment Program',
+      href: '/excess',
+      // Updated: High-end logistics/tech inventory background
+      image: `${vignette}, url(https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1400&q=80)`,
+      features: [
+        { icon: <FiClipboard />, title: "Serialized Receiving With Full Documentation", desc: "We use InventoryCapture to document the condition of your inventory as it is received." },
+        { icon: <FiTruck />, title: "All Logistics Costs Covered", desc: "We cover the logistics costs, so there is no out-of-pocket expense to the customer." },
+        { icon: <FiRefreshCw />, title: "Liquidate or Recall at Any Time", desc: "Maintain full control of your inventory with the flexibility to liquidate or recall it at any time." }
       ]
     }
   ];
@@ -110,8 +110,6 @@ const ComponentSearchLandingSlides = () => {
                     <div className="mt-4 pt-4 border-top">
                       <Button
                         href={slide.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="cta-button btn-lg px-5 py-2 fw-bold shadow-sm"
                       >
                         {slide.button} →
