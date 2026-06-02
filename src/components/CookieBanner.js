@@ -12,7 +12,10 @@ export default function CookieBanner() {
   }, []);
 
   const handleAccept = () => {
-    // 1. Tell the browser window to update Google Analytics
+    // 1. Save setting so they don't see the banner next time
+    localStorage.setItem('cookie-consent', 'granted');
+    setIsVisible(false);
+    // 2. Explicitly update and fire the hit right now
     if (window.gtag) {
       window.gtag('consent', 'update', {
         'ad_storage': 'granted',
@@ -20,19 +23,7 @@ export default function CookieBanner() {
         'ad_user_data': 'granted',
         'ad_personalization': 'granted'
       });
-    }
-
-    // 2. Save preference and hide banner
-    localStorage.setItem('cookie-consent', 'granted');
-    setIsVisible(false);
-
-    // FORCE A FRESH PAGEVIEW EVENT RIGHT AFTER THE UPDATE
-    // This sends a pristine payload to Google using the newly unlocked consent states
-    if (window.gtag) {
-      window.gtag('event', 'page_view', {
-        page_location: window.location.href,
-        page_title: document.title
-      });
+      window.gtag('config', 'G-BE3QMHZ0JD');
     }
   };
 
