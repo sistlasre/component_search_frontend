@@ -31,6 +31,7 @@ import ScrollToTop from './components/ScrollToTop';
 import InfoPages from './components/InfoPages'
 import ManufacturersPage from './components/ManufacturersPage';
 import ExcessPage from './components/ExcessPage'
+import CookieBanner from './components/CookieBanner';
 
 function App() {
   return (
@@ -73,6 +74,7 @@ function App() {
               } />
             </Routes>
           </main>
+          <CookieBanner />
           <Footer />
         </div>
       </CartProvider>
