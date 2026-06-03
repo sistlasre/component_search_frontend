@@ -138,6 +138,25 @@ const SearchResults = () => {
     fetchData();
   }, [buildApiUrl]); // Refetch when buildApiUrl changes (which depends on filters)
 
+  // If the only active filter is `q` and there is exactly one result whose
+  // part number matches the query, redirect straight to the part page.
+  useEffect(() => {
+    if (loading || results.length !== 1) return;
+    if (categoryFilter || subcategoryFilter || manufacturerFilter) return;
+    if (Object.keys(selectedFilters).length > 0) return;
+    if (!query) return;
+
+    const part = results[0];
+    const partNumber = part.part_number || part.partNumber;
+    // partNumber.toLowerCase() === query.toLowerCase()
+    if (partNumber) {
+      navigate(
+        `/part/${encodeURIComponent(part.id || partNumber)}?pi=${btoa(part.id || partNumber)}`,
+        { replace: true }
+      );
+    }
+  }, [loading, results, query, categoryFilter, subcategoryFilter, manufacturerFilter, selectedFilters, navigate]);
+
   // Once we have a fresh set of results, ask the backend for the
   // quantity + status string to show on each card. Done as a separate
   // request so the main grid can render without waiting for inventory.
