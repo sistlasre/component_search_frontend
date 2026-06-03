@@ -32,6 +32,8 @@ import InfoPages from './components/InfoPages'
 import ManufacturersPage from './components/ManufacturersPage';
 import ExcessPage from './components/ExcessPage'
 import CookieBanner from './components/CookieBanner';
+import SalesTermsAndConditions from './components/SalesTermsAndConditions'
+import PurchaseOrderTermsAndConditions from './components/PurchaseOrderTermsAndConditions'
 
 function App() {
   return (
@@ -57,6 +59,8 @@ function App() {
               <Route path="/orders" element={<MyOrders />} />
               <Route path="/resource-center" element={<InfoPages />} />
               <Route path="/excess" element={<ExcessPage />} />
+              <Route path="terms-conditions" element={<SalesTermsAndConditions />} />
+              <Route path="po_terms" element={<PurchaseOrderTermsAndConditions />} />
               <Route path="/login" element={
                 <PublicRoute>
                   <Login />
