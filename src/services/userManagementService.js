@@ -227,6 +227,18 @@ class ApiService {
     return this.api.get(`/orders/${encodeURIComponent(recordId)}`);
   }
 
+  // -------------------- ComponentCRM Contact Documents --------------------
+  // Fetch a contact's CRM documents (invoices, quotes, rfqs, sales_orders)
+  // by email address. `types` is an optional array of the document types to
+  // fetch (defaults to all four server-side); `page` defaults to 1.
+  async getContactDocuments({ email, types, page }) {
+    return this.api.post('/componentcrm/contacts', {
+      email_address: email,
+      types,
+      page,
+    });
+  }
+
   // -------------------- Purchase Order PDF --------------------
   async getPurchaseOrderUploadUrl({ filename } = {}) {
     return this.api.post('/orders/purchase-order-url', {
