@@ -14,6 +14,7 @@ import {
 } from 'react-bootstrap';
 import { apiService } from '../services/userManagementService';
 import { useAuth } from '../context/AuthContext';
+import { FiFileText } from 'react-icons/fi';
 
 // The document types we render, in tab order, mapped to display labels.
 const DOC_TYPES = [
@@ -47,6 +48,25 @@ const formatDate = (value) => {
 
 const partLink = (partNumber) => {
   return partNumber || '—';
+};
+
+const PdfLink = ({ type, number }) => {
+  if (!number) return null;
+  // Dynamically generate your download URL
+  const pdfUrl = `/api/cc/${type}/${number}/pdf`;
+  return (
+    <a
+      href={pdfUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="btn btn-sm btn-outline-danger d-inline-flex align-items-center ms-2 py-0 px-2"
+      title="Download PDF"
+      style={{ fontSize: '0.75rem', height: '22px', gap: '4px' }}
+    >
+      <FiFileText size={12} />
+      <span>PDF</span>
+    </a>
+  );
 };
 
 // Shared line-item table for invoices / quotes / sales orders.
@@ -116,7 +136,15 @@ const InvoicesView = ({ items }) => (
             <HeaderField label="Sales Rep" value={doc.salesRep || '—'} />
             <HeaderField label="Terms" value={doc.terms || '—'} />
             <HeaderField label="Total" value={formatMoney(doc.totalPrice, symbol)} />
-            {doc.currencyCode && <Badge bg="light" text="dark">{doc.currencyCode}</Badge>}
+            <HeaderField
+              label="Invoice #"
+              value={
+                <>
+                  {doc.invoiceNumber || '—'}
+                  <PdfLink type="invoices" number={doc.invoiceNumber} />
+                </>
+              }
+            />
           </div>
           <LineItemsTable items={doc.lineItems} symbol={symbol} />
         </DocumentCard>
@@ -137,7 +165,15 @@ const QuotesView = ({ items }) => (
             <HeaderField label="Quote Date" value={formatDate(doc.quoteDate)} />
             <HeaderField label="Sales Rep" value={doc.salesRep || '—'} />
             <HeaderField label="Total" value={formatMoney(doc.totalPrice, symbol)} />
-            {doc.currencyCode && <Badge bg="light" text="dark">{doc.currencyCode}</Badge>}
+            <HeaderField
+              label="Quote #"
+              value={
+                <>
+                  {doc.quoteNumber || '—'}
+                  <PdfLink type="quotes" number={doc.quoteNumber} />
+                </>
+              }
+            />
           </div>
           <LineItemsTable items={doc.lineItems} symbol={symbol} showDiscounts />
         </DocumentCard>
@@ -160,7 +196,15 @@ const SalesOrdersView = ({ items }) => (
             <HeaderField label="Sales Rep" value={doc.salesRep || '—'} />
             <HeaderField label="Terms" value={doc.terms || '—'} />
             <HeaderField label="Total" value={formatMoney(doc.totalPrice, symbol)} />
-            {doc.currencyCode && <Badge bg="light" text="dark">{doc.currencyCode}</Badge>}
+            <HeaderField
+              label="Sales Order #"
+              value={
+                <>
+                  {doc.salesOrderNumber || '—'}
+                  <PdfLink type="sales_orders" number={doc.salesOrderNumber} />
+                </>
+              }
+            />
           </div>
           <LineItemsTable items={doc.lineItems} symbol={symbol} showTotal />
         </DocumentCard>
