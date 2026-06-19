@@ -406,8 +406,8 @@ const ContactDocuments = () => {
 
   return (
     <Container className="py-4">
-      <h2 className="mb-1" style={{ fontWeight: 400 }}>My Documents</h2>
-      <p className="text-muted">Documents associated with <strong>{email}</strong></p>
+      <h2 className="mb-1" style={{ fontWeight: 400 }}>My Orders</h2>
+      <p className="text-muted">Orders associated with <strong>{email}</strong></p>
 
       {error && <Alert variant="danger">{error}</Alert>}
 
