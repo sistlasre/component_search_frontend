@@ -46,12 +46,7 @@ const formatDate = (value) => {
 };
 
 const partLink = (partNumber) => {
-  if (!partNumber) return '—';
-  return (
-    <Link to={`/part/${encodeURIComponent(partNumber)}?pi=${btoa(partNumber)}`}>
-      {partNumber}
-    </Link>
-  );
+  return partNumber || '—';
 };
 
 // Shared line-item table for invoices / quotes / sales orders.
@@ -64,6 +59,7 @@ const LineItemsTable = ({ items, symbol, showDiscounts, showTotal }) => {
       <thead>
         <tr>
           <th>Part Number</th>
+          <th>Internal Part Number</th>
           <th>Manufacturer</th>
           <th className="text-end">Qty</th>
           <th className="text-end">Unit Price</th>
@@ -77,6 +73,7 @@ const LineItemsTable = ({ items, symbol, showDiscounts, showTotal }) => {
         {items.map((li, idx) => (
           <tr key={idx}>
             <td>{partLink(li.partNumber)}</td>
+            <td>{partLink(li.internalPartNumber)}</td>
             <td>{li.manufacturer || '—'}</td>
             <td className="text-end">{formatQty(li.quantity)}</td>
             <td className="text-end">{formatMoney(li.unitPrice, symbol)}</td>
@@ -115,6 +112,7 @@ const InvoicesView = ({ items }) => (
             <HeaderField label="Invoice Date" value={formatDate(doc.invoiceDate)} />
             <HeaderField label="Due Date" value={formatDate(doc.dueDate)} />
             <HeaderField label="PO #" value={doc.purchaseOrderNumber || '—'} />
+            <HeaderField label="SO #" value={doc.salesOrderNumber || '—'} />
             <HeaderField label="Sales Rep" value={doc.salesRep || '—'} />
             <HeaderField label="Terms" value={doc.terms || '—'} />
             <HeaderField label="Total" value={formatMoney(doc.totalPrice, symbol)} />
@@ -135,6 +133,7 @@ const QuotesView = ({ items }) => (
         <DocumentCard key={doc.quoteNumber || idx}>
           <div className="mb-2">
             <HeaderField label="Quote #" value={doc.quoteNumber || '—'} />
+            <HeaderField label="C-RFQ #" value={doc.customerRfqNumber || '—'} />
             <HeaderField label="Quote Date" value={formatDate(doc.quoteDate)} />
             <HeaderField label="Sales Rep" value={doc.salesRep || '—'} />
             <HeaderField label="Total" value={formatMoney(doc.totalPrice, symbol)} />
@@ -177,6 +176,7 @@ const RfqsView = ({ items }) => (
       <thead className="bg-light">
         <tr>
           <th>RFQ #</th>
+          <th>C-RFQ #</th>
           <th>Created</th>
           <th>Part Number</th>
           <th>Manufacturer</th>
@@ -192,6 +192,7 @@ const RfqsView = ({ items }) => (
           return (
             <tr key={doc.rfqNumber || idx}>
               <td>{doc.rfqNumber || '—'}</td>
+              <td>{doc.customerRfqNumber || '—'}</td>
               <td>{formatDate(doc.createdAt)}</td>
               <td>{partLink(doc.partNumber)}</td>
               <td>{doc.manufacturer || '—'}</td>
