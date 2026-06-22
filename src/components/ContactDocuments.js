@@ -9,8 +9,7 @@ import {
   Spinner,
   Alert,
   Badge,
-  Button,
-  Pagination,
+  Button
 } from 'react-bootstrap';
 import { apiService } from '../services/userManagementService';
 import { useAuth } from '../context/AuthContext';
@@ -18,10 +17,10 @@ import { FiFileText } from 'react-icons/fi';
 
 // The document types we render, in tab order, mapped to display labels.
 const DOC_TYPES = [
-  { key: 'invoices', label: 'Invoices' },
-  { key: 'quotes', label: 'Quotes' },
   { key: 'rfqs', label: 'RFQs' },
+  { key: 'quotes', label: 'Quotes' },
   { key: 'sales_orders', label: 'Sales Orders' },
+  { key: 'invoices', label: 'Invoices' }
 ];
 
 // ---- Formatting helpers (mirroring MyOrders.js conventions) ----
@@ -267,55 +266,9 @@ const renderTypeBody = (typeKey, items) => {
   }
 };
 
-// Builds a compact, windowed list of page numbers around the current page.
-const PAGE_WINDOW = 5;
-const getPageWindow = (current, total) => {
-  let start = Math.max(1, current - Math.floor(PAGE_WINDOW / 2));
-  const end = Math.min(total, start + PAGE_WINDOW - 1);
-  start = Math.max(1, end - PAGE_WINDOW + 1);
-  const pages = [];
-  for (let p = start; p <= end; p += 1) pages.push(p);
-  return pages;
-};
-
-// Per-section pagination bar. Renders nothing unless there is more than one
-// page (i.e. there are more results than fit on a single page).
-const SectionPagination = ({ page, hits, pageSize, loading, onChange }) => {
-  const totalPages = pageSize > 0 ? Math.ceil(hits / pageSize) : 1;
-  if (totalPages <= 1) return null;
-  const pages = getPageWindow(page, totalPages);
-  return (
-    <div className="d-flex align-items-center justify-content-between flex-wrap mt-3">
-      <small className="text-muted">
-        Page {page} of {totalPages} · {Number(hits).toLocaleString()} total
-        {loading && <Spinner animation="border" size="sm" className="ms-2" />}
-      </small>
-      <Pagination className="mb-0">
-        <Pagination.First disabled={loading || page <= 1} onClick={() => onChange(1)} />
-        <Pagination.Prev disabled={loading || page <= 1} onClick={() => onChange(page - 1)} />
-        {pages[0] > 1 && <Pagination.Ellipsis disabled />}
-        {pages.map((p) => (
-          <Pagination.Item
-            key={p}
-            active={p === page}
-            disabled={loading}
-            onClick={() => onChange(p)}
-          >
-            {p}
-          </Pagination.Item>
-        ))}
-        {pages[pages.length - 1] < totalPages && <Pagination.Ellipsis disabled />}
-        <Pagination.Next disabled={loading || page >= totalPages} onClick={() => onChange(page + 1)} />
-        <Pagination.Last disabled={loading || page >= totalPages} onClick={() => onChange(totalPages)} />
-      </Pagination>
-    </div>
-  );
-};
-
 const ContactDocuments = () => {
   const { user } = useAuth();
   const [results, setResults] = useState({});
-  const [typeErrors, setTypeErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(DOC_TYPES[0].key);
@@ -334,10 +287,9 @@ const ContactDocuments = () => {
       setLoading(true);
       setError('');
       try {
-        const resp = await apiService.getContactDocuments({ email });
+        const resp = await apiService.getContactDocuments(email);
         if (!cancelled) {
-          setResults(resp.data?.results || {});
-          setTypeErrors(resp.data?.errors || {});
+          setResults(resp?.results || {});
         }
       } catch (err) {
         if (!cancelled) {
@@ -352,35 +304,6 @@ const ContactDocuments = () => {
       cancelled = true;
     };
   }, [user, email]);
-
-  // Re-fetch a single section at a specific page and merge just that type's
-  // results, leaving the other tabs untouched.
-  const fetchType = async (typeKey, page) => {
-    if (!email) return;
-    setPageLoading((prev) => ({ ...prev, [typeKey]: true }));
-    try {
-      const resp = await apiService.getContactDocuments({ email, types: [typeKey], page });
-      const typeResult = resp.data?.results?.[typeKey];
-      setResults((prev) => ({
-        ...prev,
-        [typeKey]: typeResult || { items: [], hits: 0, page, pageSize: 0 },
-      }));
-      setTypeErrors((prev) => {
-        const next = { ...prev };
-        const errMsg = resp.data?.errors?.[typeKey];
-        if (errMsg) next[typeKey] = errMsg;
-        else delete next[typeKey];
-        return next;
-      });
-    } catch (err) {
-      setTypeErrors((prev) => ({
-        ...prev,
-        [typeKey]: err.response?.data?.error || err.message || 'Failed to load',
-      }));
-    } finally {
-      setPageLoading((prev) => ({ ...prev, [typeKey]: false }));
-    }
-  };
 
   if (!user) {
     return (
@@ -422,9 +345,6 @@ const ContactDocuments = () => {
           {DOC_TYPES.map(({ key, label }) => {
             const typeResult = results[key] || {};
             const items = typeResult.items || [];
-            const typeError = typeErrors[key];
-            const page = typeResult.page || 1;
-            const pageSize = typeResult.pageSize || 0;
             const hits = typeResult.hits ?? items.length;
             return (
               <Tab
@@ -437,12 +357,12 @@ const ContactDocuments = () => {
                   </span>
                 }
               >
-                {typeError && (
+                {error && (
                   <Alert variant="warning" className="mb-3">
-                    Couldn't load {label.toLowerCase()}: {typeError}
+                    Couldn't load {label.toLowerCase()}: {error}
                   </Alert>
                 )}
-                {items.length === 0 && !typeError ? (
+                {items.length === 0 && !error ? (
                   <Card className="shadow-sm border-0 text-center py-5">
                     <Card.Body>
                       <p className="text-muted mb-0">No {label.toLowerCase()} found.</p>
@@ -451,13 +371,6 @@ const ContactDocuments = () => {
                 ) : (
                   <>
                     {renderTypeBody(key, items)}
-                    <SectionPagination
-                      page={page}
-                      hits={hits}
-                      pageSize={pageSize}
-                      loading={!!pageLoading[key]}
-                      onChange={(p) => fetchType(key, p)}
-                    />
                   </>
                 )}
               </Tab>

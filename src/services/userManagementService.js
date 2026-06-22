@@ -7,6 +7,7 @@ const API_BASE_URL = process.env.REACT_APP_NEW_CS_API_URL || '/api';
 // on first access. Kept stable across logins/logouts (we rotate only on
 // explicit reset) so anonymous activity can be merged on login.
 export const SESSION_ID_STORAGE_KEY = 'cs_session_id';
+const ORDER_TYPES = ["rfqs", "quotes", "sales_orders", "invoices"];
 
 const generateSessionId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -231,12 +232,52 @@ class ApiService {
   // Fetch a contact's CRM documents (invoices, quotes, rfqs, sales_orders)
   // by email address. `types` is an optional array of the document types to
   // fetch (defaults to all four server-side); `page` defaults to 1.
-  async getContactDocuments({ email, types, page }) {
-    return this.api.post('/componentcrm/contacts', {
-      email_address: email,
-      types,
-      page,
-    });
+  async getContactDocuments(email) {
+      const aggregatedItems = {};
+      ORDER_TYPES.forEach(type => {
+        aggregatedItems[type] = [];
+      });
+      let activeTypes = [...ORDER_TYPES];
+      let page = 0;
+      while (activeTypes.length > 0 && page < 40) {
+        page++;
+        const { data: payload } = await this.api.post('/componentcrm/contacts', {
+          email_address: email.trim(),
+          activeTypes,
+          page
+        });
+        const nextActiveTypes = [];
+
+        activeTypes.forEach(type => {
+          const typeData = payload?.results?.[type];
+          const currentItems = typeData?.items || [];
+          const totalHits = typeData?.hits || 0;
+          if (currentItems.length > 0) {
+            aggregatedItems[type] = aggregatedItems[type].concat(currentItems);
+            // If we haven't fetched all the total hits yet, keep this type active
+            if (aggregatedItems[type].length < totalHits) {
+              nextActiveTypes.push(type);
+            }
+          }
+        });
+        activeTypes = nextActiveTypes;
+      }
+
+      const finalPayload = {};
+      if (aggregatedItems) {
+        ORDER_TYPES.forEach(type => {
+          if (aggregatedItems[type]) {
+            finalPayload[type] = {
+              "items": aggregatedItems[type],
+              "hits": aggregatedItems[type].length
+            }
+          }
+        });
+        return {
+          "results": finalPayload
+        };
+      }
+      return {}; // if nothing
   }
 
   // -------------------- Purchase Order PDF --------------------
