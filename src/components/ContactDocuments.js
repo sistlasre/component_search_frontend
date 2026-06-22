@@ -9,7 +9,10 @@ import {
   Spinner,
   Alert,
   Badge,
-  Button
+  Button,
+  Row,
+  Col,
+  Form
 } from 'react-bootstrap';
 import { apiService } from '../services/userManagementService';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +25,27 @@ const DOC_TYPES = [
   { key: 'sales_orders', label: 'Sales Orders' },
   { key: 'invoices', label: 'Invoices' }
 ];
+
+// Search fields config mapping which options apply to which tab keys
+const SEARCHABLE_FIELDS = {
+  rfqs: [
+    { key: 'partNumber', label: 'Part Number' }
+  ],
+  quotes: [
+    { key: 'partNumber', label: 'Part Number' },
+    { key: 'internalPartNumber', label: 'Internal Part Number' }
+  ],
+  sales_orders: [
+    { key: 'partNumber', label: 'Part Number' },
+    { key: 'internalPartNumber', label: 'Internal Part Number' },
+    { key: 'purchaseOrderNumber', label: 'PO #' }
+  ],
+  invoices: [
+    { key: 'partNumber', label: 'Part Number' },
+    { key: 'internalPartNumber', label: 'Internal Part Number' },
+    { key: 'purchaseOrderNumber', label: 'PO #' }
+  ]
+};
 
 // ---- Formatting helpers (mirroring MyOrders.js conventions) ----
 const formatMoney = (value, symbol = '$') => {
@@ -274,6 +298,47 @@ const ContactDocuments = () => {
   const [activeTab, setActiveTab] = useState(DOC_TYPES[0].key);
   // Per-type loading flags while an individual section changes pages.
   const [pageLoading, setPageLoading] = useState({});
+  // Search state
+  const [searchField, setSearchField] = useState('partNumber');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Handle Tab changes: automatically reset search target to an applicable field for that tab
+  const handleTabSelect = (key) => {
+    const validKey = key || DOC_TYPES[0].key;
+    setActiveTab(validKey);
+
+    const availableFields = SEARCHABLE_FIELDS[validKey] || [];
+    if (availableFields.length > 0) {
+      setSearchField(availableFields[0].key);
+    }
+    setSearchQuery('');
+  };
+
+  // Logic to process client-side text filtering
+  const getFilteredItems = (items, typeKey) => {
+    if (!searchQuery.trim()) return items;
+    const query = searchQuery.toLowerCase().trim();
+
+    return items.filter((doc) => {
+      if (searchField === 'purchaseOrderNumber') {
+        return doc.purchaseOrderNumber?.toLowerCase().includes(query);
+      }
+
+      if (typeKey === 'rfqs') {
+        if (searchField === 'partNumber') {
+          return doc.partNumber?.toLowerCase().includes(query);
+        }
+        return false;
+      }
+
+      if (searchField === 'partNumber' || searchField === 'internalPartNumber') {
+        return doc.lineItems?.some((lineItem) =>
+          lineItem[searchField]?.toLowerCase().includes(query)
+        );
+      }
+      return false;
+    });
+  };
 
   const email = user?.email;
 
@@ -339,13 +404,14 @@ const ContactDocuments = () => {
       ) : (
         <Tabs
           activeKey={activeTab}
-          onSelect={(k) => setActiveTab(k || DOC_TYPES[0].key)}
+          onSelect={handleTabSelect}
           className="mb-3"
         >
           {DOC_TYPES.map(({ key, label }) => {
             const typeResult = results[key] || {};
-            const items = typeResult.items || [];
-            const hits = typeResult.hits ?? items.length;
+            const rawItems = typeResult.items || [];
+            const filteredItems = getFilteredItems(rawItems, key);
+            const totalCount = typeResult.hits ?? rawItems.length;
             return (
               <Tab
                 key={key}
@@ -353,24 +419,73 @@ const ContactDocuments = () => {
                 title={
                   <span>
                     {label}{' '}
-                    <Badge bg="secondary" pill>{typeResult.hits ?? items.length}</Badge>
+                    <Badge bg="secondary" pill>{totalCount}</Badge>
                   </span>
                 }
               >
+                {/* UX Search Bar inside the Active Tab Panel */}
+                <Card className="p-3 mb-3 bg-light border-0 shadow-sm">
+                  <Row className="g-2 align-items-center">
+                    <Col xs={12} sm={4} md={3}>
+                      <Form.Group controlId={`searchField-${key}`}>
+                        <Form.Select
+                          value={searchField}
+                          onChange={(e) => setSearchField(e.target.value)}
+                          size="sm"
+                        >
+                          {(SEARCHABLE_FIELDS[key] || []).map((f) => (
+                            <option key={f.key} value={f.key}>
+                              Search by {f.label}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col xs={12} sm={8} md={9}>
+                      <Form.Group controlId={`searchQuery-${key}`} className="position-relative">
+                        <Form.Control
+                          type="text"
+                          placeholder="Type to filter matching results..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          size="sm"
+                          className="pe-4"
+                        />
+                        {searchQuery && (
+                          <Button
+                            variant="link"
+                            className="position-absolute end-0 top-50 translate-middle-y text-muted text-decoration-none py-0 px-2"
+                            onClick={() => setSearchQuery('')}
+                            style={{ fontSize: '0.85rem' }}
+                          >
+                            ✕
+                          </Button>
+                        )}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </Card>
+
                 {error && (
                   <Alert variant="warning" className="mb-3">
                     Couldn't load {label.toLowerCase()}: {error}
                   </Alert>
                 )}
-                {items.length === 0 && !error ? (
+                {rawItems.length === 0 && !error ? (
                   <Card className="shadow-sm border-0 text-center py-5">
                     <Card.Body>
                       <p className="text-muted mb-0">No {label.toLowerCase()} found.</p>
                     </Card.Body>
                   </Card>
+                ) : filteredItems.length === 0 ? (
+                  <Card className="shadow-sm border-0 text-center py-5">
+                    <Card.Body>
+                      <p className="text-muted mb-0">No matching documents found for your search criteria.</p>
+                    </Card.Body>
+                  </Card>
                 ) : (
                   <>
-                    {renderTypeBody(key, items)}
+                    {renderTypeBody(key, filteredItems)}
                   </>
                 )}
               </Tab>
