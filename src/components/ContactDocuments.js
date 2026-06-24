@@ -29,7 +29,8 @@ const DOC_TYPES = [
 // Search fields config mapping which options apply to which tab keys
 const SEARCHABLE_FIELDS = {
   rfqs: [
-    { key: 'partNumber', label: 'Part Number' }
+    { key: 'partNumber', label: 'Part Number' },
+    { key: 'internalPartNumber', label: 'Internal Part Number' }
   ],
   quotes: [
     { key: 'partNumber', label: 'Part Number' },
@@ -246,6 +247,7 @@ const RfqsView = ({ items }) => (
           <th>C-RFQ #</th>
           <th>Created</th>
           <th>Part Number</th>
+          <th>Internal PN</th>
           <th>Manufacturer</th>
           <th className="text-end">Qty</th>
           <th className="text-end">Target Price</th>
@@ -262,6 +264,7 @@ const RfqsView = ({ items }) => (
               <td>{doc.customerRfqNumber || '—'}</td>
               <td>{formatDate(doc.createdAt)}</td>
               <td>{partLink(doc.partNumber)}</td>
+              <td>{partLink(doc.internalPartNumber)}</td>
               <td>{doc.manufacturer || '—'}</td>
               <td className="text-end">{formatQty(doc.quantity)}</td>
               <td className="text-end">{formatMoney(doc.targetPrice, symbol)}</td>
