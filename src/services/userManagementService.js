@@ -233,51 +233,10 @@ class ApiService {
   // by email address. `types` is an optional array of the document types to
   // fetch (defaults to all four server-side); `page` defaults to 1.
   async getContactDocuments(email) {
-      const aggregatedItems = {};
-      ORDER_TYPES.forEach(type => {
-        aggregatedItems[type] = [];
+      const { data: payload } = await this.api.post('/componentcrm/v2/contacts', {
+        email_address: email.trim()
       });
-      let activeTypes = [...ORDER_TYPES];
-      let page = 0;
-      while (activeTypes.length > 0 && page < 40) {
-        page++;
-        const { data: payload } = await this.api.post('/componentcrm/contacts', {
-          email_address: email.trim(),
-          activeTypes,
-          page
-        });
-        const nextActiveTypes = [];
-
-        activeTypes.forEach(type => {
-          const typeData = payload?.results?.[type];
-          const currentItems = typeData?.items || [];
-          const totalHits = typeData?.hits || 0;
-          if (currentItems.length > 0) {
-            aggregatedItems[type] = aggregatedItems[type].concat(currentItems);
-            // If we haven't fetched all the total hits yet, keep this type active
-            if (aggregatedItems[type].length < totalHits) {
-              nextActiveTypes.push(type);
-            }
-          }
-        });
-        activeTypes = nextActiveTypes;
-      }
-
-      const finalPayload = {};
-      if (aggregatedItems) {
-        ORDER_TYPES.forEach(type => {
-          if (aggregatedItems[type]) {
-            finalPayload[type] = {
-              "items": aggregatedItems[type],
-              "hits": aggregatedItems[type].length
-            }
-          }
-        });
-        return {
-          "results": finalPayload
-        };
-      }
-      return {}; // if nothing
+      return payload;
   }
 
   // -------------------- Purchase Order PDF --------------------
