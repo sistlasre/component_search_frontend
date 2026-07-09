@@ -562,10 +562,12 @@ const PartDetail = () => {
           <Col lg={4} xs={12} className="order-2">
             <Card className="shadow-sm sticky-pricing-card">
               <Card.Body className="p-0">
-                <div className="px-3 py-2 border-bottom text-center">
-                  <span className="h3 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
-                  <span className="text-muted ms-2">{part.pricingType || "available"}</span>
-                </div>
+                {part.totalQuantity > 0 && (
+                    <div className="px-3 py-2 border-bottom text-center">
+                      <span className="h3 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
+                      <span className="text-muted ms-2">{part.pricingType || "available"}</span>
+                    </div>
+                  )}
 
                 <div className="bg-light px-3 py-2 border-top border-bottom">
                   <Form.Group className="mb-2">
@@ -578,11 +580,6 @@ const PartDetail = () => {
                         onChange={(e) => handleQuantityChange(e.target.value)}
                       />
                     </InputGroup>
-                    {maxQuantity === 0 && (
-                      <Alert variant="warning" className="mt-2 mb-0 py-1 small">
-                        This item is currently out of stock. Adding to cart will submit it as a request at checkout.
-                      </Alert>
-                    )}
                     {maxQuantity > 0 && quantity > maxQuantity && (
                       <Alert variant="warning" className="mt-2 mb-0 py-1 small">
                         Quantity exceeds available stock ({formatQuantity(maxQuantity)} available). This will be submitted as a request at checkout.
@@ -647,7 +644,6 @@ const PartDetail = () => {
                     record directly to /orders without touching the cart.
                     The form itself is collapsed by default; the title +
                     description act as a clickable toggle. */}
-                {part.totalQuantity > 0 && (
                  <div className="border-top">
                   <button
                     type="button"
@@ -659,7 +655,9 @@ const PartDetail = () => {
                     <div className="d-flex align-items-center justify-content-between mb-2">
                       <div className="d-flex align-items-center">
                         <FontAwesomeIcon icon={faTag} className="me-2 text-primary" />
-                        <h6 className="mb-0 fw-bold">Request Discounted Pricing</h6>
+                        <h6 className="mb-0 fw-bold">
+                          {part.priceBreaks && part.priceBreaks.length > 0 ? "Request Discounted Pricing" : "Request Pricing"}
+                        </h6>
                       </div>
                       <FontAwesomeIcon
                         icon={discountExpanded ? faChevronUp : faChevronDown}
@@ -738,13 +736,12 @@ const PartDetail = () => {
                           onClick={handleRequestDiscountedPricing}
                           disabled={submittingDiscountRequest}
                         >
-                          {submittingDiscountRequest ? 'Submitting…' : 'Request Discounted Pricing'}
+                          {submittingDiscountRequest ? 'Submitting…' : part.priceBreaks && part.priceBreaks.length > 0 ? "Request Discounted Pricing" : "Request Pricing"}
                         </Button>
                       </div>
                     </div>
                   </Collapse>
                  </div>
-                )}
               </Card.Body>
             </Card>
           </Col>
