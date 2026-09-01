@@ -251,6 +251,45 @@ class ApiService {
     return this.api.get(`/orders/${encodeURIComponent(recordId)}/purchase-order`);
   }
 
+  // -------------------- Vendor --------------------
+  // Vendor profile information (supplier name, address, phone, type, ...).
+  async getVendor(vendorId) {
+    return this.api.get(`/vendor/${encodeURIComponent(vendorId)}`);
+  }
+
+  // Paginated list of a vendor's excess submissions. Shape:
+  // { hits, page, pageSize, items: [{ excessNumber, excessName, createdAt }] }
+  async getVendorExcess(vendorId, { page = 1 } = {}) {
+    return this.api.get(`/vendor/${encodeURIComponent(vendorId)}/excess`, {
+      params: { page },
+    });
+  }
+
+  // Paginated list of a vendor's consignments. Mirrors the excess shape with
+  // consignmentNumber/consignmentName. NOTE: the API responds 404 (rather than
+  // an empty list) when the vendor has no consignments at all.
+  async getVendorConsignment(vendorId, { page = 1 } = {}) {
+    return this.api.get(`/vendor/${encodeURIComponent(vendorId)}/consignment`, {
+      params: { page },
+    });
+  }
+
+  // Paginated line items for a single excess submission.
+  async getVendorExcessLines(vendorId, excessNumber, { page = 1 } = {}) {
+    return this.api.get(
+      `/vendor/${encodeURIComponent(vendorId)}/excess/${encodeURIComponent(excessNumber)}`,
+      { params: { page } }
+    );
+  }
+
+  // Paginated line items for a single consignment.
+  async getVendorConsignmentLines(vendorId, consignmentNumber, { page = 1 } = {}) {
+    return this.api.get(
+      `/vendor/${encodeURIComponent(vendorId)}/consignment/${encodeURIComponent(consignmentNumber)}`,
+      { params: { page } }
+    );
+  }
+
   /**
    * Convenience: obtain a presigned URL, PUT the file to S3, and return the
    * `purchase_order` payload to attach to an order.

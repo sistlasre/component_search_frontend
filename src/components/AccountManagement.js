@@ -13,6 +13,13 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faCheck, faTimes, faPencil, faTruck } from '@fortawesome/free-solid-svg-icons';
 import { apiService } from '../services/userManagementService';
+import VendorManagement from './VendorManagement';
+
+// vendor_id may arrive as a number or a string; treat blank/whitespace as absent.
+const normalizeVendorId = (value) => {
+  if (value == null) return '';
+  return String(value).trim();
+};
 
 const AccountManagement = () => {
   const [requestingUser, setRequestingUser] = useState(null);
@@ -135,6 +142,8 @@ const AccountManagement = () => {
   }, []);
 
   if (loading) return <Container className="py-5 text-center"><Spinner animation="border" /></Container>;
+
+  const vendorId = normalizeVendorId(requestingUser?.vendor_id);
 
   return (
     <Container fluid className="py-3">
@@ -312,6 +321,8 @@ const AccountManagement = () => {
           </Col>
         </Row>
       )}
+
+      {vendorId && <VendorManagement vendorId={vendorId} />}
 
       <ToastContainer className="p-3" position="top-end">
         <Toast
