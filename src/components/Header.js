@@ -86,7 +86,7 @@ const Header = () => {
                 <Navbar.Text className="me-3 text-dark">
                   <Link to="/account" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <FontAwesomeIcon icon={faUser} className="me-1" />
-                    {user.username || user.user_id}
+                    {user.first_name || user.username || user.user_id}
                   </Link>
                 </Navbar.Text>
                 <Nav.Link as={Link} to="/orders" className="text-dark me-2" title="My Orders & Requests">
