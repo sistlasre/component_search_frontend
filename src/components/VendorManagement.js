@@ -391,15 +391,7 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick }) => {
                   title="View past RFQs and quotes for this part"
                 >
                   <td>{new Date(li.createdAt).toLocaleDateString()}</td>
-                  <td>
-                    {/* Keep the search link navigable without also opening the modal. */}
-                    <a
-                      href={`/search?q=${li.partNumber}`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {li.partNumber}
-                    </a>
-                  </td>
+                  <td>{li.partNumber}</td>
                   <td>{textOrDash(li.manufacturer)}</td>
                   <td className="text-end">{formatQty(li.quantity)}</td>
                   <td className="text-end">{formatMoney(li.price, symbol)}</td>
