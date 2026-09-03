@@ -290,6 +290,22 @@ class ApiService {
     );
   }
 
+  // Previous RFQs for a part number, relative to an upload date.
+  // Returns { hits, page, pageSize, items: [...] }. `mpn` is passed raw here -
+  // axios encodes query params, so pre-encoding would double-escape it.
+  async getVendorPreviousRfqs(mpn, uploadDate, { page = 1 } = {}) {
+    return this.api.get('/vendor/rfqs/previous', {
+      params: { mpn, uploadDate, page },
+    });
+  }
+
+  // Previous Quotes for a part number, relative to an upload date.
+  async getVendorPreviousQuotes(mpn, uploadDate, { page = 1 } = {}) {
+    return this.api.get('/vendor/quotes/previous', {
+      params: { mpn, uploadDate, page },
+    });
+  }
+
   /**
    * Convenience: obtain a presigned URL, PUT the file to S3, and return the
    * `purchase_order` payload to attach to an order.

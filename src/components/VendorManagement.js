@@ -7,7 +7,10 @@ import {
   Spinner,
   Alert,
   Button,
-  Badge
+  Badge,
+  Modal,
+  Tabs,
+  Tab
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -53,6 +56,15 @@ const textOrDash = (value) => {
   if (value == null) return DASH;
   const str = String(value).trim();
   return str === '' ? DASH : str;
+};
+
+// Reduce an API timestamp to the YYYY-MM-DD form the history endpoints expect.
+// Timestamps arrive as "2026-02-18 00:02:41.589665" or already as "2026-02-18";
+// slicing the leading date avoids the UTC shift a Date round-trip would cause.
+const toDateParam = (value) => {
+  if (!value) return '';
+  const match = String(value).trim().match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
 };
 
 // The API answers 404 when a vendor simply has no records of a given kind
@@ -143,8 +155,198 @@ const Pager = ({ page, pageSize, hits, loading, onPageChange }) => {
   );
 };
 
+// Past RFQ / Quote history for a part. Both endpoints return the same envelope
+// ({ hits, page, pageSize, items }) but name their date and price fields
+// differently, so each tab declares its own accessors.
+const HISTORY_TABS = [
+  {
+    key: 'rfqs',
+    label: 'Past RFQs',
+    dateKey: 'createdAt',
+    priceKey: 'targetPrice',
+    priceLabel: 'Target Price',
+    emptyText: 'No previous RFQs found for this part.',
+    fetch: (mpn, uploadDate, page) =>
+      apiService.getVendorPreviousRfqs(mpn, uploadDate, { page })
+  },
+  {
+    key: 'quotes',
+    label: 'Past Quotes',
+    dateKey: 'quoteDate',
+    priceKey: 'unitPrice',
+    priceLabel: 'Unit Price',
+    emptyText: 'No previous quotes found for this part.',
+    fetch: (mpn, uploadDate, page) =>
+      apiService.getVendorPreviousQuotes(mpn, uploadDate, { page })
+  }
+];
+
+const PartHistoryTable = ({ tab, mpn, uploadDate }) => {
+  const [state, setState] = useState({
+    items: null,
+    hits: 0,
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    loading: true,
+    error: ''
+  });
+
+  const load = useCallback(async (page) => {
+    setState((prev) => ({ ...prev, loading: true, error: '' }));
+    try {
+      const resp = await tab.fetch(mpn, uploadDate, page);
+      const data = resp.data || {};
+      setState({
+        items: data.items || [],
+        hits: data.hits ?? (data.items || []).length,
+        page: data.page || page,
+        pageSize: data.pageSize || DEFAULT_PAGE_SIZE,
+        loading: false,
+        error: ''
+      });
+    } catch (err) {
+      if (isNotFound(err)) {
+        setState({
+          items: [],
+          hits: 0,
+          page: 1,
+          pageSize: DEFAULT_PAGE_SIZE,
+          loading: false,
+          error: ''
+        });
+      } else {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: errorMessage(err, `Failed to load ${tab.label.toLowerCase()}.`)
+        }));
+      }
+    }
+  }, [tab, mpn, uploadDate]);
+
+  useEffect(() => {
+    load(1);
+  }, [load]);
+
+  if (state.loading && state.items === null) {
+    return (
+      <div className="text-center py-4">
+        <Spinner animation="border" size="sm" />
+      </div>
+    );
+  }
+
+  if (state.error) {
+    return <Alert variant="warning" className="mb-0">{state.error}</Alert>;
+  }
+
+  const items = state.items || [];
+  if (items.length === 0) {
+    return <p className="text-muted mb-0 py-2">{tab.emptyText}</p>;
+  }
+
+  return (
+    <>
+      <div className="table-responsive">
+        <Table bordered hover size="sm" className="mb-0">
+          <thead className="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Company Type</th>
+              <th>Company Country</th>
+              <th>MPN</th>
+              <th>Manufacturer</th>
+              <th className="text-end">{tab.priceLabel}</th>
+              <th className="text-end">Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((row, idx) => (
+              <tr key={row.rfqNumber || row.quoteNumber || idx}>
+                <td>{formatDate(row[tab.dateKey])}</td>
+                <td>{textOrDash(row.companyType)}</td>
+                <td>{textOrDash(row.country)}</td>
+                <td className="fw-semibold">{textOrDash(row.partNumber)}</td>
+                <td>{textOrDash(row.manufacturer)}</td>
+                <td className="text-end">
+                  {formatMoney(row[tab.priceKey], row.currencySymbol || '$')}
+                </td>
+                <td className="text-end">{formatQty(row.quantity)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </div>
+      <Pager
+        page={state.page}
+        pageSize={state.pageSize}
+        hits={state.hits}
+        loading={state.loading}
+        onPageChange={load}
+      />
+    </>
+  );
+};
+
+// Modal shown when a user clicks an excess/consignment line, surfacing prior
+// RFQ and quote activity for that part as of the line's created date.
+const PartHistoryModal = ({ line, onHide }) => {
+  const [activeTab, setActiveTab] = useState(HISTORY_TABS[0].key);
+
+  // Always reopen on the first tab so the modal is not showing a stale
+  // selection from the previously inspected line.
+  useEffect(() => {
+    if (line) setActiveTab(HISTORY_TABS[0].key);
+  }, [line]);
+
+  if (!line) return null;
+
+  const mpn = String(line.partNumber || '').trim();
+  const uploadDate = toDateParam(line.createdAt);
+  const canLookUp = Boolean(mpn && uploadDate);
+
+  return (
+    <Modal show onHide={onHide} size="xl" centered scrollable>
+      <Modal.Header closeButton>
+        <div>
+          <Modal.Title as="h5" className="mb-0">
+            {mpn || 'Part history'}
+          </Modal.Title>
+          <small className="text-muted">
+            {line.manufacturer ? `${line.manufacturer} · ` : ''}
+            {uploadDate ? `As of ${uploadDate}` : 'No date on this line'}
+          </small>
+        </div>
+      </Modal.Header>
+      <Modal.Body>
+        {!canLookUp ? (
+          <Alert variant="warning" className="mb-0">
+            This line is missing a {mpn ? 'created date' : 'part number'}, so past
+            RFQs and quotes cannot be looked up.
+          </Alert>
+        ) : (
+          <Tabs
+            activeKey={activeTab}
+            onSelect={(key) => setActiveTab(key || HISTORY_TABS[0].key)}
+            className="mb-3"
+            // Defer each tab's request until it is actually opened, but keep it
+            // mounted afterwards so switching back does not refetch.
+            mountOnEnter
+          >
+            {HISTORY_TABS.map((tab) => (
+              <Tab key={tab.key} eventKey={tab.key} title={tab.label}>
+                <PartHistoryTable tab={tab} mpn={mpn} uploadDate={uploadDate} />
+              </Tab>
+            ))}
+          </Tabs>
+        )}
+      </Modal.Body>
+    </Modal>
+  );
+};
+
 // Line items for a single excess/consignment document.
-const LinesTable = ({ state, showQuoteNumber, onPageChange }) => {
+const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick }) => {
   if (!state || (state.loading && !state.items)) {
     return (
       <div className="text-center py-3">
@@ -164,8 +366,11 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange }) => {
 
   return (
     <>
+      <div className="text-muted small mb-2">
+        Select a line to view past RFQs and quotes for that part.
+      </div>
       <div className="table-responsive">
-        <Table bordered size="sm" className="mb-0 bg-white">
+        <Table bordered hover size="sm" className="mb-0 bg-white">
           <thead>
             <tr>
               <th>Date</th>
@@ -179,9 +384,22 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange }) => {
             {items.map((li, idx) => {
               const symbol = li.currencySymbol || '$';
               return (
-                <tr key={li.consignmentLineID || li.vendorQuoteNumber || `${li.partNumber}-${idx}`}>
+                <tr
+                  key={li.consignmentLineID || li.vendorQuoteNumber || `${li.partNumber}-${idx}`}
+                  onClick={() => onLineClick?.(li)}
+                  style={{ cursor: 'pointer' }}
+                  title="View past RFQs and quotes for this part"
+                >
                   <td>{new Date(li.createdAt).toLocaleDateString()}</td>
-                  <td><a href={`/search?q=${li.partNumber}`}>{li.partNumber}</a></td>
+                  <td>
+                    {/* Keep the search link navigable without also opening the modal. */}
+                    <a
+                      href={`/search?q=${li.partNumber}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {li.partNumber}
+                    </a>
+                  </td>
                   <td>{textOrDash(li.manufacturer)}</td>
                   <td className="text-end">{formatQty(li.quantity)}</td>
                   <td className="text-end">{formatMoney(li.price, symbol)}</td>
@@ -216,6 +434,8 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
   // Line-item state cached per document number so collapsing/re-expanding a row
   // does not re-fetch what we already have.
   const [lines, setLines] = useState({});
+  // The line whose past RFQ/quote history is currently open in the modal.
+  const [historyLine, setHistoryLine] = useState(null);
 
   const loadList = useCallback(async (page) => {
     setLoading(true);
@@ -246,6 +466,7 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
     // Reset section state whenever the vendor changes.
     setExpanded(null);
     setLines({});
+    setHistoryLine(null);
     if (!cancelled) loadList(1);
     return () => { cancelled = true; };
   }, [loadList]);
@@ -361,6 +582,7 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
                               state={lineState}
                               showQuoteNumber={config.showQuoteNumber}
                               onPageChange={(nextPage) => loadLines(number, nextPage)}
+                              onLineClick={setHistoryLine}
                             />
                           </td>
                         </tr>
@@ -383,6 +605,8 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
           />
         </>
       )}
+
+      <PartHistoryModal line={historyLine} onHide={() => setHistoryLine(null)} />
     </div>
   );
 };
