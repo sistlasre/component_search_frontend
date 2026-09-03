@@ -17,6 +17,7 @@ import {
 import { apiService } from '../services/userManagementService';
 import { useAuth } from '../context/AuthContext';
 import { FiFileText } from 'react-icons/fi';
+import VendorManagement from './VendorManagement';
 
 // The document types we render, in tab order, mapped to display labels.
 const DOC_TYPES = [
@@ -305,6 +306,8 @@ const ContactDocuments = () => {
   const [searchField, setSearchField] = useState('partNumber');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [vendorId, setVendorId] = useState('');
+
   // Handle Tab changes: automatically reset search target to an applicable field for that tab
   const handleTabSelect = (key) => {
     const validKey = key || DOC_TYPES[0].key;
@@ -345,6 +348,24 @@ const ContactDocuments = () => {
 
   const email = user?.email;
 
+  const fetchVendorId = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await apiService.getUser();
+      const userData = response.data?.requesting_user || null;
+      // Handle stringified JSON from the database
+      if (userData && userData.vendor_id) {
+        setVendorId(userData.vendor_id);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+      setError('Failed to load user information');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user || !email) {
       setLoading(false);
@@ -373,6 +394,10 @@ const ContactDocuments = () => {
     };
   }, [user, email]);
 
+  useEffect(() => {
+    fetchVendorId();
+  }, []);
+
   if (!user) {
     return (
       <Container className="py-5 text-center">
@@ -397,7 +422,8 @@ const ContactDocuments = () => {
 
   return (
     <Container className="py-4">
-      <h2 className="mb-1" style={{ fontWeight: 400 }}>My Orders</h2>
+      <h2 className="mb-1" style={{ fontWeight: 400 }}>My Account</h2>
+      <Row className="my-3 p-1">
       <p className="text-muted">Orders associated with <strong>{email}</strong></p>
 
       {error && <Alert variant="danger">{error}</Alert>}
@@ -496,6 +522,10 @@ const ContactDocuments = () => {
           })}
         </Tabs>
       )}
+      </Row>
+      <Row className="my-3">
+        {vendorId && <VendorManagement vendorId={vendorId} />}
+      </Row>
     </Container>
   );
 };

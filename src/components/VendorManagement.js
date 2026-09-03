@@ -168,16 +168,11 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange }) => {
         <Table bordered size="sm" className="mb-0 bg-white">
           <thead>
             <tr>
+              <th>Date</th>
               <th>Part Number</th>
               <th>Manufacturer</th>
-              <th>Description</th>
-              <th>Date Code</th>
-              <th>RoHS</th>
-              {showQuoteNumber && <th>Quote #</th>}
-              <th className="text-end">Qty</th>
-              <th className="text-end">Price</th>
-              <th className="text-end">Extended</th>
-              <th>Lead Time</th>
+              <th>Quantity</th>
+              <th>Cost</th>
             </tr>
           </thead>
           <tbody>
@@ -185,20 +180,11 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange }) => {
               const symbol = li.currencySymbol || '$';
               return (
                 <tr key={li.consignmentLineID || li.vendorQuoteNumber || `${li.partNumber}-${idx}`}>
+                  <td>{new Date(li.createdAt).toLocaleDateString()}</td>
                   <td><a href={`/search?q=${li.partNumber}`}>{li.partNumber}</a></td>
                   <td>{textOrDash(li.manufacturer)}</td>
-                  <td>{textOrDash(li.description)}</td>
-                  <td>{textOrDash(li.dateCode)}</td>
-                  <td>
-                    {String(li.rohs || '').trim()
-                      ? <Badge bg="success">{li.rohs}</Badge>
-                      : DASH}
-                  </td>
-                  {showQuoteNumber && <td>{textOrDash(li.vendorQuoteNumber)}</td>}
                   <td className="text-end">{formatQty(li.quantity)}</td>
                   <td className="text-end">{formatMoney(li.price, symbol)}</td>
-                  <td className="text-end">{formatMoney(li.extendedPrice, symbol, 2)}</td>
-                  <td>{textOrDash(li.leadTime)}</td>
                 </tr>
               );
             })}

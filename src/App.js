@@ -55,8 +55,8 @@ function App() {
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-account" element={<VerifyAccount />} />
-              <Route path="/account" element={<AccountManagement />} />
-              <Route path="/orders" element={<ContactDocuments />} />
+              <Route path="/accountsettings" element={<AccountManagement />} />
+              <Route path="/account" element={<ContactDocuments />} />
               <Route path="/resource-center" element={<InfoPages />} />
               <Route path="/excess" element={<ExcessPage />} />
               <Route path="terms-conditions" element={<SalesTermsAndConditions />} />
