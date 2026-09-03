@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Card,
   Row,
@@ -8,7 +8,6 @@ import {
   Alert,
   Button,
   Badge,
-  Modal,
   Tabs,
   Tab
 } from 'react-bootstrap';
@@ -20,7 +19,8 @@ import {
   faChevronDown,
   faChevronRight,
   faLocationDot,
-  faPhone
+  faPhone,
+  faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import { apiService } from '../services/userManagementService';
 
@@ -288,15 +288,18 @@ const PartHistoryTable = ({ tab, mpn, uploadDate }) => {
   );
 };
 
-// Modal shown when a user clicks an excess/consignment line, surfacing prior
-// RFQ and quote activity for that part as of the line's created date.
-const PartHistoryModal = ({ line, onHide }) => {
+// Inline tabbed section showing past RFQs and quotes for a selected line item.
+// Rendered at the bottom of its Excess/Consignment section.
+const PartHistorySection = ({ line, onClose }) => {
   const [activeTab, setActiveTab] = useState(HISTORY_TABS[0].key);
+  const containerRef = useRef(null);
 
-  // Always reopen on the first tab so the modal is not showing a stale
-  // selection from the previously inspected line.
+  // The section can sit well below the fold, so bring it into view whenever a
+  // different line is selected.
   useEffect(() => {
-    if (line) setActiveTab(HISTORY_TABS[0].key);
+    if (line && containerRef.current) {
+      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, [line]);
 
   if (!line) return null;
@@ -306,47 +309,54 @@ const PartHistoryModal = ({ line, onHide }) => {
   const canLookUp = Boolean(mpn && uploadDate);
 
   return (
-    <Modal show onHide={onHide} size="xl" centered scrollable>
-      <Modal.Header closeButton>
-        <div>
-          <Modal.Title as="h5" className="mb-0">
-            {mpn || 'Part history'}
-          </Modal.Title>
-          <small className="text-muted">
-            {line.manufacturer ? `${line.manufacturer} · ` : ''}
-            {uploadDate ? `As of ${uploadDate}` : 'No date on this line'}
-          </small>
-        </div>
-      </Modal.Header>
-      <Modal.Body>
-        {!canLookUp ? (
-          <Alert variant="warning" className="mb-0">
-            This line is missing a {mpn ? 'created date' : 'part number'}, so past
-            RFQs and quotes cannot be looked up.
-          </Alert>
-        ) : (
-          <Tabs
-            activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key || HISTORY_TABS[0].key)}
-            className="mb-3"
-            // Defer each tab's request until it is actually opened, but keep it
-            // mounted afterwards so switching back does not refetch.
-            mountOnEnter
-          >
-            {HISTORY_TABS.map((tab) => (
-              <Tab key={tab.key} eventKey={tab.key} title={tab.label}>
+    <div
+      ref={containerRef}
+      className="mt-4 p-3 bg-light border-start border-4 border-primary rounded"
+    >
+      <div className="d-flex justify-content-between align-items-start mb-3">
+        <h6 className="text-muted mb-0">
+          Past RFQs &amp; Quotes for <strong>{mpn || 'Part'}</strong>
+          {line.manufacturer && (
+            <span className="ms-2">({line.manufacturer})</span>
+          )}
+          {uploadDate && (
+            <span className="ms-2">as of {uploadDate}</span>
+          )}
+        </h6>
+        <Button size="sm" variant="outline-secondary" onClick={onClose}>
+          <FontAwesomeIcon icon={faXmark} className="me-1" />
+          Close
+        </Button>
+      </div>
+      {!canLookUp ? (
+        <Alert variant="warning" className="mb-0">
+          This line is missing a {mpn ? 'created date' : 'part number'}, so past
+          RFQs and quotes cannot be looked up.
+        </Alert>
+      ) : (
+        <Tabs
+          // Remount on part change so only the visible tab refetches.
+          key={`${mpn}|${uploadDate}`}
+          activeKey={activeTab}
+          onSelect={(key) => setActiveTab(key || HISTORY_TABS[0].key)}
+          className="mb-0"
+          mountOnEnter
+        >
+          {HISTORY_TABS.map((tab) => (
+            <Tab key={tab.key} eventKey={tab.key} title={tab.label}>
+              <div className="mt-3">
                 <PartHistoryTable tab={tab} mpn={mpn} uploadDate={uploadDate} />
-              </Tab>
-            ))}
-          </Tabs>
-        )}
-      </Modal.Body>
-    </Modal>
+              </div>
+            </Tab>
+          ))}
+        </Tabs>
+      )}
+    </div>
   );
 };
 
 // Line items for a single excess/consignment document.
-const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick }) => {
+const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick, selectedLine }) => {
   if (!state || (state.loading && !state.items)) {
     return (
       <div className="text-center py-3">
@@ -387,6 +397,7 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick }) => {
                 <tr
                   key={li.consignmentLineID || li.vendorQuoteNumber || `${li.partNumber}-${idx}`}
                   onClick={() => onLineClick?.(li)}
+                  className={li === selectedLine ? 'table-primary' : undefined}
                   style={{ cursor: 'pointer' }}
                   title="View past RFQs and quotes for this part"
                 >
@@ -498,6 +509,9 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
   }, [vendorId, config]);
 
   const toggleRow = (number) => {
+    // The history section belongs to whichever line is visible, so drop the
+    // selection when the surrounding line table is collapsed or swapped out.
+    setHistoryLine(null);
     if (expanded === number) {
       setExpanded(null);
       return;
@@ -506,6 +520,11 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
     if (!lines[number]) {
       loadLines(number, 1);
     }
+  };
+
+  // Clicking the already-selected line closes the history section again.
+  const toggleHistoryLine = (line) => {
+    setHistoryLine((prev) => (prev === line ? null : line));
   };
 
   const colSpan = 4;
@@ -573,8 +592,12 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
                             <LinesTable
                               state={lineState}
                               showQuoteNumber={config.showQuoteNumber}
-                              onPageChange={(nextPage) => loadLines(number, nextPage)}
-                              onLineClick={setHistoryLine}
+                              onPageChange={(nextPage) => {
+                                setHistoryLine(null);
+                                loadLines(number, nextPage);
+                              }}
+                              onLineClick={toggleHistoryLine}
+                              selectedLine={historyLine}
                             />
                           </td>
                         </tr>
@@ -592,13 +615,14 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
             loading={loading}
             onPageChange={(nextPage) => {
               setExpanded(null);
+              setHistoryLine(null);
               loadList(nextPage);
             }}
           />
         </>
       )}
 
-      <PartHistoryModal line={historyLine} onHide={() => setHistoryLine(null)} />
+      <PartHistorySection line={historyLine} onClose={() => setHistoryLine(null)} />
     </div>
   );
 };
