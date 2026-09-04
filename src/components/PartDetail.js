@@ -405,6 +405,7 @@ const PartDetail = () => {
   if (loading) return <Container className="py-5 text-center"><div className="spinner-border text-primary" /></Container>;
   if (!part) return <Container className="py-5"><Alert variant="warning">Part Not Found</Alert></Container>;
 
+  const formatPricingType = (pricingType = "available") => pricingType === 'pieces' ? 'pieces available excess' : pricingType;
   const formatQuantity = (qty) => Number(qty).toLocaleString();
   const formatCurrency = (amount) =>
     `$${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
@@ -565,7 +566,12 @@ const PartDetail = () => {
                 {part.totalQuantity > 0 && (
                     <div className="px-3 py-2 border-bottom text-center">
                       <span className="h3 text-success fw-bold mb-0">{formatQuantity(part.totalQuantity)}</span>
-                      <span className="text-muted ms-2">{part.pricingType || "available"}</span>
+                      <span className="text-muted ms-2">{formatPricingType(part.pricingType)}</span>
+                      {part.pricingType && part.pricingType === "pieces" && (
+                        <div className="text-muted fst-italic small mt-1">
+                          (requires reconfirmation before ordering)
+                        </div>
+                      )}
                     </div>
                   )}
 
