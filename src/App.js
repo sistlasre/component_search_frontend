@@ -24,8 +24,7 @@ import Register from './components/Register';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import VerifyAccount from './components/VerifyAccount';
-import AccountManagement from './components/AccountManagement';
-import ContactDocuments from './components/ContactDocuments';
+import AccountPage from './components/AccountPage';
 import PublicRoute from './components/PublicRoute';
 import ScrollToTop from './components/ScrollToTop';
 import InfoPages from './components/InfoPages'
@@ -55,8 +54,7 @@ function App() {
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-account" element={<VerifyAccount />} />
-              <Route path="/accountsettings" element={<AccountManagement />} />
-              <Route path="/account" element={<ContactDocuments />} />
+              <Route path="/account" element={<AccountPage />} />
               <Route path="/resource-center" element={<InfoPages />} />
               <Route path="/excess" element={<ExcessPage />} />
               <Route path="terms-conditions" element={<SalesTermsAndConditions />} />

@@ -84,15 +84,11 @@ const Header = () => {
             {user ? (
               <>
                 <Navbar.Text className="me-3 text-dark">
-                  <Link to="/accountsettings" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <Link to="/account" style={{ textDecoration: 'none', color: 'inherit' }}>
                     <FontAwesomeIcon icon={faUser} className="me-1" />
                     {user.first_name || user.username || user.user_id}
                   </Link>
                 </Navbar.Text>
-                <Nav.Link as={Link} to="/account" className="text-dark me-2" title="My Account">
-                  <FontAwesomeIcon icon={faFileInvoice} className="me-1" />
-                  Account
-                </Nav.Link>
                 <Button variant="outline-primary" size="sm" onClick={handleLogout}>
                   <FontAwesomeIcon icon={faSignOutAlt} className="me-1" />
                   Logout

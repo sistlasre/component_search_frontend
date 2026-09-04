@@ -1,8 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Card,
-  Row,
-  Col,
   Table,
   Spinner,
   Alert,
@@ -13,13 +10,10 @@ import {
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faBuilding,
   faBoxesStacked,
   faHandshake,
   faChevronDown,
   faChevronRight,
-  faLocationDot,
-  faPhone,
   faXmark
 } from '@fortawesome/free-solid-svg-icons';
 import { apiService } from '../services/userManagementService';
@@ -84,8 +78,6 @@ const SECTIONS = {
     nameKey: 'excessName',
     numberLabel: 'Excess #',
     nameLabel: 'Excess Name',
-    // Excess lines carry a vendor quote number; consignment lines do not.
-    showQuoteNumber: true,
     emptyText: 'No excess submissions found for this vendor.',
     fetchList: (vendorId, page) => apiService.getVendorExcess(vendorId, { page }),
     fetchLines: (vendorId, number, page) =>
@@ -98,21 +90,12 @@ const SECTIONS = {
     nameKey: 'consignmentName',
     numberLabel: 'Consignment #',
     nameLabel: 'Consignment Name',
-    showQuoteNumber: false,
     emptyText: 'No consignments found for this vendor.',
     fetchList: (vendorId, page) => apiService.getVendorConsignment(vendorId, { page }),
     fetchLines: (vendorId, number, page) =>
       apiService.getVendorConsignmentLines(vendorId, number, { page })
   }
 };
-
-// Small label/value pair used throughout the vendor information panel.
-const InfoField = ({ label, value }) => (
-  <div className="mb-2">
-    <span className="text-muted small">{label}:</span>{' '}
-    <strong>{value}</strong>
-  </div>
-);
 
 // "Showing 1–25 of 65" plus prev/next controls, shared by lists and line tables.
 const Pager = ({ page, pageSize, hits, loading, onPageChange }) => {
@@ -289,30 +272,16 @@ const PartHistoryTable = ({ tab, mpn, uploadDate }) => {
 };
 
 // Inline tabbed section showing past RFQs and quotes for a selected line item.
-// Rendered at the bottom of its Excess/Consignment section.
+// Rendered as a sub-row directly beneath the line that was clicked.
 const PartHistorySection = ({ line, onClose }) => {
   const [activeTab, setActiveTab] = useState(HISTORY_TABS[0].key);
-  const containerRef = useRef(null);
-
-  // The section can sit well below the fold, so bring it into view whenever a
-  // different line is selected.
-  useEffect(() => {
-    if (line && containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  }, [line]);
-
-  if (!line) return null;
 
   const mpn = String(line.partNumber || '').trim();
   const uploadDate = toDateParam(line.createdAt);
   const canLookUp = Boolean(mpn && uploadDate);
 
   return (
-    <div
-      ref={containerRef}
-      className="mt-4 p-3 bg-light border-start border-4 border-primary rounded"
-    >
+    <div className="p-3 bg-white border-start border-4 border-primary rounded">
       <div className="d-flex justify-content-between align-items-start mb-3">
         <h6 className="text-muted mb-0">
           Past RFQs &amp; Quotes for <strong>{mpn || 'Part'}</strong>
@@ -355,8 +324,11 @@ const PartHistorySection = ({ line, onClose }) => {
   );
 };
 
-// Line items for a single excess/consignment document.
-const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick, selectedLine }) => {
+// Line items for a single excess/consignment document. Clicking a line opens
+// (or, on a second click, closes) a Past RFQs/Quotes panel directly beneath it.
+const LinesTable = ({ state, onPageChange }) => {
+  const [historyLine, setHistoryLine] = useState(null);
+
   if (!state || (state.loading && !state.items)) {
     return (
       <div className="text-center py-3">
@@ -373,6 +345,12 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick, selecte
   if (items.length === 0) {
     return <div className="text-muted small">No line items.</div>;
   }
+
+  const toggleHistoryLine = (line) => {
+    setHistoryLine((prev) => (prev === line ? null : line));
+  };
+
+  const colSpan = 5;
 
   return (
     <>
@@ -393,20 +371,30 @@ const LinesTable = ({ state, showQuoteNumber, onPageChange, onLineClick, selecte
           <tbody>
             {items.map((li, idx) => {
               const symbol = li.currencySymbol || '$';
+              const key = li.consignmentLineID || li.vendorQuoteNumber || `${li.partNumber}-${idx}`;
+              const isSelected = li === historyLine;
               return (
-                <tr
-                  key={li.consignmentLineID || li.vendorQuoteNumber || `${li.partNumber}-${idx}`}
-                  onClick={() => onLineClick?.(li)}
-                  className={li === selectedLine ? 'table-primary' : undefined}
-                  style={{ cursor: 'pointer' }}
-                  title="View past RFQs and quotes for this part"
-                >
-                  <td>{new Date(li.createdAt).toLocaleDateString()}</td>
-                  <td>{li.partNumber}</td>
-                  <td>{textOrDash(li.manufacturer)}</td>
-                  <td className="text-end">{formatQty(li.quantity)}</td>
-                  <td className="text-end">{formatMoney(li.price, symbol)}</td>
-                </tr>
+                <React.Fragment key={key}>
+                  <tr
+                    onClick={() => toggleHistoryLine(li)}
+                    className={isSelected ? 'table-primary' : undefined}
+                    style={{ cursor: 'pointer' }}
+                    title="View past RFQs and quotes for this part"
+                  >
+                    <td>{new Date(li.createdAt).toLocaleDateString()}</td>
+                    <td>{li.partNumber}</td>
+                    <td>{textOrDash(li.manufacturer)}</td>
+                    <td className="text-end">{formatQty(li.quantity)}</td>
+                    <td className="text-end">{formatMoney(li.price, symbol)}</td>
+                  </tr>
+                  {isSelected && (
+                    <tr>
+                      <td colSpan={colSpan} className="p-0">
+                        <PartHistorySection line={li} onClose={() => setHistoryLine(null)} />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               );
             })}
           </tbody>
@@ -437,8 +425,6 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
   // Line-item state cached per document number so collapsing/re-expanding a row
   // does not re-fetch what we already have.
   const [lines, setLines] = useState({});
-  // The line whose past RFQ/quote history is currently open in the modal.
-  const [historyLine, setHistoryLine] = useState(null);
 
   const loadList = useCallback(async (page) => {
     setLoading(true);
@@ -469,7 +455,6 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
     // Reset section state whenever the vendor changes.
     setExpanded(null);
     setLines({});
-    setHistoryLine(null);
     if (!cancelled) loadList(1);
     return () => { cancelled = true; };
   }, [loadList]);
@@ -509,9 +494,6 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
   }, [vendorId, config]);
 
   const toggleRow = (number) => {
-    // The history section belongs to whichever line is visible, so drop the
-    // selection when the surrounding line table is collapsed or swapped out.
-    setHistoryLine(null);
     if (expanded === number) {
       setExpanded(null);
       return;
@@ -520,11 +502,6 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
     if (!lines[number]) {
       loadLines(number, 1);
     }
-  };
-
-  // Clicking the already-selected line closes the history section again.
-  const toggleHistoryLine = (line) => {
-    setHistoryLine((prev) => (prev === line ? null : line));
   };
 
   const colSpan = 4;
@@ -591,13 +568,7 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
                           <td colSpan={colSpan} className="bg-light">
                             <LinesTable
                               state={lineState}
-                              showQuoteNumber={config.showQuoteNumber}
-                              onPageChange={(nextPage) => {
-                                setHistoryLine(null);
-                                loadLines(number, nextPage);
-                              }}
-                              onLineClick={toggleHistoryLine}
-                              selectedLine={historyLine}
+                              onPageChange={(nextPage) => loadLines(number, nextPage)}
                             />
                           </td>
                         </tr>
@@ -615,133 +586,13 @@ const VendorDocumentSection = ({ vendorId, kind }) => {
             loading={loading}
             onPageChange={(nextPage) => {
               setExpanded(null);
-              setHistoryLine(null);
               loadList(nextPage);
             }}
           />
         </>
       )}
-
-      <PartHistorySection line={historyLine} onClose={() => setHistoryLine(null)} />
     </div>
   );
 };
 
-// Vendor profile panel (supplier name, type, contact details, address).
-const VendorInformation = ({ vendorId }) => {
-  const [vendor, setVendor] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let cancelled = false;
-    const fetchVendor = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const resp = await apiService.getVendor(vendorId);
-        if (!cancelled) setVendor(resp.data || null);
-      } catch (err) {
-        if (!cancelled) {
-          setError(errorMessage(err, 'Failed to load vendor information.'));
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    fetchVendor();
-    return () => { cancelled = true; };
-  }, [vendorId]);
-
-  const hasAddress = vendor && (
-    vendor.address1 || vendor.address2 || vendor.city ||
-    vendor.state || vendor.postalCode || vendor.country
-  );
-
-  return (
-    <div className="mb-4">
-      <h6 className="text-muted border-bottom pb-2">
-        <FontAwesomeIcon icon={faBuilding} className="me-2" />
-        Vendor Information
-      </h6>
-
-      {loading ? (
-        <div className="text-center py-4">
-          <Spinner animation="border" size="sm" />
-        </div>
-      ) : error ? (
-        <Alert variant="warning" className="mb-0">{error}</Alert>
-      ) : !vendor ? (
-        <p className="text-muted mb-0 py-2">No vendor information available.</p>
-      ) : (
-        <Row className="pt-2">
-          <Col md={6}>
-            <InfoField label="Supplier" value={textOrDash(vendor.supplier)} />
-            <InfoField label="Vendor ID" value={textOrDash(vendorId)} />
-            <InfoField label="Vendor Type" value={textOrDash(vendor.vendorType)} />
-            <InfoField
-              label="Phone"
-              value={
-                vendor.phoneNumber
-                  ? (
-                    <a href={`tel:${vendor.phoneNumber}`} className="text-decoration-none">
-                      <FontAwesomeIcon icon={faPhone} className="me-1" size="sm" />
-                      {vendor.phoneNumber}
-                    </a>
-                  )
-                  : DASH
-              }
-            />
-            <InfoField label="Timezone" value={textOrDash(vendor.timezone)} />
-          </Col>
-          <Col md={6}>
-            <div className="mb-2">
-              <span className="text-muted small">
-                <FontAwesomeIcon icon={faLocationDot} className="me-1" />
-                Address:
-              </span>
-            </div>
-            {hasAddress ? (
-              <address className="mb-0">
-                {vendor.address1 && <>{vendor.address1}<br /></>}
-                {vendor.address2 && <>{vendor.address2}<br /></>}
-                {[vendor.city, vendor.state].filter(Boolean).join(', ')}
-                {vendor.postalCode ? ` ${vendor.postalCode}` : ''}
-                {vendor.country && <><br />{vendor.country}</>}
-              </address>
-            ) : (
-              <span className="text-muted">No address on file.</span>
-            )}
-          </Col>
-        </Row>
-      )}
-    </div>
-  );
-};
-
-/**
- * Vendor section of the account page. Only rendered for users that have a
- * vendor_id associated with their account.
- */
-const VendorManagement = ({ vendorId }) => {
-  if (!vendorId) return null;
-
-  return (
-    <Row className="mb-4">
-      <Col>
-        <Card className="shadow-sm">
-          <Card.Header>
-            <h5 className="mb-0">Vendor</h5>
-          </Card.Header>
-          <Card.Body>
-            <VendorInformation vendorId={vendorId} />
-            <VendorDocumentSection vendorId={vendorId} kind="excess" />
-            <VendorDocumentSection vendorId={vendorId} kind="consignment" />
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
-  );
-};
-
-export default VendorManagement;
+export { VendorDocumentSection };
