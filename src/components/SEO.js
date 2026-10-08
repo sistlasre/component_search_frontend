@@ -8,7 +8,8 @@ const SEO = ({
   image,
   url,
   type = 'website',
-  author = 'ComponentSearch'
+  author = 'ComponentSearch',
+  noindex = false
 }) => {
   const siteTitle = 'Component Search';
   const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
@@ -16,6 +17,7 @@ const SEO = ({
   const defaultKeywords = 'electronic components, parts search, IC chips, semiconductors, electronic parts supplier';
   const defaultImage = '/og-image.jpg';
   const baseUrl = 'https://www.componentsearch.com';
+  const robots = noindex ? 'noindex, nofollow' : 'index, follow';
   
   return (
     <Helmet>
@@ -40,9 +42,9 @@ const SEO = ({
       <meta property="twitter:image" content={image || defaultImage} />
       
       {/* Additional SEO Tags */}
-      <link rel="canonical" href={url || baseUrl} />
-      <meta name="robots" content="index, follow" />
-      <meta name="googlebot" content="index, follow" />
+      {!noindex && <link rel="canonical" href={url || baseUrl} />}
+      <meta name="robots" content={robots} />
+      <meta name="googlebot" content={robots} />
       
       {/* Structured Data for Products (JSON-LD) */}
       {type === 'product' && (

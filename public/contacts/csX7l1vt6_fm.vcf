@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Todaro;Dominic;;;
+FN:Dominic Todaro
+ORG:;
+TITLE:East Coast Sales Manager
+EMAIL;TYPE=WORK:dominic@componentsearch.com
+TEL;TYPE=WORK,VOICE:(714) 482-0123
+END:VCARD

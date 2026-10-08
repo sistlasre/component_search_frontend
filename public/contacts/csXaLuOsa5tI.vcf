@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Chudler;Nadav;;;
+FN:Nadav Chudler
+ORG:;
+TITLE:Operations Manager
+EMAIL;TYPE=WORK:nadav@componentsearch.com
+TEL;TYPE=WORK,VOICE:(714) 699-4933
+TEL;TYPE=CELL:6573416984
+END:VCARD

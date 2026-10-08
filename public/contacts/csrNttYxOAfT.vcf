@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Schlundt;Rick;;;
+FN:Rick Schlundt
+ORG:;
+TITLE:Business Development Manager
+EMAIL;TYPE=WORK:rick.schlundt@componentsearch.com
+TEL;TYPE=WORK,VOICE:(714) 361-5690
+END:VCARD

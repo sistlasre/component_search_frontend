@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Rider;Darla;;;
+FN:Darla Rider
+ORG:;
+TITLE:Account Manager
+EMAIL;TYPE=WORK:darla@componentsearch.com
+TEL;TYPE=WORK,VOICE:(714) 987-1268
+END:VCARD

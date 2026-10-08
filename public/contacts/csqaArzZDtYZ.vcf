@@ -1,0 +1,9 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Dean;Seamus;;;
+FN:Seamus Dean
+ORG:;
+TITLE:Account Manager
+EMAIL;TYPE=WORK:seamus@componentsearch.com
+TEL;TYPE=WORK,VOICE:(657) 341-4140
+END:VCARD
