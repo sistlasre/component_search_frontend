@@ -42,7 +42,7 @@
       "destination": "/api/part-prerender?partId=:partId"
     },
     {
-      "source": "/contact/:contactId/download",
+      "source": "/contact/:contactId",
       "destination": "/api/contact-download?contactId=:contactId"
     },
     {
