@@ -72,25 +72,53 @@ const ContactRow = ({ icon: Icon, label, value, href, external }) => {
   );
 };
 
+/**
+ * Map a URL id to its static .vcf path. The id maps 1:1 to the file in
+ * `public/contacts/`, so `/contact/foo` reads `public/contacts/foo.vcf`.
+ * Returns '' for ids that look like path traversal attempts.
+ */
+export const contactVcfPath = (contactId) => {
+  if (!contactId) return '';
+  const trimmed = contactId.trim();
+  // react-router already blocks `/` in a single segment; this covers the rest.
+  if (!trimmed || trimmed.includes('..') || trimmed.includes('\\')) return '';
+  const name = trimmed.toLowerCase().endsWith('.vcf') ? trimmed : `${trimmed}.vcf`;
+  return `${process.env.PUBLIC_URL || ''}/contacts/${encodeURIComponent(name)}`;
+};
+
+/** Public download URL. Served by `api/contact-download.js` in production. */
+export const contactDownloadPath = (contactId) =>
+  contactVcfPath(contactId) ? `/contact/${encodeURIComponent(contactId)}/download` : '';
+
+/**
+ * Fallback handler for `/contact/:contactId/download`.
+ *
+ * In production Vercel rewrites that path to the serverless function before
+ * React ever loads, so this never runs. It exists for the CRA dev server,
+ * which has no serverless runtime and would otherwise render the SPA shell.
+ */
+export const ContactDownloadRedirect = () => {
+  const { contactId } = useParams();
+
+  useEffect(() => {
+    window.location.replace(contactVcfPath(contactId) || '/');
+  }, [contactId]);
+
+  return (
+    <div className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '40vh' }}>
+      <Spinner animation="grow" variant="primary" />
+    </div>
+  );
+};
+
 const ContactPage = () => {
   const { contactId } = useParams();
 
   const [state, setState] = useState({ status: 'loading', contact: null, raw: '' });
   const [copied, setCopied] = useState(false);
 
-  // Normalize the URL segment to a filename. The id maps 1:1 to the file in
-  // `public/contacts/`, so `/contact/foo` serves `public/contacts/foo.vcf`.
-  const fileName = useMemo(() => {
-    if (!contactId) return '';
-    const trimmed = contactId.trim();
-    // Guard against path traversal; react-router already blocks `/`.
-    if (!trimmed || trimmed.includes('..') || trimmed.includes('\\')) return '';
-    return trimmed.toLowerCase().endsWith('.vcf') ? trimmed : `${trimmed}.vcf`;
-  }, [contactId]);
-
-  const fileUrl = fileName
-    ? `${process.env.PUBLIC_URL || ''}/contacts/${encodeURIComponent(fileName)}`
-    : '';
+  const fileUrl = useMemo(() => contactVcfPath(contactId), [contactId]);
+  const downloadUrl = useMemo(() => contactDownloadPath(contactId), [contactId]);
 
   useEffect(() => {
     if (!fileUrl) {
@@ -168,7 +196,6 @@ const ContactPage = () => {
   }
 
   const initials = getInitials(contact);
-  const downloadName = `${contact.fullName || contactId}.vcf`;
 
   const seoDescription = [contact.fullName, contact.title, contact.organization]
     .filter(Boolean)
@@ -215,10 +242,14 @@ const ContactPage = () => {
             <Card.Body className="px-4 pb-4 pt-0">
               {/* Primary action */}
               <div className="d-grid gap-2 d-sm-flex justify-content-sm-center mb-4">
+                {/* Links to the download endpoint rather than the raw file so
+                    the response carries text/vcard plus a Content-Disposition
+                    named after the contact. No `download` attribute: letting
+                    the server drive the disposition is what gets mobile
+                    browsers to offer "Add to Contacts". */}
                 <Button
                   as="a"
-                  href={fileUrl}
-                  download={downloadName}
+                  href={downloadUrl}
                   variant="primary"
                   className="rounded-pill px-4 py-2 fw-bold d-inline-flex align-items-center justify-content-center gap-2"
                 >

@@ -33,7 +33,7 @@ import ExcessPage from './components/ExcessPage'
 import CookieBanner from './components/CookieBanner';
 import SalesTermsAndConditions from './components/SalesTermsAndConditions'
 import PurchaseOrderTermsAndConditions from './components/PurchaseOrderTermsAndConditions'
-import ContactPage from './components/ContactPage';
+import ContactPage, { ContactDownloadRedirect } from './components/ContactPage';
 
 function App() {
   return (
@@ -50,6 +50,7 @@ function App() {
               <Route path="/category/:categoryName" element={<SubcategoryPage />} />
               <Route path="/part/:partId" element={<PartDetail />} />
               <Route path="/contact/:contactId" element={<ContactPage />} />
+              <Route path="/contact/:contactId/download" element={<ContactDownloadRedirect />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/manufacturers" element={<ManufacturersPage />} />
               <Route path="/cart" element={<CartPage />} />

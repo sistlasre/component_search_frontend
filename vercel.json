@@ -17,6 +17,10 @@
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
+      "source": "/contact/:contactId/download",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
       "source": "/contacts/(.*).vcf",
       "headers": [
         { "key": "Content-Type", "value": "text/vcard; charset=utf-8" },
@@ -27,12 +31,19 @@
   "functions": {
     "api/part-prerender.js": {
       "includeFiles": "build/index.html"
+    },
+    "api/contact-download.js": {
+      "includeFiles": "build/contacts/**"
     }
   },
   "rewrites": [
     {
       "source": "/part/:partId",
       "destination": "/api/part-prerender?partId=:partId"
+    },
+    {
+      "source": "/contact/:contactId/download",
+      "destination": "/api/contact-download?contactId=:contactId"
     },
     {
       "source": "/api/cs/:path*",
