@@ -1,19 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Card, Spinner, Button, Row, Col } from 'react-bootstrap';
-import { QRCodeSVG } from 'qrcode.react';
 import {
-  FiMail,
-  FiPhone,
-  FiSmartphone,
-  FiPrinter,
-  FiGlobe,
-  FiMapPin,
   FiDownload,
-  FiBriefcase,
-  FiCalendar,
-  FiCheck,
-  FiLink,
+  FiBriefcase
 } from 'react-icons/fi';
 import SEO from './SEO';
 import { parseVCard, isVCard, stripBinaryProperties, getInitials } from '../utils/vcardParser';
@@ -32,25 +22,6 @@ export const contactVcfPath = (contactId) => {
   if (!trimmed || trimmed.includes('..') || trimmed.includes('\\')) return '';
   const name = trimmed.toLowerCase().endsWith('.vcf') ? trimmed : `${trimmed}.vcf`;
   return `${process.env.PUBLIC_URL || ''}/contacts/${encodeURIComponent(name)}`;
-};
-
-/**
- * Handler for `/contact/:contactId/download`: sends the visitor to the static
- * .vcf. Not used for `/contact/:contactId` itself, which is device-routed on
- * the server (see vercel.json).
- */
-export const ContactDownloadRedirect = () => {
-  const { contactId } = useParams();
-
-  useEffect(() => {
-    window.location.replace(contactVcfPath(contactId) || '/');
-  }, [contactId]);
-
-  return (
-    <div className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '40vh' }}>
-      <Spinner animation="grow" variant="primary" />
-    </div>
-  );
 };
 
 /**
@@ -101,22 +72,6 @@ const ContactPage = () => {
   }, [fileUrl]);
 
   const { status, contact, raw } = state;
-
-  // Prefer encoding the vCard itself so a scan offers "Add Contact" directly.
-  const qrValue = useMemo(() => {
-    if (!raw) return '';
-    const compact = stripBinaryProperties(raw);
-    if (compact.length <= MAX_QR_PAYLOAD) return compact;
-    return typeof window !== 'undefined' ? window.location.href : '';
-  }, [raw]);
-
-  const handleCopyLink = useCallback(() => {
-    if (typeof window === 'undefined' || !navigator.clipboard) return;
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, []);
 
   if (status === 'loading') {
     return (

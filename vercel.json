@@ -20,10 +20,6 @@
       ]
     },
     {
-      "source": "/contact/:contactId/download",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
       "source": "/contacts/(.*).vcf",
       "headers": [
         { "key": "Content-Type", "value": "text/vcard; charset=utf-8" },
