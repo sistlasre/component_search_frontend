@@ -14,7 +14,10 @@
     },
     {
       "source": "/contact/:contactId",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Vary", "value": "User-Agent" }
+      ]
     },
     {
       "source": "/contact/:contactId/download",
@@ -40,6 +43,11 @@
     {
       "source": "/part/:partId",
       "destination": "/api/part-prerender?partId=:partId"
+    },
+    {
+      "source": "/contact/:contactId",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*Android.*" }],
+      "destination": "/index.html"
     },
     {
       "source": "/contact/:contactId",

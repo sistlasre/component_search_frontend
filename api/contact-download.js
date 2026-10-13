@@ -119,7 +119,13 @@ module.exports = async (req, res) => {
     `attachment; filename="${asciiFile}"; filename*=UTF-8''${utf8File}`
   );
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400');
+  // `/contact/:id` serves different content per device (Android gets the web
+  // page via a rewrite in vercel.json, everything else lands here), so this
+  // response must never sit in a shared cache where it could be handed to an
+  // Android visitor. `private` keeps it out of the CDN; Vary covers any
+  // intermediary that caches anyway.
+  res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
+  res.setHeader('Vary', 'User-Agent');
 
   const body = Buffer.from(vcf, 'utf8');
   // Set the byte length explicitly. A character-count Content-Length (the
